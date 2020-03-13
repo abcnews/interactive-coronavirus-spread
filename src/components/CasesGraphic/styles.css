@@ -1,0 +1,17 @@
+.root {
+  background: yellow;
+}
+
+.svg {
+  display: block;
+  width: 300px;
+  height: 150px;
+}
+
+.xAxis {
+  fill: red;
+}
+
+.yAxis {
+  fill: blue;
+}
