@@ -1,64 +1,71 @@
-import React, { useRef, useEffect } from "react";
-const d3 = { ...require("d3-selection"), ...require("d3-force") };
+import React, { useRef, useEffect } from 'react';
+const d3 = { ...require('d3-selection'), ...require('d3-force') };
 
-import scaleCanvas from "./scaleCanvas";
+import scaleCanvas from './scaleCanvas';
 
-import styles from "./styles.scss";
+import styles from './styles.scss';
 
 export default props => {
   const el = useRef(null);
 
-  const init = () => {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    let centerX = width / 2;
-    let centerY = height / 2;
+  // Init these so we can unload them later on dismount
+  let canvas;
+  let ctx;
+  let simulation;
+  let render;
+  let animate;
 
-    const nodes = [];
-    const nodesToAdd = [];
-    const duration = 2;
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+  let centerX = width / 2;
+  let centerY = height / 2;
 
-    const config = {
-      startTime: false,
-      ticks: 0,
-      animReqId: null
-    };
+  const nodes = [];
+  const nodesToAdd = [];
+  const duration = 2;
 
-    for (let i = 0; i < 0; i++) {
-      nodes.push({
-        targetX: centerX,
-        targetY: centerY
-      });
-    }
+  const config = {
+    startTime: false,
+    ticks: 0,
+    animReqId: null
+  };
 
-    const canvas = d3
+  for (let i = 0; i < 0; i++) {
+    nodes.push({
+      targetX: centerX,
+      targetY: centerY
+    });
+  }
+
+  useEffect(() => {
+    canvas = d3
       .select(el.current)
-      .append("canvas")
-      .attr("width", width)
-      .attr("height", height);
+      .append('canvas')
+      .attr('width', width)
+      .attr('height', height);
 
-    const ctx = canvas.node().getContext("2d");
+    ctx = canvas.node().getContext('2d');
 
     scaleCanvas(canvas.node(), ctx, width, height);
 
-    const simulation = d3
+    simulation = d3
       .forceSimulation([])
       .force(
-        "x",
+        'x',
         d3
           .forceX()
-          .strength(0.05)
+          .strength(0.2)
           .x(d => d.targetX)
       )
       .force(
-        "y",
+        'y',
         d3
           .forceY()
-          .strength(0.05)
+          .strength(0.2)
           .y(d => d.targetY)
       )
       .force(
-        "charge",
+        'charge',
         d3
           .forceManyBody()
           .strength(-1.8)
@@ -76,7 +83,8 @@ export default props => {
       simulation.tick();
     }
 
-    const render = () => {
+    // Paint to canvas
+    render = () => {
       const nodes = simulation.nodes();
       ctx.clearRect(0, 0, width, height);
 
@@ -85,14 +93,15 @@ export default props => {
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.fill();
       }
 
       return nodes;
     };
 
-    const animate = (time, nodesToAdd) => {
+    // Animation frame
+    animate = (time, nodesToAdd) => {
       if (!config.startTime) {
         config.startTime = time;
       }
@@ -127,8 +136,10 @@ export default props => {
     // Additional nodes
     for (let i = 0; i < 1000; i++) {
       nodesToAdd.push({
-        x: centerX + width * Math.sin(Math.random() * (2 * Math.PI)),
-        y: centerY + width * Math.cos(Math.random() * (2 * Math.PI)),
+        // x: centerX + width * Math.sin(Math.random() * (2 * Math.PI)),
+        // y: centerY + width * Math.cos(Math.random() * (2 * Math.PI)),
+        x: centerX,
+        y: centerY,
         delay: Math.random() * (duration * 1000),
         targetX: centerX,
         targetY: i < 500 ? centerY - 100 : centerY + 100
@@ -136,14 +147,19 @@ export default props => {
     }
 
     let count = requestAnimationFrame(t => animate(t, nodesToAdd));
-  };
 
-  useEffect(() => {
-    init();
+    // Unload these otherwise browser gets bogged down
+    return () => {
+      canvas = null;
+      ctx = null;
+      simulation = null;
+      render = null;
+      animate = null;
+    };
   });
+
   return <div ref={el} className={styles.root}></div>;
 };
-
 
 // import { select } from 'd3';
 // import React, { useEffect, useRef } from 'react';
