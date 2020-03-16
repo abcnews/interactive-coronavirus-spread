@@ -6,3 +6,12 @@
   width: 300px;
   height: 150px;
 }
+
+:global {
+  body {
+    margin: 0;
+  }
+  canvas {
+    display: block;
+  }
+}

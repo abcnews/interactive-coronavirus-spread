@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-const d3 = { ...require('d3-selection'), ...require('d3-force'), ...require('d3-scale') };
+const d3 = { ...require('d3-selection'), ...require('d3-force') };
 
 import scaleCanvas from './scaleCanvas';
 
@@ -129,7 +129,7 @@ export default props => {
     // for (let i = 0; i < 128; i++) {
     //   simulation.tick();
     // }
-    simulation.nodes([]);
+    simulation.nodes([]).stop();
 
     // render();
     // Additional nodes
@@ -150,7 +150,7 @@ export default props => {
 
   useEffect(() => {
     if (props.marker === 'doubling') {
-      simulation.nodes([]);
+      simulation.nodes([]).stop();
       return;
     }
 
@@ -183,8 +183,8 @@ export default props => {
     for (let i = 0; i < 128; i++) {
       nodesToAdd.push({
         groupName: 'three',
-        x: width * 0.75,//centerX,
-        y: centerY,//height * 0.75,
+        x: width * 0.75, //centerX,
+        y: centerY, //height * 0.75,
         delay: Math.random() * duration,
         targetX: width * 0.75, //centerX,
         targetY: height * 0.5
