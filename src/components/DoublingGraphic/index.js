@@ -5,7 +5,7 @@ import scaleCanvas from './scaleCanvas';
 
 import styles from './styles.scss';
 
-const ANIMATION_TICK_LIMIT = 500;
+const ANIMATION_TICK_LIMIT = 11000;
 
 // Init these so we can unload them later on dismount
 let canvas;
@@ -14,21 +14,13 @@ let simulation;
 let render;
 let animate;
 
-const nodes = [];
-
 let width = window.innerWidth;
 let height = window.innerHeight;
 let centerX = width / 2;
 let centerY = height / 2;
 
 const nodesToAdd = [];
-const duration = 1000; // In milliseconds
-
-// const config = {
-//   startTime: false,
-//   ticks: 0,
-//   animReqId: null
-// };
+const duration = 10000; // In milliseconds
 
 let ticks = 0;
 let startTime = false;
@@ -55,7 +47,7 @@ simulation = d3
     'charge',
     d3
       .forceManyBody()
-      .strength(-4)
+      .strength(-30)
       .theta(0.1)
   )
   .alpha(1)
@@ -73,8 +65,8 @@ render = () => {
     const node = nodes[i];
 
     ctx.beginPath();
-    ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
     ctx.fill();
   }
 
@@ -117,37 +109,10 @@ animate = (time, nodesToAdd) => {
 export default props => {
   const el = useRef(null);
 
-  // Initial dots setup
-  // Set up groups
-  // for (let i = 0; i < 1; i++) {
-  //   nodes.push({
-  //     groupName: 'one',
-  //     targetX: centerX,
-  //     targetY: height * 0.25
-  //   });
-  // }
-
-  // for (let i = 0; i < 1; i++) {
-  //   nodes.push({
-  //     groupName: 'two',
-  //     targetX: centerX,
-  //     targetY: centerY
-  //   });
-  // }
-
-  // for (let i = 0; i < 1; i++) {
-  //   nodes.push({
-  //     groupName: 'three',
-  //     targetX: centerX,
-  //     targetY: height * 0.75
-  //   });
-  // }
-
   useEffect(() => {
     // Add the canvas element to the page
     canvas = d3
       .select(el.current)
-      .append('canvas')
       .attr('width', width)
       .attr('height', height);
 
@@ -164,21 +129,12 @@ export default props => {
     // for (let i = 0; i < 128; i++) {
     //   simulation.tick();
     // }
+    simulation.nodes([]);
 
     // render();
     // Additional nodes
     startTime = false;
     ticks = 0;
-    for (let i = 0; i < 10; i++) {
-      nodesToAdd.push({
-        groupName: 'one',
-        x: centerX,
-        y: height * 0.25,
-        delay: Math.random() * duration,
-        targetX: centerX,
-        targetY: height * 0.25
-      });
-    }
 
     let count = requestAnimationFrame(t => animate(t, nodesToAdd));
 
@@ -193,21 +149,52 @@ export default props => {
   }, []);
 
   useEffect(() => {
-    if (props.marker === 'doubling') return;
+    if (props.marker === 'doubling') {
+      simulation.nodes([]);
+      return;
+    }
 
+    // Reset animation timers
     startTime = false;
     ticks = 0;
-    for (let i = 0; i < 10; i++) {
+
+    for (let i = 0; i < 8; i++) {
       nodesToAdd.push({
         groupName: 'one',
-        x: centerX,
-        y: height * 0.5,
+        x: width * 0.25, //centerX,
+        y: centerY, //height * 0.25,
+        delay: Math.random() * duration,
+        targetX: width * 0.25,
+        targetY: height * 0.5
+      });
+    }
+
+    for (let i = 0; i < 32; i++) {
+      nodesToAdd.push({
+        groupName: 'two',
+        x: width * 0.5, //centerX,
+        y: centerY, //height * 0.5,
         delay: Math.random() * duration,
         targetX: centerX,
         targetY: height * 0.5
       });
     }
+
+    for (let i = 0; i < 128; i++) {
+      nodesToAdd.push({
+        groupName: 'three',
+        x: width * 0.75,//centerX,
+        y: centerY,//height * 0.75,
+        delay: Math.random() * duration,
+        targetX: width * 0.75, //centerX,
+        targetY: height * 0.5
+      });
+    }
   }, [props.marker]);
 
-  return <div ref={el} className={styles.root}></div>;
+  return (
+    <div className={styles.root}>
+      <canvas ref={el} />
+    </div>
+  );
 };
