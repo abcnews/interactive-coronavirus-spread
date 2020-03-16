@@ -5,30 +5,31 @@ import scaleCanvas from './scaleCanvas';
 
 import styles from './styles.scss';
 
+// Init these so we can unload them later on dismount
+let canvas;
+let ctx;
+let simulation;
+let render;
+let animate;
+
+const nodes = [];
+
+const config = {
+  startTime: false,
+  ticks: 0,
+  animReqId: null
+};
+
 export default props => {
   const el = useRef(null);
-
-  // Init these so we can unload them later on dismount
-  let canvas;
-  let ctx;
-  let simulation;
-  let render;
-  let animate;
 
   let width = window.innerWidth;
   let height = window.innerHeight;
   let centerX = width / 2;
   let centerY = height / 2;
 
-  const nodes = [];
   const nodesToAdd = [];
-  const duration = 200; // In milliseconds
-
-  const config = {
-    startTime: false,
-    ticks: 0,
-    animReqId: null
-  };
+  const duration = 2000; // In milliseconds
 
   // Initial dots setup
   // Set up groups
@@ -86,6 +87,79 @@ export default props => {
     .velocityDecay(0.4)
     .stop();
 
+  // Function that paints to canvas
+  render = () => {
+    const nodes = simulation.nodes();
+    ctx.clearRect(0, 0, width, height);
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.fill();
+    }
+
+    return nodes;
+  };
+
+  // // Animation frame
+  // animate = (time, nodesToAdd) => {
+  //   const nodes = render();
+  //   const newNodes = [];
+
+  //   for (let i = 0; i < nodesToAdd.length; i++) {
+  //     const node = nodesToAdd[i];
+
+  //     newNodes.push(node);
+  //     nodesToAdd.splice(i, 1);
+  //     i--;
+  //   }
+
+  //   simulation
+  //     .nodes(nodes.concat(newNodes))
+  //     .alpha(1)
+  //     .tick();
+
+  //   config.ticks++;
+
+  //   if (config.ticks < 1800 || nodesToAdd.length > 0) {
+  //     config.animReqId = requestAnimationFrame(t => animate(t, nodesToAdd));
+  //   }
+  // };
+
+  // Animation frame
+animate = (time, nodesToAdd) => {
+  if (!config.startTime) {
+    config.startTime = time;
+  }
+
+  const progress = time - config.startTime;
+  const nodes = render();
+  const newNodes = [];
+
+  for (let i = 0; i < nodesToAdd.length; i++) {
+    const node = nodesToAdd[i];
+    if (node.delay < progress) {
+      newNodes.push(node);
+      nodesToAdd.splice(i, 1);
+      i--;
+    }
+  }
+
+  simulation
+    .nodes(nodes.concat(newNodes))
+    .alpha(1)
+    .tick();
+
+  config.ticks++;
+
+  if (true || config.ticks < 1800 || nodesToAdd.length > 0) {
+    config.animReqId = requestAnimationFrame(t => animate(t, nodesToAdd));
+  }
+};
+
   useEffect(() => {
     // Add the canvas element to the page
     canvas = d3
@@ -108,55 +182,9 @@ export default props => {
       simulation.tick();
     }
 
-    // Function that paints to canvas
-    render = () => {
-      const nodes = simulation.nodes();
-      ctx.clearRect(0, 0, width, height);
-
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.fill();
-      }
-
-      return nodes;
-    };
-
-    // Animation frame
-    animate = (time, nodesToAdd) => {
-      if (!config.startTime) {
-        config.startTime = time;
-      }
-
-      const progress = time - config.startTime;
-      const nodes = render();
-      const newNodes = [];
-
-      for (let i = 0; i < nodesToAdd.length; i++) {
-        const node = nodesToAdd[i];
-        if (node.delay < progress) {
-          newNodes.push(node);
-          nodesToAdd.splice(i, 1);
-          i--;
-        }
-      }
-
-      simulation
-        .nodes(nodes.concat(newNodes))
-        .alpha(1)
-        .tick();
-
-      config.ticks++;
-
-      if (config.ticks < 1800 || nodesToAdd.length > 0) {
-        config.animReqId = requestAnimationFrame(t => animate(t, nodesToAdd));
-      }
-    };
-
     render();
+
+    console.log('hi');
 
     // Unload these otherwise browser gets bogged down
     return () => {
@@ -166,12 +194,10 @@ export default props => {
       render = null;
       animate = null;
     };
-  });
+  }, []);
 
   useEffect(() => {
-    
-
-  
+    if (props.marker === 'doubling') return;
 
     // Additional nodes
     for (let i = 0; i < 10; i++) {
@@ -185,12 +211,41 @@ export default props => {
       });
     }
 
-    console.log(props.marker);
+    console.log(nodesToAdd, props.marker);
 
-    let count = requestAnimationFrame(t => animate(t, nodesToAdd));
-
-    // render();
+    let count = window.requestAnimationFrame(t => animate(t, nodesToAdd));
   }, [props.marker]);
 
   return <div ref={el} className={styles.root}></div>;
 };
+
+// // Animation frame
+// animate = (time, nodesToAdd) => {
+//   if (!config.startTime) {
+//     config.startTime = time;
+//   }
+
+//   const progress = time - config.startTime;
+//   const nodes = render();
+//   const newNodes = [];
+
+//   for (let i = 0; i < nodesToAdd.length; i++) {
+//     const node = nodesToAdd[i];
+//     if (node.delay < progress) {
+//       newNodes.push(node);
+//       nodesToAdd.splice(i, 1);
+//       i--;
+//     }
+//   }
+
+//   simulation
+//     .nodes(nodes.concat(newNodes))
+//     .alpha(1)
+//     .tick();
+
+//   config.ticks++;
+
+//   if (config.ticks < 1800 || nodesToAdd.length > 0) {
+//     config.animReqId = requestAnimationFrame(t => animate(t, nodesToAdd));
+//   }
+// };
