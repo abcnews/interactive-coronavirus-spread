@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-const d3 = { ...require('d3-selection'), ...require('d3-force') };
+const d3 = { ...require('d3-selection'), ...require('d3-force'), ...require('d3-scale') };
 
 import scaleCanvas from './scaleCanvas';
 
@@ -22,7 +22,7 @@ export default props => {
 
   const nodes = [];
   const nodesToAdd = [];
-  const duration = 2;
+  const duration = 200; // In milliseconds
 
   const config = {
     startTime: false,
@@ -30,60 +30,85 @@ export default props => {
     animReqId: null
   };
 
-  for (let i = 0; i < 0; i++) {
+  // Initial dots setup
+  // Set up groups
+  for (let i = 0; i < 1; i++) {
     nodes.push({
+      groupName: 'one',
+      targetX: centerX,
+      targetY: height * 0.25
+    });
+  }
+
+  for (let i = 0; i < 1; i++) {
+    nodes.push({
+      groupName: 'two',
       targetX: centerX,
       targetY: centerY
     });
   }
 
+  for (let i = 0; i < 1; i++) {
+    nodes.push({
+      groupName: 'three',
+      targetX: centerX,
+      targetY: height * 0.75
+    });
+  }
+
+  // Setup our physics
+  simulation = d3
+    .forceSimulation([])
+    .force(
+      'x',
+      d3
+        .forceX()
+        .strength(0.2)
+        .x(d => d.targetX)
+    )
+    .force(
+      'y',
+      d3
+        .forceY()
+        .strength(0.2)
+        .y(d => d.targetY)
+    )
+    .force(
+      'charge',
+      d3
+        .forceManyBody()
+        .strength(-3)
+        .theta(0.9)
+    )
+    .alpha(1)
+    .alphaDecay(0.01)
+    .alphaMin(0.25)
+    .velocityDecay(0.4)
+    .stop();
+
   useEffect(() => {
+    // Add the canvas element to the page
     canvas = d3
       .select(el.current)
       .append('canvas')
       .attr('width', width)
       .attr('height', height);
 
+    // Get the canvas context to draw
     ctx = canvas.node().getContext('2d');
 
+    // Fit to retina devices
     scaleCanvas(canvas.node(), ctx, width, height);
 
-    simulation = d3
-      .forceSimulation([])
-      .force(
-        'x',
-        d3
-          .forceX()
-          .strength(0.2)
-          .x(d => d.targetX)
-      )
-      .force(
-        'y',
-        d3
-          .forceY()
-          .strength(0.2)
-          .y(d => d.targetY)
-      )
-      .force(
-        'charge',
-        d3
-          .forceManyBody()
-          .strength(-1.8)
-          .theta(0.9)
-      )
-      .alpha(1)
-      .alphaDecay(0.01)
-      .alphaMin(0.25)
-      .velocityDecay(0.4)
-      .stop();
-
+    // Add initial nodes to simulation
     simulation.nodes(nodes).stop();
 
-    for (let i = 0; i < 130; i++) {
+    // Tick over a few to get stable initial state
+    for (let i = 0; i < 128; i++) {
       simulation.tick();
     }
 
-    // Paint to canvas
+    // Function that paints to canvas
     render = () => {
       const nodes = simulation.nodes();
       ctx.clearRect(0, 0, width, height);
@@ -133,21 +158,6 @@ export default props => {
 
     render();
 
-    // Additional nodes
-    for (let i = 0; i < 1000; i++) {
-      nodesToAdd.push({
-        // x: centerX + width * Math.sin(Math.random() * (2 * Math.PI)),
-        // y: centerY + width * Math.cos(Math.random() * (2 * Math.PI)),
-        x: centerX,
-        y: centerY,
-        delay: Math.random() * (duration * 1000),
-        targetX: centerX,
-        targetY: i < 500 ? centerY - 100 : centerY + 100
-      });
-    }
-
-    let count = requestAnimationFrame(t => animate(t, nodesToAdd));
-
     // Unload these otherwise browser gets bogged down
     return () => {
       canvas = null;
@@ -158,23 +168,29 @@ export default props => {
     };
   });
 
+  useEffect(() => {
+    
+
+  
+
+    // Additional nodes
+    for (let i = 0; i < 10; i++) {
+      nodesToAdd.push({
+        groupName: 'one',
+        x: centerX,
+        y: height * 0.25,
+        delay: Math.random() * duration,
+        targetX: centerX,
+        targetY: height * 0.25
+      });
+    }
+
+    console.log(props.marker);
+
+    let count = requestAnimationFrame(t => animate(t, nodesToAdd));
+
+    // render();
+  }, [props.marker]);
+
   return <div ref={el} className={styles.root}></div>;
 };
-
-// import { select } from 'd3';
-// import React, { useEffect, useRef } from 'react';
-// import styles from './styles.css';
-
-// export default ({ preset }) => {
-//   const svgRef = useRef();
-
-//   useEffect(() => {
-//     const svg = select(svgRef.current);
-//   }, [preset]);
-
-//   return (
-//     <div className={styles.root}>
-//       <svg ref={svgRef} className={styles.svg}></svg>
-//     </div>
-//   );
-// };
