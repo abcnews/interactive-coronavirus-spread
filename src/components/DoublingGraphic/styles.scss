@@ -7,11 +7,12 @@
   height: 150px;
 }
 
-:global {
-  body {
-    margin: 0;
-  }
-  canvas {
-    display: block;
-  }
+.canvas {
+  display: block;
 }
+
+// :global {
+//   body {
+//     margin: 0;
+//   }
+// }

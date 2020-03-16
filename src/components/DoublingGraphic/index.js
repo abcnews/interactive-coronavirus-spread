@@ -33,21 +33,21 @@ simulation = d3
     'x',
     d3
       .forceX()
-      .strength(0.4)
+      .strength(0.6)
       .x(d => d.targetX)
   )
   .force(
     'y',
     d3
       .forceY()
-      .strength(0.4)
+      .strength(0.6)
       .y(d => d.targetY)
   )
   .force(
     'charge',
     d3
       .forceManyBody()
-      .strength(-30)
+      .strength(-10)
       .theta(0.1)
   )
   .alpha(1)
@@ -65,8 +65,8 @@ render = () => {
     const node = nodes[i];
 
     ctx.beginPath();
-    ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+    ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.fill();
   }
 
@@ -158,7 +158,7 @@ export default props => {
     startTime = false;
     ticks = 0;
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 16; i++) {
       nodesToAdd.push({
         groupName: 'one',
         x: width * 0.25, //centerX,
@@ -169,7 +169,7 @@ export default props => {
       });
     }
 
-    for (let i = 0; i < 32; i++) {
+    for (let i = 0; i < 128; i++) {
       nodesToAdd.push({
         groupName: 'two',
         x: width * 0.5, //centerX,
@@ -180,7 +180,7 @@ export default props => {
       });
     }
 
-    for (let i = 0; i < 128; i++) {
+    for (let i = 0; i < 645; i++) {
       nodesToAdd.push({
         groupName: 'three',
         x: width * 0.75, //centerX,
@@ -194,7 +194,7 @@ export default props => {
 
   return (
     <div className={styles.root}>
-      <canvas ref={el} />
+      <canvas className={styles.canvas} ref={el} />
     </div>
   );
 };

@@ -2,14 +2,13 @@ import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
 import App from './components/App';
-import Doubling from "./components/DoublingGraphic";
 import { COUNTRY_TOTALS_URL } from './constants';
 
 const PROJECT_NAME = 'interactive-coronavirus-spread';
-const root = document.querySelector(`[data-covid-19-root]`);
+const root = document.querySelector(`[data-${PROJECT_NAME}-root]`);
 
 function renderApp(scrollyData, countryTotals) {
-  render(<Doubling />, root);
+  render(<App scrollyData={scrollyData} countryTotals={countryTotals} />, scrollyData.mountNode);
 }
 
 const whenOdysseyLoaded = new Promise(resolve =>
@@ -47,7 +46,6 @@ function renderAppWhenReady() {
     .catch(console.error);
 }
 
-renderApp();
 renderAppWhenReady();
 
 if (module.hot) {
