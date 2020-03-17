@@ -1,5 +1,9 @@
 .root {
-  background: rgb(37, 170, 93);
+  background: #f3fcfc;
+  text-align: center;
+  height: 100vh;
+  color: #3e494c;
+  padding-top: 5vh;
 }
 
 .svg {
@@ -9,6 +13,8 @@
 
 .canvas {
   display: block;
+  position: absolute;
+  pointer-events: none;
 }
 
 // :global {

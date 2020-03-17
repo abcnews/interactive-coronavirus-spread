@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 const d3 = { ...require('d3-selection'), ...require('d3-force') };
 
 import scaleCanvas from './scaleCanvas';
@@ -18,6 +18,7 @@ let height = window.innerHeight;
 let centerX = width / 2;
 let centerY = height / 2;
 
+const nodes = [];
 const nodesToAdd = [];
 const duration = 10000; // In milliseconds
 
@@ -26,93 +27,97 @@ let startTime = false;
 let animReqId = null;
 
 // Setup our physics
-simulation = d3
-  .forceSimulation([])
-  .force(
-    'x',
-    d3
-      .forceX()
-      .strength(0.6)
-      .x(d => d.targetX)
-  )
-  .force(
-    'y',
-    d3
-      .forceY()
-      .strength(0.6)
-      .y(d => d.targetY)
-  )
-  .force(
-    'charge',
-    d3
-      .forceManyBody()
-      .strength(-20)
-      .theta(0.1)
-  )
-  .alpha(1)
-  .alphaDecay(0.2)
-  .alphaMin(0.001)
-  .velocityDecay(0.7)
-  .stop();
+// simulation = d3
+//   .forceSimulation([])
+//   .force(
+//     'x',
+//     d3
+//       .forceX()
+//       .strength(0.6)
+//       .x(d => d.targetX)
+//   )
+//   .force(
+//     'y',
+//     d3
+//       .forceY()
+//       .strength(0.6)
+//       .y(d => d.targetY)
+//   )
+//   .force(
+//     'charge',
+//     d3
+//       .forceManyBody()
+//       .strength(-20)
+//       .theta(0.1)
+//   )
+//   .alpha(1)
+//   .alphaDecay(0.2)
+//   .alphaMin(0.001)
+//   .velocityDecay(0.7)
+//   .stop();
 
 // Function that paints to canvas
-render = () => {
-  const nodes = simulation.nodes();
-  ctx.clearRect(0, 0, width, height);
+// render = () => {
+//   const nodes = simulation.nodes();
+//   ctx.clearRect(0, 0, width, height);
 
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
+//   for (let i = 0; i < nodes.length; i++) {
+//     const node = nodes[i];
 
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fill();
-  }
+//     ctx.beginPath();
+//     ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
+//     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+//     ctx.fill();
+//   }
 
-  return nodes;
-};
+//   return nodes;
+// };
 
 // Animation frame
-animate = (time, nodesToAdd) => {
-  if (!startTime) {
-    startTime = time;
-  }
+// animate = (time, nodesToAdd) => {
+//   if (!startTime) {
+//     startTime = time;
+//   }
 
-  const progress = time - startTime;
-  const nodes = render();
-  const newNodes = [];
+//   const progress = time - startTime;
+//   const nodes = render();
+//   const newNodes = [];
 
-  for (let i = 0; i < nodesToAdd.length; i++) {
-    const node = nodesToAdd[i];
-    if (node.delay < progress) {
-      newNodes.push(node);
-      nodesToAdd.splice(i, 1);
-      i--;
-    }
-  }
+//   for (let i = 0; i < nodesToAdd.length; i++) {
+//     const node = nodesToAdd[i];
+//     if (node.delay < progress) {
+//       newNodes.push(node);
+//       nodesToAdd.splice(i, 1);
+//       i--;
+//     }
+//   }
 
-  simulation
-    .nodes(nodes.concat(newNodes))
-    .alpha(1)
-    .tick();
+//   simulation
+//     .nodes(nodes.concat(newNodes))
+//     .alpha(1)
+//     .tick();
 
-  ticks++;
+//   ticks++;
 
-  if (ticks < ANIMATION_TICK_LIMIT || nodesToAdd.length > 0) {
-    requestAnimationFrame(t => {
-      animate(t, nodesToAdd);
-    });
-  }
-};
+//   if (ticks < ANIMATION_TICK_LIMIT || nodesToAdd.length > 0) {
+//     requestAnimationFrame(t => {
+//       animate(t, nodesToAdd);
+//     });
+//   }
+// };
 
 export default props => {
-  const el = useRef(null);
+  // Get a reference to our canvas
+  const canvasEl = useRef(null);
+
+  // Set up state
+  const [pageTitle, setPageTitle] = useState(null);
 
   useLayoutEffect(() => {
     console.log('Mounting D3 vis...');
     // Add the canvas element to the page
     canvas = d3
-      .select(el.current)
+      .select(canvasEl.current)
       .attr('width', width)
       .attr('height', height);
 
@@ -150,8 +155,19 @@ export default props => {
   }, []);
 
   useEffect(() => {
+    console.log(props);
 
-  }, [props])
+    switch (props.marker) {
+      case 'doubling':
+        setPageTitle('What is exponential growth?');
+        break;
+      case 'doublinginit':
+        setPageTitle('Week 1');
+        break;
+      default:
+        setPageTitle('What is exponential growth?');
+    }
+  }, [props]);
 
   // useEffect(() => {
   //   if (props.marker === 'doubling') {
@@ -199,7 +215,8 @@ export default props => {
 
   return (
     <div className={styles.root}>
-      <canvas className={styles.canvas} ref={el} />
+      <canvas className={styles.canvas} ref={canvasEl} />
+      <h1>{pageTitle}</h1>
     </div>
   );
 };
