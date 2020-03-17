@@ -53,8 +53,21 @@ export const PRESETS = {
     highlightedCountries: true,
     trends: true
   },
-  doubling: {
-    graphic: 'doubling'
+  doublinginit: {
+    graphic: 'doubling',
+    marker: 'doublinginit'
+  },
+  doublingweek1: {
+    graphic: 'doubling',
+    marker: 'doublingweek1'
+  },
+  doublingweek2: {
+    graphic: 'doubling',
+    marker: 'doublingweek2'
+  },
+  doublingmonth: {
+    graphic: 'doubling',
+    marker: 'doublingmonth'
   },
   logarithmic: {
     graphic: 'cases',

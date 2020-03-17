@@ -3,6 +3,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { PRESETS } from '../../constants';
 import CasesGraphic from '../CasesGraphic';
 import DoublingGraphic from '../DoublingGraphic';
+import Placeholder from '../TestComponent';
 import styles from './styles.css';
 
 export default ({ scrollyData, countryTotals }) => {
@@ -15,7 +16,7 @@ export default ({ scrollyData, countryTotals }) => {
   }, []);
 
   let { graphic, ...graphicProps } = PRESETS[preset] || {};
-  let Graphic;
+  let Graphic = Placeholder;
 
   if (graphic === 'cases') {
     Graphic = CasesGraphic;
