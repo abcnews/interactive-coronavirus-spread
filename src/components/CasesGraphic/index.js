@@ -17,8 +17,7 @@ import styles from './styles.css';
 
 const REM = 16;
 const MARGIN = {
-  top: 2 * REM,
-  // top: 3 * REM,
+  top: 3 * REM,
   right: 5 * REM,
   bottom: 3 * REM,
   left: 2 * REM
@@ -63,14 +62,14 @@ export default class CasesGraphic extends Component {
         .filter(({ value }) => value >= 1);
       const daysSince100CasesTotals = dailyTotals
         .filter(({ value }) => value >= 100)
-        .map(({ value }, index) => ({ day: index + 1, value }));
+        .map(({ value }, index) => ({ day: index, value }));
 
       return { key: country, dailyTotals, daysSince100CasesTotals };
     });
     this.earliestDate = this.countriesData[0].dailyTotals[0].date;
     this.latestDate = this.countriesData[0].dailyTotals[this.countriesData[0].dailyTotals.length - 1].date;
     this.mostDaysSince100Cases = this.countriesData.reduce((memo, d) => {
-      return Math.max(memo, d.dailyTotals.length);
+      return Math.max(memo, d.dailyTotals.length - 1);
     }, 0);
     this.mostCases = this.countriesData.reduce((memo, d) => {
       return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.value)));
@@ -120,15 +119,12 @@ export default class CasesGraphic extends Component {
 
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
-      : scaleLinear().domain([1, this.mostDaysSince100Cases])
+      : scaleLinear().domain([0, this.mostDaysSince100Cases])
     ).range([0, chartWidth]);
 
-    const yScale = (yScaleType === 'logarithmic'
-      ? scaleLog()
-          .domain([100, this.mostCases])
-          .nice()
-      : scaleLinear().domain([0, Math.ceil(this.mostCases / 1e5) * 1e5])
-    ).range([chartHeight, 0]);
+    const yScale = (yScaleType === 'logarithmic' ? scaleLog().nice() : scaleLinear())
+      .domain([100, Math.ceil(this.mostCases / 1e5) * 1e5])
+      .range([chartHeight, 0]);
 
     const xAxisGenerator =
       xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale);
@@ -141,7 +137,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : 'Days since the 100th case');
+      .text(xScaleType === 'dates' ? 'Date' : 'Number of days since the 100th case');
 
     const yAxisGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType])
@@ -157,12 +153,11 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
-      .text('Cumulative number of cases');
-    // .html(
-    //   yScaleType === 'linear'
-    //     ? 'Cumulative number of cases'
-    //     : `<tspan x="0" dy="-0.875em">Cumulative number of</tspan><tspan x="0" dy="1.25em">casessince the 100th case</tspan>`
-    // );
+      .html(
+        yScaleType === 'linear'
+          ? 'Total cases'
+          : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+      );
 
     const yAxisGridlinesGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType])
