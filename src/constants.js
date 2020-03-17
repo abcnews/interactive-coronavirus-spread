@@ -2,20 +2,16 @@ export const DATA_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-da
 export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/country-totals.json';
 export const AFTER_100_CASES_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/after-100-cases.json';
 
-export const KEY_COUNTRIES = [
-  'Australia',
-  'China',
-  'Italy',
-  'Singapore',
-  'South Korea',
-  'United Kingdom',
-  'United States'
-];
+export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Korea, South', 'Singapore', 'United Kingdom', 'US'];
+
+export const ALIASES = {
+  'Korea, South': 'South Korea',
+  'United Kingdom': 'UK'
+};
 
 export const ABBREVIATIONS = {
   Australia: 'Aus',
-  'United Kingdom': 'UK',
-  'United States': 'US'
+  'United Kingdom': 'UK'
 };
 
 export const PRESETS = {
@@ -30,8 +26,8 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    countries: true,
-    highlightedCountries: ['China'],
+    countries: ['China'],
+    highlightedCountries: true,
     trends: true
   },
   all: {

@@ -13,6 +13,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
+import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES } from '../../constants';
 import styles from './styles.css';
 
 const REM = 16;
@@ -26,7 +27,10 @@ const TICK_VALUES = {
   linear: [0, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5],
   logarithmic: [1e2, 1e3, 1e4, 1e5]
 };
-const TRANSITION_DURATION = 1000;
+const TRANSITION_DURATIONS = {
+  opacity: 250,
+  transform: 1000
+};
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 
@@ -53,21 +57,44 @@ export default class CasesGraphic extends Component {
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
 
-    this.countriesData = Object.keys(countryTotals).map(country => {
-      const dailyTotals = Object.keys(countryTotals[country])
-        .map(date => ({
-          date: new Date(date),
-          value: countryTotals[country][date]
-        }))
-        .filter(({ value }) => value >= 1);
-      const daysSince100CasesTotals = dailyTotals
-        .filter(({ value }) => value >= 100)
-        .map(({ value }, index) => ({ day: index, value }));
+    this.countriesData = Object.keys(countryTotals)
+      .map(country => {
+        const dailyTotals = Object.keys(countryTotals[country])
+          .map(date => ({
+            date: new Date(date),
+            value: countryTotals[country][date]
+          }))
+          .filter(({ value }) => value >= 1);
+        // .filter(({ value }) => value >= 100);
+        const daysSince100CasesTotals = dailyTotals
+          .filter(({ value }) => value >= 100)
+          .map(({ value }, index) => ({ day: index, value }));
 
-      return { key: country, dailyTotals, daysSince100CasesTotals };
-    });
-    this.earliestDate = this.countriesData[0].dailyTotals[0].date;
-    this.latestDate = this.countriesData[0].dailyTotals[this.countriesData[0].dailyTotals.length - 1].date;
+        return { key: country, dailyTotals, daysSince100CasesTotals };
+      })
+      // .filter(d => d.dailyTotals.length > 0)
+      .filter(d => d.daysSince100CasesTotals.length > 0)
+      .sort((a, b) => a.dailyTotals[a.dailyTotals.length - 1].value - b.dailyTotals[b.dailyTotals.length - 1].value)
+      .sort((a, b) => (KEY_COUNTRIES.indexOf(a.key) > -1 ? -1 : 1));
+    // console.debug(this.countriesData);
+    this.earliestDate = this.countriesData.reduce((memo, d) => {
+      const candidate = d.dailyTotals[0].date;
+
+      if (new Date(candidate) < new Date(memo)) {
+        return candidate;
+      }
+
+      return memo;
+    }, this.countriesData[0].dailyTotals[0].date);
+    this.latestDate = this.countriesData.reduce((memo, d) => {
+      const candidate = d.dailyTotals[d.dailyTotals.length - 1].date;
+
+      if (new Date(candidate) < new Date(memo)) {
+        return candidate;
+      }
+
+      return memo;
+    }, this.countriesData[0].dailyTotals[this.countriesData[0].dailyTotals.length - 1].date);
     this.mostDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(memo, d.dailyTotals.length - 1);
     }, 0);
@@ -98,15 +125,21 @@ export default class CasesGraphic extends Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     const prevProps = this.props;
+    const prevState = this.state;
 
-    const { preset, xScaleType, yScaleType } = nextProps;
+    const { countries, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = nextProps;
     const { width, height } = nextState;
 
-    if (preset === prevProps.preset && width === prevProps.width && height === prevProps.height) {
+    const wasResize = width !== prevState.width || height !== prevState.height;
+
+    if (preset === prevProps.preset && !wasResize) {
       return false;
     }
 
     checkScaleTypes(xScaleType, yScaleType);
+
+    const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
+    const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
 
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
@@ -147,7 +180,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.yAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .transition()
-      .duration(TRANSITION_DURATION)
+      .duration(transformTransitionDuration)
       .call(yAxisGenerator);
 
     svg
@@ -168,29 +201,44 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.yAxisGridlines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .transition()
-      .duration(TRANSITION_DURATION)
+      .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
     const generateLinePath = d =>
       line()
+        // .curve(curveMonotoneX)
         .x(d => xScale(d[xScaleType === 'dates' ? 'date' : 'day']))
-        .y(d => yScale(d.value))
-        .curve(curveMonotoneX)(d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals']);
+        .y(d => yScale(d.value))(d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals']);
+
+    const isHighlighted = d =>
+      highlightedCountries === true ||
+      (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
 
     // Bind
-    const lines = grid.selectAll(`.${styles.line}`).data(this.countriesData);
+    const lines = grid
+      .selectAll(`.${styles.line}`)
+      .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
 
     // Enter
     const linesEnter = lines
       .enter()
       .append('path')
-      .attr('class', styles.line)
-      .attr('d', generateLinePath);
+      .attr('data-country', d => d.key)
+      .classed(styles.line, true)
+      .classed(styles.highlighted, isHighlighted)
+      .attr('d', generateLinePath)
+      .style('stroke-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', 1);
 
     // Update
     lines
+      .classed(styles.highlighted, isHighlighted)
+      .style('stroke-opacity', 1)
       .transition()
-      .duration(TRANSITION_DURATION)
+      .duration(transformTransitionDuration)
+
       .attrTween('d', function(d) {
         const currentPath = generateLinePath(d);
 
@@ -201,7 +249,12 @@ export default class CasesGraphic extends Component {
       });
 
     // Exit
-    lines.exit().remove();
+    lines
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', 0)
+      .remove();
 
     return false;
   }

@@ -1,9 +1,12 @@
 .root {
+  transform: translate(-50%, -50%);
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 50%;
+  left: 50%;
   width: calc(100% - 2rem);
   height: calc(100% - 2rem);
+  max-width: 64rem;
+  max-height: 48rem;
 }
 
 .svg {
@@ -55,11 +58,38 @@
 
 .line {
   fill: none;
-  stroke: #000;
   stroke-width: 1;
   stroke-linejoin: round;
 }
 
-.line.focused {
+.line.highlighted {
   stroke-width: 3;
+}
+
+path.line[data-country='Australia'] {
+  stroke: #000;
+}
+
+path.line[data-country='China'] {
+  stroke: #00b395;
+}
+
+path.line[data-country='Italy'] {
+  stroke: #ff6100;
+}
+
+path.line[data-country='Singapore'] {
+  stroke: #01cfff;
+}
+
+path.line[data-country='Korea, South'] {
+  stroke: #8272d6;
+}
+
+path.line[data-country='United Kingdom'] {
+  stroke: #ea526f;
+}
+
+path.line[data-country='US'] {
+  stroke: #248bc9;
 }
