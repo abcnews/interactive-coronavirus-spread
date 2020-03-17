@@ -62,44 +62,44 @@
   text-anchor: start;
 }
 
-.grid {
+.plot {
   fill: none;
 }
 
-.line {
+.plotLine {
   fill: none;
   stroke-width: 1;
   stroke-linejoin: round;
 }
 
-.line.highlighted {
+.plotLine.highlighted {
   stroke-width: 3;
 }
 
-path.line[data-country='Australia'] {
-  stroke: #000;
+path.plotLine[data-country='Australia'] {
+  stroke: #000000;
 }
 
-path.line[data-country='China'] {
+path.plotLine[data-country='China'] {
   stroke: #00b395;
 }
 
-path.line[data-country='Italy'] {
+path.plotLine[data-country='Italy'] {
   stroke: #ff6100;
 }
 
-path.line[data-country='Singapore'] {
+path.plotLine[data-country='Singapore'] {
   stroke: #01cfff;
 }
 
-path.line[data-country='Korea, South'] {
+path.plotLine[data-country='Korea, South'] {
   stroke: #8272d6;
 }
 
-path.line[data-country='United Kingdom'] {
+path.plotLine[data-country='United Kingdom'] {
   stroke: #ea526f;
 }
 
-path.line[data-country='US'] {
+path.plotLine[data-country='US'] {
   stroke: #248bc9;
 }

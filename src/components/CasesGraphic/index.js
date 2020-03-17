@@ -148,8 +148,6 @@ export default class CasesGraphic extends Component {
       .attr('width', width)
       .attr('height', height);
 
-    const grid = svg.select(`.${styles.grid}`).attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`);
-
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
       : scaleLinear().domain([0, this.mostDaysSince100Cases])
@@ -204,6 +202,8 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
+    const plot = svg.select(`.${styles.plot}`).attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`);
+
     const generateLinePath = d =>
       line()
         // .curve(curveMonotoneX)
@@ -215,16 +215,16 @@ export default class CasesGraphic extends Component {
       (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
 
     // Bind
-    const lines = grid
-      .selectAll(`.${styles.line}`)
+    const plotLines = plot
+      .selectAll(`.${styles.plotLine}`)
       .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
 
     // Enter
-    const linesEnter = lines
+    const plotLinesEnter = plotLines
       .enter()
       .append('path')
       .attr('data-country', d => d.key)
-      .classed(styles.line, true)
+      .classed(styles.plotLine, true)
       .classed(styles.highlighted, isHighlighted)
       .attr('d', generateLinePath)
       .style('stroke-opacity', 0)
@@ -233,7 +233,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 1);
 
     // Update
-    lines
+    plotLines
       .classed(styles.highlighted, isHighlighted)
       .style('stroke-opacity', 1)
       .transition()
@@ -249,7 +249,7 @@ export default class CasesGraphic extends Component {
       });
 
     // Exit
-    lines
+    plotLines
       .exit()
       .transition()
       .duration(opacityTransitionDuration)
@@ -272,7 +272,7 @@ export default class CasesGraphic extends Component {
           <g className={styles.yAxis} />
           <text className={styles.yAxisLabel} />
           <g className={styles.yAxisGridlines} />
-          <g className={styles.grid} />
+          <g className={styles.plot} />
         </svg>
       </div>
     );
