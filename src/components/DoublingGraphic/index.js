@@ -47,7 +47,7 @@ simulation = d3
     'charge',
     d3
       .forceManyBody()
-      .strength(-10)
+      .strength(-20)
       .theta(0.1)
   )
   .alpha(1)
