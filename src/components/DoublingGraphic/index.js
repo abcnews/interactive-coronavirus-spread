@@ -49,7 +49,6 @@ simulation = d3
       .forceManyBody()
       .strength(-20)
       .theta(0.1)
-      .distanceMax(200)
   )
   .alpha(1)
   .alphaDecay(0.2)
