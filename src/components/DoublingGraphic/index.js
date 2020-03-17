@@ -162,11 +162,17 @@ export default props => {
     setPageTitle(null);
 
     switch (props.marker) {
-      case 'doubling':
+      case 'doublinginit':
         setTimeout(() => setPageTitle('What is exponential growth?'), 100);
         break;
-      case 'doublinginit':
+      case 'doublingweek1':
         setTimeout(() => setPageTitle('Week 1'), 100);
+        break;
+        case 'doublingweek2':
+        setTimeout(() => setPageTitle('Week 2'), 100);
+        break;
+        case 'doublingmonth':
+        setTimeout(() => setPageTitle('1 month'), 100);
         break;
       default:
         setTimeout(() => setPageTitle('What is exponential growth?'), 100);

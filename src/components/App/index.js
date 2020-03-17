@@ -16,12 +16,14 @@ export default ({ scrollyData, countryTotals }) => {
   }, []);
 
   let Graphic;
-  let graphicProps = {}
+  let otherProps = {}
 
   if (typeof PRESETS[preset] === 'undefined') {
     Graphic = Placeholder;
   } else {
     let { graphic, ...graphicProps } = PRESETS[preset];
+
+    otherProps = graphicProps;
 
     if (graphic === 'cases') {
       Graphic = CasesGraphic;
@@ -33,7 +35,7 @@ export default ({ scrollyData, countryTotals }) => {
 
   return (
     <Scrollyteller panels={scrollyData.panels} onMarker={onMarker}>
-      <div>{Graphic ? <Graphic preset={preset} {...graphicProps} /> : null}</div>
+      <div>{Graphic ? <Graphic preset={preset} {...otherProps} /> : null}</div>
     </Scrollyteller>
   );
 };

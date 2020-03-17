@@ -10,13 +10,21 @@ export const PRESETS = {
     graphic: 'cases',
     booms: 10
   },
-  doubling: {
-    graphic: 'doubling',
-    marker: 'doubling'
-  },
   doublinginit: {
     graphic: 'doubling',
     marker: 'doublinginit'
+  },
+  doublingweek1: {
+    graphic: 'doubling',
+    marker: 'doublingweek1'
+  },
+  doublingweek2: {
+    graphic: 'doubling',
+    marker: 'doublingweek2'
+  },
+  doublingmonth: {
+    graphic: 'doubling',
+    marker: 'doublingmonth'
   },
   logarithmic: {
     graphic: 'cases',
