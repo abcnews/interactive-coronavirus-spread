@@ -4,6 +4,10 @@
   height: 100vh;
   color: #3e494c;
   padding-top: 5vh;
+
+  h1 {
+    text-align: center;
+  }
 }
 
 .svg {
@@ -15,6 +19,13 @@
   display: block;
   position: absolute;
   pointer-events: none;
+}
+
+.heading {
+  > div {
+    text-align: center;
+    width: unset;
+  }
 }
 
 // :global {

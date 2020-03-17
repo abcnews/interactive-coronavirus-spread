@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 const d3 = { ...require('d3-selection'), ...require('d3-force') };
+import { Fade } from 'react-reveal';
 
 import scaleCanvas from './scaleCanvas';
 import styles from './styles.scss';
@@ -157,15 +158,18 @@ export default props => {
   useEffect(() => {
     console.log(props);
 
+    // Delay transitions to animate
+    setPageTitle(null);
+
     switch (props.marker) {
       case 'doubling':
-        setPageTitle('What is exponential growth?');
+        setTimeout(() => setPageTitle('What is exponential growth?'), 100);
         break;
       case 'doublinginit':
-        setPageTitle('Week 1');
+        setTimeout(() => setPageTitle('Week 1'), 100);
         break;
       default:
-        setPageTitle('What is exponential growth?');
+        setTimeout(() => setPageTitle('What is exponential growth?'), 100);
     }
   }, [props]);
 
@@ -216,7 +220,7 @@ export default props => {
   return (
     <div className={styles.root}>
       <canvas className={styles.canvas} ref={canvasEl} />
-      <h1>{pageTitle}</h1>
+      <Fade>{pageTitle ? <h1>{pageTitle}</h1> : ''}</Fade>
     </div>
   );
 };
