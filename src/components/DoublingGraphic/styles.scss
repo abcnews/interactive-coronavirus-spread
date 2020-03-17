@@ -1,0 +1,35 @@
+.root {
+  background: #f3fcfc;
+  text-align: center;
+  height: 100vh;
+  color: #3e494c;
+  padding-top: 5vh;
+
+  h1 {
+    text-align: center;
+  }
+}
+
+.svg {
+  width: 300px;
+  height: 150px;
+}
+
+.canvas {
+  display: block;
+  position: absolute;
+  pointer-events: none;
+}
+
+.heading {
+  > div {
+    text-align: center;
+    width: unset;
+  }
+}
+
+// :global {
+//   body {
+//     margin: 0;
+//   }
+// }

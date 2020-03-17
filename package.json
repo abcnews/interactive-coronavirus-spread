@@ -21,7 +21,9 @@
   "dependencies": {
     "@abcnews/scrollyteller": "^2.2.1",
     "d3": "^5.15.0",
+    "d3-selection": "^1.4.1",
     "react": "^16.13.0",
-    "react-dom": "^16.13.0"
+    "react-dom": "^16.13.0",
+    "react-reveal": "^1.2.2"
   }
 }

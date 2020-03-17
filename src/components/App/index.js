@@ -3,6 +3,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { PRESETS } from '../../constants';
 import CasesGraphic from '../CasesGraphic';
 import DoublingGraphic from '../DoublingGraphic';
+import Placeholder from "../TestComponent";
 import styles from './styles.css';
 
 export default ({ scrollyData, countryTotals }) => {
@@ -14,14 +15,20 @@ export default ({ scrollyData, countryTotals }) => {
     setPreset(preset);
   }, []);
 
-  let { graphic, ...graphicProps } = PRESETS[preset];
   let Graphic;
+  let graphicProps = {}
 
-  if (graphic === 'cases') {
-    Graphic = CasesGraphic;
-    graphicProps.countryTotals = countryTotals;
-  } else if (graphic === 'doubling') {
-    Graphic = DoublingGraphic;
+  if (typeof PRESETS[preset] === 'undefined') {
+    Graphic = Placeholder;
+  } else {
+    let { graphic, ...graphicProps } = PRESETS[preset];
+
+    if (graphic === 'cases') {
+      Graphic = CasesGraphic;
+      graphicProps.countryTotals = countryTotals;
+    } else if (graphic === 'doubling') {
+      Graphic = DoublingGraphic;
+    }
   }
 
   return (

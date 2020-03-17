@@ -11,7 +11,12 @@ export const PRESETS = {
     booms: 10
   },
   doubling: {
-    graphic: 'doubling'
+    graphic: 'doubling',
+    marker: 'doubling'
+  },
+  doublinginit: {
+    graphic: 'doubling',
+    marker: 'doublinginit'
   },
   logarithmic: {
     graphic: 'cases',
