@@ -43,5 +43,5 @@ export default props => {
     // TODO: update the SVG
   }
 
-  return <div className={styles.root} ref={root} />;
+  return <div className={styles.root} ref={root}><p>YOU NEED TO POPULATE constants.js with the PRESET name...</p></div>;
 };
