@@ -1,7 +1,22 @@
 export const DATA_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/data.json';
 export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/country-totals.json';
+export const AFTER_100_CASES_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/after-100-cases.json';
 
-const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Singapore', 'South Korea', 'UK', 'US'];
+export const KEY_COUNTRIES = [
+  'Australia',
+  'China',
+  'Italy',
+  'Singapore',
+  'South Korea',
+  'United Kingdom',
+  'United States'
+];
+
+export const ABBREVIATIONS = {
+  Australia: 'Aus',
+  'United Kingdom': 'UK',
+  'United States': 'US'
+};
 
 export const PRESETS = {
   initial: {
