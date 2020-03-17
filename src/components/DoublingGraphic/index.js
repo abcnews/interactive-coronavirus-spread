@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useLayoutEffect } from 'react';
 const d3 = { ...require('d3-selection'), ...require('d3-force') };
 
 import scaleCanvas from './scaleCanvas';
-
 import styles from './styles.scss';
 
 const ANIMATION_TICK_LIMIT = 11000;
@@ -110,6 +109,7 @@ export default props => {
   const el = useRef(null);
 
   useLayoutEffect(() => {
+    console.log('Mounting D3 vis...');
     // Add the canvas element to the page
     canvas = d3
       .select(el.current)
@@ -129,17 +129,18 @@ export default props => {
     // for (let i = 0; i < 128; i++) {
     //   simulation.tick();
     // }
-    simulation.nodes([]).stop();
+    // simulation.nodes([]).stop();
 
     // render();
     // Additional nodes
-    startTime = false;
-    ticks = 0;
+    // startTime = false;
+    // ticks = 0;
 
-    let count = requestAnimationFrame(t => animate(t, nodesToAdd));
+    // let count = requestAnimationFrame(t => animate(t, nodesToAdd));
 
-    // Unload these otherwise browser gets bogged down
+    // Run on unmount
     return () => {
+      console.log('Unmounting doubling vis...');
       // canvas = null;
       // ctx = null;
       // simulation = null;
@@ -149,48 +150,52 @@ export default props => {
   }, []);
 
   useEffect(() => {
-    if (props.marker === 'doubling') {
-      simulation.nodes([]).stop();
-      return;
-    }
 
-    // Reset animation timers
-    startTime = false;
-    ticks = 0;
+  }, [props])
 
-    for (let i = 0; i < 16; i++) {
-      nodesToAdd.push({
-        groupName: 'one',
-        x: width * 0.25, //centerX,
-        y: centerY, //height * 0.25,
-        delay: Math.random() * duration,
-        targetX: width * 0.25,
-        targetY: height * 0.5
-      });
-    }
+  // useEffect(() => {
+  //   if (props.marker === 'doubling') {
+  //     simulation.nodes([]).stop();
+  //     return;
+  //   }
 
-    for (let i = 0; i < 128; i++) {
-      nodesToAdd.push({
-        groupName: 'two',
-        x: width * 0.5, //centerX,
-        y: centerY, //height * 0.5,
-        delay: Math.random() * duration,
-        targetX: centerX,
-        targetY: height * 0.5
-      });
-    }
+  //   // Reset animation timers
+  //   startTime = false;
+  //   ticks = 0;
 
-    for (let i = 0; i < 645; i++) {
-      nodesToAdd.push({
-        groupName: 'three',
-        x: width * 0.75, //centerX,
-        y: centerY, //height * 0.75,
-        delay: Math.random() * duration,
-        targetX: width * 0.75, //centerX,
-        targetY: height * 0.5
-      });
-    }
-  }, [props.marker]);
+  //   for (let i = 0; i < 16; i++) {
+  //     nodesToAdd.push({
+  //       groupName: 'one',
+  //       x: width * 0.25, //centerX,
+  //       y: centerY, //height * 0.25,
+  //       delay: Math.random() * duration,
+  //       targetX: width * 0.25,
+  //       targetY: height * 0.5
+  //     });
+  //   }
+
+  //   for (let i = 0; i < 128; i++) {
+  //     nodesToAdd.push({
+  //       groupName: 'two',
+  //       x: width * 0.5, //centerX,
+  //       y: centerY, //height * 0.5,
+  //       delay: Math.random() * duration,
+  //       targetX: centerX,
+  //       targetY: height * 0.5
+  //     });
+  //   }
+
+  //   for (let i = 0; i < 645; i++) {
+  //     nodesToAdd.push({
+  //       groupName: 'three',
+  //       x: width * 0.75, //centerX,
+  //       y: centerY, //height * 0.75,
+  //       delay: Math.random() * duration,
+  //       targetX: width * 0.75, //centerX,
+  //       targetY: height * 0.5
+  //     });
+  //   }
+  // }, [props.marker]);
 
   return (
     <div className={styles.root}>
