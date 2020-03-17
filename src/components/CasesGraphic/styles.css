@@ -7,6 +7,16 @@
   height: calc(100% - 2rem);
   max-width: 64rem;
   max-height: 48rem;
+  animation: enter 0.5s;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .svg {

@@ -3,6 +3,19 @@
   --bg: #f3fcfc;
 }
 
+html {
+  transition: background-color 0.25s;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .root {
   display: flex;
   flex-direction: column;
