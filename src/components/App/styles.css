@@ -1,3 +1,8 @@
+/* Odyssey theming */
+:root {
+  --bg: #f3fcfc;
+}
+
 .root {
   display: flex;
   flex-direction: column;
