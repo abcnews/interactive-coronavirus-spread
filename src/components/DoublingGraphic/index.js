@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 const d3 = { ...require('d3-selection'), ...require('d3-force') };
 
 import scaleCanvas from './scaleCanvas';
@@ -109,7 +109,7 @@ animate = (time, nodesToAdd) => {
 export default props => {
   const el = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Add the canvas element to the page
     canvas = d3
       .select(el.current)
