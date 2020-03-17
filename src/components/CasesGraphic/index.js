@@ -18,13 +18,14 @@ import styles from './styles.css';
 const REM = 16;
 const MARGIN = {
   top: 2 * REM,
+  // top: 3 * REM,
   right: 5 * REM,
   bottom: 3 * REM,
   left: 2 * REM
 };
 const TICK_VALUES = {
-  linear: [1e3, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5],
-  logarithmic: [1e3, 1e4, 1e5]
+  linear: [0, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5],
+  logarithmic: [1e2, 1e3, 1e4, 1e5]
 };
 const TRANSITION_DURATION = 1000;
 const X_SCALE_TYPES = ['dates', 'days'];
@@ -130,7 +131,7 @@ export default class CasesGraphic extends Component {
     ).range([chartHeight, 0]);
 
     const xAxisGenerator =
-      xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale).ticks(5);
+      xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale);
 
     svg
       .select(`.${styles.xAxis}`)
@@ -140,7 +141,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : 'Days since 100 cases');
+      .text(xScaleType === 'dates' ? 'Date' : 'Days since the 100th case');
 
     const yAxisGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType])
@@ -156,7 +157,12 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
-      .text('Number of cases');
+      .text('Cumulative number of cases');
+    // .html(
+    //   yScaleType === 'linear'
+    //     ? 'Cumulative number of cases'
+    //     : `<tspan x="0" dy="-0.875em">Cumulative number of</tspan><tspan x="0" dy="1.25em">casessince the 100th case</tspan>`
+    // );
 
     const yAxisGridlinesGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType])

@@ -8,16 +8,37 @@
 
 .svg {
   display: block;
-}
-
-.svg text {
+  color: #5c6c70;
   font-family: 'ABCSans', sans-serif;
 }
 
-.xAxis,
-.yAxis {
-  fill: none;
+.svg line {
+  stroke: #e4e6e7;
+}
+
+.svg path {
+  stroke: #5c6c70;
+}
+
+.xAxis text,
+.yAxis text {
+  font-weight: bold;
+}
+
+.xAxis path,
+.yAxis path,
+.yAxisGridlines path {
   shape-rendering: crispEdges;
+  stroke: none;
+}
+
+.yAxisGridlines line {
+  shape-rendering: crispEdges;
+}
+
+.xAxisLabel,
+.yAxisLabel {
+  font-family: 'ABCSerif', sans-serif;
 }
 
 .xAxisLabel {
@@ -26,17 +47,6 @@
 
 .yAxisLabel {
   text-anchor: start;
-}
-
-.yAxisGridlines line {
-  shape-rendering: crispEdges;
-  stroke: #999;
-  stroke-dasharray: 3 3;
-  stroke-opacity: 0.6;
-}
-
-.yAxisGridlines path {
-  stroke-width: 0;
 }
 
 .grid {
