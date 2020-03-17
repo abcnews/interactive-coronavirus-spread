@@ -14,7 +14,7 @@ export default ({ scrollyData, countryTotals }) => {
     setPreset(preset);
   }, []);
 
-  let { graphic, ...graphicProps } = PRESETS[preset];
+  let { graphic, ...graphicProps } = PRESETS[preset] || {};
   let Graphic;
 
   if (graphic === 'cases') {

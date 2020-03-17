@@ -1,17 +1,55 @@
 .root {
-  background: yellow;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: calc(100% - 2rem);
+  height: calc(100% - 2rem);
 }
 
 .svg {
   display: block;
-  width: 300px;
-  height: 150px;
 }
 
-.xAxis {
-  fill: red;
+.svg text {
+  font-family: 'ABCSans', sans-serif;
 }
 
+.xAxis,
 .yAxis {
-  fill: blue;
+  fill: none;
+  shape-rendering: crispEdges;
+}
+
+.xAxisLabel {
+  text-anchor: middle;
+}
+
+.yAxisLabel {
+  text-anchor: start;
+}
+
+.yAxisGridlines line {
+  shape-rendering: crispEdges;
+  stroke: #999;
+  stroke-dasharray: 3 3;
+  stroke-opacity: 0.6;
+}
+
+.yAxisGridlines path {
+  stroke-width: 0;
+}
+
+.grid {
+  fill: none;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.line.focused {
+  stroke-width: 3;
 }

@@ -4,17 +4,20 @@ export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/
 export const PRESETS = {
   initial: {
     graphic: 'cases',
-    booms: 1
+    xScaleType: 'dates',
+    yScaleType: 'linear'
   },
   hundred: {
     graphic: 'cases',
-    booms: 10
+    xScaleType: 'days',
+    yScaleType: 'linear'
   },
   doubling: {
     graphic: 'doubling'
   },
   logarithmic: {
     graphic: 'cases',
-    booms: 100
+    xScaleType: 'days',
+    yScaleType: 'logarithmic'
   }
 };
