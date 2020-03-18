@@ -20,6 +20,7 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     countries: true,
+    highlightedCountries: KEY_COUNTRIES,
     trends: false
   },
   china: {
@@ -35,6 +36,7 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     countries: true,
+    highlightedCountries: KEY_COUNTRIES,
     trends: true
   },
   key: {

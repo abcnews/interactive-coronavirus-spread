@@ -2,6 +2,9 @@ import {
   axisBottom,
   axisLeft,
   curveMonotoneX,
+  forceCollide,
+  forceSimulation,
+  forceY,
   format,
   line,
   range,
@@ -23,6 +26,7 @@ const MARGIN = {
   bottom: 3 * REM,
   left: 2 * REM
 };
+const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
   linear: [0, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5],
   logarithmic: [1e2, 1e3, 1e4, 1e5]
@@ -78,7 +82,6 @@ export default class CasesGraphic extends Component {
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => last(a.dailyTotals).cases - last(b.dailyTotals).cases)
       .sort((a, b) => (KEY_COUNTRIES.indexOf(a.key) > -1 ? -1 : 1));
-    // console.debug(this.countriesData);
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
 
@@ -142,40 +145,74 @@ export default class CasesGraphic extends Component {
 
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
-
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-
-    const svg = select(this.svgRef.current)
-      .attr('width', width)
-      .attr('height', height);
-
+    const visibleCountriesData = this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1);
+    const xPropName = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
       : scaleLinear().domain([0, this.mostDaysSince100Cases])
     ).range([0, chartWidth]);
-
     const yScale = (yScaleType === 'logarithmic' ? scaleLog().nice() : scaleLinear())
       .domain([100, Math.ceil(this.mostCases / 1e5) * 1e5])
       .range([chartHeight, 0]);
+    const getDataCollection = d => d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'];
+    const generateLinePath = d =>
+      line()
+        .x(d => xScale(d[xPropName]))
+        .y(d => yScale(d.cases))(getDataCollection(d));
+    const generatePlotPointTransform = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
+    const generateLineEndTransform = d => generatePlotPointTransform(last(getDataCollection(d)));
+    const plotLabelForceClamp = (min, max) => {
+      let forceNodes;
 
+      const force = () => {
+        forceNodes.forEach(n => {
+          if (n.y > max) {
+            n.y = max;
+          }
+
+          if (n.y < min) {
+            n.y = min;
+          }
+        });
+      };
+
+      force.initialize = _ => (forceNodes = _);
+
+      return force;
+    };
+    const isHighlighted = d =>
+      highlightedCountries === true ||
+      (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
     const xAxisGenerator =
       xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale);
+    const yAxisGenerator = axisLeft(yScale)
+      .tickValues(TICK_VALUES[yScaleType])
+      .tickFormat(format(',.1s'));
+    const yAxisGridlinesGenerator = axisLeft(yScale)
+      .tickValues(TICK_VALUES[yScaleType])
+      .tickSize(-chartWidth)
+      .tickFormat('');
 
+    // Rendering > 1: Update SVG dimensions
+    const svg = select(this.svgRef.current)
+      .attr('width', width)
+      .attr('height', height);
+
+    // Rendering > 2: Add/update x-axis
     svg
       .select(`.${styles.xAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top + chartHeight})`)
       .call(xAxisGenerator);
 
+    // Rendering > 3: Update x-axis label
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
       .text(xScaleType === 'dates' ? 'Date' : 'Number of days since the 100th case');
 
-    const yAxisGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType])
-      .tickFormat(format(',.1s'));
-
+    // Rendering > 4: Add/update y-axis
     svg
       .select(`.${styles.yAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -183,6 +220,7 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGenerator);
 
+    // Rendering > 5. Update y-axis label
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
@@ -192,11 +230,7 @@ export default class CasesGraphic extends Component {
           : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
       );
 
-    const yAxisGridlinesGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType])
-      .tickSize(-chartWidth)
-      .tickFormat('');
-
+    // Rendering > 6. Add/Update y-axis gridlines
     svg
       .select(`.${styles.yAxisGridlines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -204,36 +238,13 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
-    const plot = svg.select(`.${styles.plot}`).attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`);
-
-    const getDataCollection = d => d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'];
-    const getYPropName = d => (xScaleType === 'dates' ? 'date' : 'day');
-
-    const generateLinePath = d =>
-      line()
-        // .curve(curveMonotoneX)
-        .x(d => xScale(d[getYPropName(d)]))
-        .y(d => yScale(d.cases))(getDataCollection(d));
-
-    const generateLineEndTransform = d => {
-      const dataCollection = getDataCollection(d);
-      const yPropName = getYPropName(d);
-
-      return `translate(${xScale(last(dataCollection)[yPropName])}, ${yScale(last(dataCollection).cases)})`;
-    };
-
-    const isHighlighted = d =>
-      highlightedCountries === true ||
-      (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
-
-    // Bind (plot lines)
-    const plotLines = plot
+    // Rendering > 7. Add/remove/update plot lines
+    const plotLines = svg // Bind
       .select(`.${styles.plotLines}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotLine}`)
-      .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
-
-    // Enter (plot lines)
-    const plotLinesEnter = plotLines
+      .data(visibleCountriesData);
+    const plotLinesEnter = plotLines // Enter
       .enter()
       .append('path')
       .attr('data-country', d => d.key)
@@ -244,14 +255,11 @@ export default class CasesGraphic extends Component {
       .transition()
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
-
-    // Update (plot lines)
-    plotLines
+    plotLines // Update
       .classed(styles.highlighted, isHighlighted)
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-
       .attrTween('d', function(d) {
         const currentPath = generateLinePath(d);
 
@@ -260,23 +268,20 @@ export default class CasesGraphic extends Component {
 
         return interpolatePath(previousPath, currentPath);
       });
-
-    // Exit (plot lines)
-    plotLines
+    plotLines // Exit
       .exit()
       .transition()
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', 0)
       .remove();
 
-    // Bind (plot dots)
-    const plotDots = plot
+    // Rendering > 8. Add/remove/update plot dots (at ends of lines)
+    const plotDots = svg // Bind
       .select(`.${styles.plotDots}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotDot}`)
-      .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
-
-    // Enter (plot dots)
-    const plotDotsEnter = plotDots
+      .data(visibleCountriesData);
+    const plotDotsEnter = plotDots // Enter
       .enter()
       .append('circle')
       .attr('data-country', d => d.key)
@@ -288,23 +293,76 @@ export default class CasesGraphic extends Component {
       .transition()
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
-
-    // Update (plot dots)
-    plotDots
+    plotDots // Update
       .classed(styles.highlighted, isHighlighted)
       .style('fill-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
       .attr('transform', generateLineEndTransform);
-
-    // Exit (plot dots)
-    plotDots
+    plotDots // Exit
       .exit()
       .transition()
       .duration(opacityTransitionDuration)
       .style('fill-opacity', 0)
       .remove();
 
+    // Rendering > 9. Add/remove/update plot labels (near ends of lines)
+    const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
+    const plotLabelForceNodes = labelledCountriesData.map(d => {
+      return {
+        fx: 0,
+        targetY: yScale(last(getDataCollection(d)).cases)
+      };
+    });
+    const plotLabelsForceSimulation = forceSimulation()
+      .nodes(plotLabelForceNodes)
+      .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
+      .force('y', forceY(d => d.targetY).strength(1))
+      .force('clamp', plotLabelForceClamp(0, chartHeight))
+      .stop();
+    for (let i = 0; i < 300; i++) {
+      plotLabelsForceSimulation.tick();
+    }
+    const plotLabelsData = labelledCountriesData.map((d, i) => ({
+      key: d.key,
+      // text: ABBREVIATIONS[d.key] || ALIASES[d.key] || d.key,
+      text: ALIASES[d.key] || d.key,
+      x: 6 + xScale(last(getDataCollection(d))[xPropName]),
+      y: plotLabelForceNodes[i].y
+    }));
+    const plotLabels = svg // Bind
+      .select(`.${styles.plotLabels}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
+      .selectAll(`.${styles.plotLabel}`)
+      .data(plotLabelsData);
+    const plotLabelsEnter = plotLabels // Enter
+      .enter()
+      .append('text')
+      .attr('data-country', d => d.key)
+      .classed(styles.plotLabel, true)
+      .classed(styles.highlighted, isHighlighted)
+      .attr('alignment-baseline', 'middle')
+      .text(d => d.text)
+      .attr('transform', d => `translate(${d.x}, ${d.y})`)
+      .style('fill-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', null);
+    plotLabels // Update
+      .classed(styles.highlighted, isHighlighted)
+      .style('fill-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+    plotLabels // Exit
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', 0)
+      .remove();
+
+    // Finally, stop React from updating the component (we've managed everything above)
     return false;
   }
 
@@ -317,14 +375,13 @@ export default class CasesGraphic extends Component {
       <div ref={this.rootRef} className={styles.root}>
         <svg ref={this.svgRef} className={styles.svg}>
           <g className={styles.yAxisGridlines} />
-          <g className={styles.plot}>
-            <g className={styles.plotLines} />
-            <g className={styles.plotDots} />
-          </g>
+          <g className={styles.plotLines} />
+          <g className={styles.plotDots} />
           <g className={styles.xAxis} />
           <text className={styles.xAxisLabel} />
           <g className={styles.yAxis} />
           <text className={styles.yAxisLabel} />
+          <g className={styles.plotLabels} />
         </svg>
       </div>
     );

@@ -52,6 +52,14 @@
 .yAxis path,
 .yAxisGridlines path {
   shape-rendering: crispEdges;
+}
+
+.xAxis path {
+  color: #e4e6e7;
+}
+
+.yAxis path,
+.yAxisGridlines path {
   stroke: none;
 }
 
@@ -100,14 +108,38 @@
 .plotDot {
   color: #5c6c70;
   fill: currentColor;
+  fill-opacity: 0.67;
   stroke: currentColor;
-  stroke-opacity: 0.5;
+  stroke-opacity: 0.67;
   stroke-width: 0;
 }
 
 .plotDot.highlighted {
+  fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 2;
+}
+
+.plotLabels {
+  fill: none;
+}
+
+.plotLabel {
+  color: #5c6c70;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  stroke: var(--bg);
+  stroke-opacity: 0.5;
+  stroke-width: 2;
+  paint-order: stroke;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.025em;
+}
+
+.plotLabel.highlighted {
+  fill-opacity: 1;
+  stroke-opacity: 1;
 }
 
 path.plotLine[data-country='Australia'],
@@ -143,4 +175,32 @@ circle.plotDot[data-country='United Kingdom'] {
 path.plotLine[data-country='US'],
 circle.plotDot[data-country='US'] {
   color: #248bc9;
+}
+
+text.plotLabel[data-country='Australia'] {
+  color: #000000;
+}
+
+text.plotLabel[data-country='China'] {
+  color: #00826a;
+}
+
+text.plotLabel[data-country='Italy'] {
+  color: #cf4200;
+}
+
+text.plotLabel[data-country='Singapore'] {
+  color: #047ca5;
+}
+
+text.plotLabel[data-country='Korea, South'] {
+  color: #7462cc;
+}
+
+text.plotLabel[data-country='United Kingdom'] {
+  color: #e01b3f;
+}
+
+text.plotLabel[data-country='US'] {
+  color: #2079b0;
 }
