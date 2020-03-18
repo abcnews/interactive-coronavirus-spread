@@ -290,12 +290,15 @@ export default class CasesGraphic extends Component {
       .attr('r', 2)
       .attr('transform', generateLineEndTransform)
       .style('fill-opacity', 0)
+      .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
-      .style('fill-opacity', null);
+      .style('fill-opacity', null)
+      .style('stroke-opacity', null);
     plotDots // Update
       .classed(styles.highlighted, isHighlighted)
       .style('fill-opacity', null)
+      .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
       .attr('transform', generateLineEndTransform);
@@ -304,6 +307,7 @@ export default class CasesGraphic extends Component {
       .transition()
       .duration(opacityTransitionDuration)
       .style('fill-opacity', 0)
+      .style('stroke-opacity', 0)
       .remove();
 
     // Rendering > 9. Add/remove/update plot labels (near ends of lines)
