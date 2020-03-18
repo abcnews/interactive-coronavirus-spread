@@ -33,6 +33,16 @@
   stroke: #5c6c70;
 }
 
+.xAxis,
+.yAxis {
+  fill: none;
+}
+
+.xAxis :global(.domain),
+.yAxis :global(.domain) {
+  fill: var(--bg);
+}
+
 .xAxis text,
 .yAxis text {
   font-weight: bold;
@@ -63,6 +73,10 @@
 }
 
 .plot {
+  fill: none;
+}
+
+.plotLines {
   fill: none;
 }
 

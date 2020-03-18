@@ -216,6 +216,7 @@ export default class CasesGraphic extends Component {
 
     // Bind
     const plotLines = plot
+      .select(`.${styles.plotLines}`)
       .selectAll(`.${styles.plotLine}`)
       .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
 
@@ -267,12 +268,14 @@ export default class CasesGraphic extends Component {
     return (
       <div ref={this.rootRef} className={styles.root}>
         <svg ref={this.svgRef} className={styles.svg}>
+          <g className={styles.yAxisGridlines} />
+          <g className={styles.plot}>
+            <g className={styles.plotLines} />
+          </g>
           <g className={styles.xAxis} />
           <text className={styles.xAxisLabel} />
           <g className={styles.yAxis} />
           <text className={styles.yAxisLabel} />
-          <g className={styles.yAxisGridlines} />
-          <g className={styles.plot} />
         </svg>
       </div>
     );
