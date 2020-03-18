@@ -26,11 +26,11 @@
 }
 
 .svg line {
-  stroke: #e4e6e7;
+  color: #e4e6e7;
 }
 
 .svg path {
-  stroke: #5c6c70;
+  color: #5c6c70;
 }
 
 .xAxis,
@@ -82,38 +82,65 @@
 
 .plotLine {
   fill: none;
+  stroke: currentColor;
+  stroke-opacity: 0.5;
   stroke-width: 1;
   stroke-linejoin: round;
 }
 
 .plotLine.highlighted {
+  stroke-opacity: 1;
   stroke-width: 3;
 }
 
-path.plotLine[data-country='Australia'] {
-  stroke: #000000;
+.plotDots {
+  fill: none;
 }
 
-path.plotLine[data-country='China'] {
-  stroke: #00b395;
+.plotDot {
+  color: #5c6c70;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-opacity: 0.5;
+  stroke-width: 0;
 }
 
-path.plotLine[data-country='Italy'] {
-  stroke: #ff6100;
+.plotDot.highlighted {
+  stroke-opacity: 1;
+  stroke-width: 2;
 }
 
-path.plotLine[data-country='Singapore'] {
-  stroke: #01cfff;
+path.plotLine[data-country='Australia'],
+circle.plotDot[data-country='Australia'] {
+  color: #000000;
 }
 
-path.plotLine[data-country='Korea, South'] {
-  stroke: #8272d6;
+path.plotLine[data-country='China'],
+circle.plotDot[data-country='China'] {
+  color: #00b395;
 }
 
-path.plotLine[data-country='United Kingdom'] {
-  stroke: #ea526f;
+path.plotLine[data-country='Italy'],
+circle.plotDot[data-country='Italy'] {
+  color: #ff6100;
 }
 
-path.plotLine[data-country='US'] {
-  stroke: #248bc9;
+path.plotLine[data-country='Singapore'],
+circle.plotDot[data-country='Singapore'] {
+  color: #01cfff;
+}
+
+path.plotLine[data-country='Korea, South'],
+circle.plotDot[data-country='Korea, South'] {
+  color: #8272d6;
+}
+
+path.plotLine[data-country='United Kingdom'],
+circle.plotDot[data-country='United Kingdom'] {
+  color: #ea526f;
+}
+
+path.plotLine[data-country='US'],
+circle.plotDot[data-country='US'] {
+  color: #248bc9;
 }

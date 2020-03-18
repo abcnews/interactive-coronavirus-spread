@@ -34,6 +34,8 @@ const TRANSITION_DURATIONS = {
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 
+const last = x => x[x.length - 1];
+
 function checkScaleTypes(xScaleType, yScaleType) {
   if (X_SCALE_TYPES.indexOf(xScaleType) === -1) {
     throw new Error(`Unrecognised xScaleType: ${xScaleType}`);
@@ -62,19 +64,19 @@ export default class CasesGraphic extends Component {
         const dailyTotals = Object.keys(countryTotals[country])
           .map(date => ({
             date: new Date(date),
-            value: countryTotals[country][date]
+            cases: countryTotals[country][date]
           }))
-          .filter(({ value }) => value >= 1);
-        // .filter(({ value }) => value >= 100);
+          .filter(({ cases }) => cases >= 1);
+        // .filter(({ cases }) => cases >= 100);
         const daysSince100CasesTotals = dailyTotals
-          .filter(({ value }) => value >= 100)
-          .map(({ value }, index) => ({ day: index, value }));
+          .filter(({ cases }) => cases >= 100)
+          .map(({ cases }, index) => ({ day: index, cases }));
 
         return { key: country, dailyTotals, daysSince100CasesTotals };
       })
       // .filter(d => d.dailyTotals.length > 0)
       .filter(d => d.daysSince100CasesTotals.length > 0)
-      .sort((a, b) => a.dailyTotals[a.dailyTotals.length - 1].value - b.dailyTotals[b.dailyTotals.length - 1].value)
+      .sort((a, b) => last(a.dailyTotals).cases - last(b.dailyTotals).cases)
       .sort((a, b) => (KEY_COUNTRIES.indexOf(a.key) > -1 ? -1 : 1));
     // console.debug(this.countriesData);
     this.earliestDate = this.countriesData.reduce((memo, d) => {
@@ -87,19 +89,19 @@ export default class CasesGraphic extends Component {
       return memo;
     }, this.countriesData[0].dailyTotals[0].date);
     this.latestDate = this.countriesData.reduce((memo, d) => {
-      const candidate = d.dailyTotals[d.dailyTotals.length - 1].date;
+      const candidate = last(d.dailyTotals).date;
 
       if (new Date(candidate) < new Date(memo)) {
         return candidate;
       }
 
       return memo;
-    }, this.countriesData[0].dailyTotals[this.countriesData[0].dailyTotals.length - 1].date);
+    }, last(this.countriesData[0].dailyTotals).date);
     this.mostDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(memo, d.dailyTotals.length - 1);
     }, 0);
     this.mostCases = this.countriesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.value)));
+      return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.cases)));
     }, 0);
 
     this.state = {
@@ -204,23 +206,33 @@ export default class CasesGraphic extends Component {
 
     const plot = svg.select(`.${styles.plot}`).attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`);
 
+    const getDataCollection = d => d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'];
+    const getYPropName = d => (xScaleType === 'dates' ? 'date' : 'day');
+
     const generateLinePath = d =>
       line()
         // .curve(curveMonotoneX)
-        .x(d => xScale(d[xScaleType === 'dates' ? 'date' : 'day']))
-        .y(d => yScale(d.value))(d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals']);
+        .x(d => xScale(d[getYPropName(d)]))
+        .y(d => yScale(d.cases))(getDataCollection(d));
+
+    const generateLineEndTransform = d => {
+      const dataCollection = getDataCollection(d);
+      const yPropName = getYPropName(d);
+
+      return `translate(${xScale(last(dataCollection)[yPropName])}, ${yScale(last(dataCollection).cases)})`;
+    };
 
     const isHighlighted = d =>
       highlightedCountries === true ||
       (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
 
-    // Bind
+    // Bind (plot lines)
     const plotLines = plot
       .select(`.${styles.plotLines}`)
       .selectAll(`.${styles.plotLine}`)
       .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
 
-    // Enter
+    // Enter (plot lines)
     const plotLinesEnter = plotLines
       .enter()
       .append('path')
@@ -231,12 +243,12 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
-      .style('stroke-opacity', 1);
+      .style('stroke-opacity', null);
 
-    // Update
+    // Update (plot lines)
     plotLines
       .classed(styles.highlighted, isHighlighted)
-      .style('stroke-opacity', 1)
+      .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
 
@@ -249,12 +261,48 @@ export default class CasesGraphic extends Component {
         return interpolatePath(previousPath, currentPath);
       });
 
-    // Exit
+    // Exit (plot lines)
     plotLines
       .exit()
       .transition()
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', 0)
+      .remove();
+
+    // Bind (plot dots)
+    const plotDots = plot
+      .select(`.${styles.plotDots}`)
+      .selectAll(`.${styles.plotDot}`)
+      .data(this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1));
+
+    // Enter (plot dots)
+    const plotDotsEnter = plotDots
+      .enter()
+      .append('circle')
+      .attr('data-country', d => d.key)
+      .classed(styles.plotDot, true)
+      .classed(styles.highlighted, isHighlighted)
+      .attr('r', 2)
+      .attr('transform', generateLineEndTransform)
+      .style('fill-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', null);
+
+    // Update (plot dots)
+    plotDots
+      .classed(styles.highlighted, isHighlighted)
+      .style('fill-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attr('transform', generateLineEndTransform);
+
+    // Exit (plot dots)
+    plotDots
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', 0)
       .remove();
 
     return false;
@@ -271,6 +319,7 @@ export default class CasesGraphic extends Component {
           <g className={styles.yAxisGridlines} />
           <g className={styles.plot}>
             <g className={styles.plotLines} />
+            <g className={styles.plotDots} />
           </g>
           <g className={styles.xAxis} />
           <text className={styles.xAxisLabel} />
