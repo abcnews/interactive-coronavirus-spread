@@ -19,93 +19,13 @@ let height = window.innerHeight;
 let centerX = width / 2;
 let centerY = height / 2;
 
-const nodes = [];
-const nodesToAdd = [];
+let nodes = [];
+let nodesToAdd = [];
 const duration = 10000; // In milliseconds
 
 let ticks = 0;
 let startTime = false;
 let animReqId = null;
-
-// Setup our physics
-// simulation = d3
-//   .forceSimulation([])
-//   .force(
-//     'x',
-//     d3
-//       .forceX()
-//       .strength(0.6)
-//       .x(d => d.targetX)
-//   )
-//   .force(
-//     'y',
-//     d3
-//       .forceY()
-//       .strength(0.6)
-//       .y(d => d.targetY)
-//   )
-//   .force(
-//     'charge',
-//     d3
-//       .forceManyBody()
-//       .strength(-20)
-//       .theta(0.1)
-//   )
-//   .alpha(1)
-//   .alphaDecay(0.2)
-//   .alphaMin(0.001)
-//   .velocityDecay(0.7)
-//   .stop();
-
-// Function that paints to canvas
-// render = () => {
-//   const nodes = simulation.nodes();
-//   ctx.clearRect(0, 0, width, height);
-
-//   for (let i = 0; i < nodes.length; i++) {
-//     const node = nodes[i];
-
-//     ctx.beginPath();
-//     ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
-//     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-//     ctx.fill();
-//   }
-
-//   return nodes;
-// };
-
-// Animation frame
-// animate = (time, nodesToAdd) => {
-//   if (!startTime) {
-//     startTime = time;
-//   }
-
-//   const progress = time - startTime;
-//   const nodes = render();
-//   const newNodes = [];
-
-//   for (let i = 0; i < nodesToAdd.length; i++) {
-//     const node = nodesToAdd[i];
-//     if (node.delay < progress) {
-//       newNodes.push(node);
-//       nodesToAdd.splice(i, 1);
-//       i--;
-//     }
-//   }
-
-//   simulation
-//     .nodes(nodes.concat(newNodes))
-//     .alpha(1)
-//     .tick();
-
-//   ticks++;
-
-//   if (ticks < ANIMATION_TICK_LIMIT || nodesToAdd.length > 0) {
-//     requestAnimationFrame(t => {
-//       animate(t, nodesToAdd);
-//     });
-//   }
-// };
 
 export default props => {
   // Get a reference to our canvas
@@ -113,10 +33,17 @@ export default props => {
 
   // Set up state
   const [pageTitle, setPageTitle] = useState(null);
+  const [label1Ypos, setLabel1Ypos] = useState(height * 0.25);
+  const [label2Ypos, setLabel2Ypos] = useState(height * 0.5);
+  const [label3Ypos, setLabel3Ypos] = useState(height * 0.75);
 
   useLayoutEffect(() => {
     console.log('Mounting D3 vis...');
     // Add the canvas element to the page
+
+    // Clear any pevious nodes on mount
+    nodes = [];
+
     canvas = d3
       .select(canvasEl.current)
       .attr('width', width)
@@ -128,21 +55,133 @@ export default props => {
     // Fit to retina devices
     scaleCanvas(canvas.node(), ctx, width, height);
 
+    // Setup our physics
+    simulation = d3
+      .forceSimulation([])
+      .force(
+        'x',
+        d3
+          .forceX()
+          .strength(0.6)
+          .x(d => d.targetX)
+      )
+      .force(
+        'y',
+        d3
+          .forceY()
+          .strength(0.6)
+          .y(d => d.targetY)
+      )
+      .force(
+        'charge',
+        d3
+          .forceManyBody()
+          .strength(-20)
+          .theta(0.1)
+      )
+      .alpha(1)
+      .alphaDecay(0.2)
+      .alphaMin(0.001)
+      .velocityDecay(0.7)
+      .stop();
+
+    // Function that paints to canvas
+    render = () => {
+      const nodes = simulation.nodes();
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fill();
+      }
+
+      return nodes;
+    };
+
+    // Animation frame
+    animate = (time, nodesToAdd) => {
+      if (!startTime) {
+        startTime = time;
+      }
+
+      const progress = time - startTime;
+      const nodes = render();
+      const newNodes = [];
+
+      for (let i = 0; i < nodesToAdd.length; i++) {
+        const node = nodesToAdd[i];
+        if (node.delay < progress) {
+          newNodes.push(node);
+          nodesToAdd.splice(i, 1);
+          i--;
+        }
+      }
+
+      simulation
+        .nodes(nodes.concat(newNodes))
+        .alpha(1)
+        .tick();
+
+      ticks++;
+
+      if (ticks < ANIMATION_TICK_LIMIT || nodesToAdd.length > 0) {
+        requestAnimationFrame(t => {
+          animate(t, nodesToAdd);
+        });
+      }
+    };
+
     // Add initial nodes to simulation
-    // simulation.nodes(nodes).stop();
+    for (let i = 0; i < 1; i++) {
+      nodes.push({
+        groupName: 'one',
+        x: centerX,
+        y:  height * 0.25,
+        targetX: centerX,
+        targetY: height * 0.25
+      });
+    }
+
+    for (let i = 0; i < 1; i++) {
+      nodes.push({
+        groupName: 'two',
+        x: centerX,
+        y: centerY,
+        targetX: centerX,
+        targetY: centerY
+      });
+    }
+
+    for (let i = 0; i < 1; i++) {
+      nodes.push({
+        groupName: 'three',
+        x: centerX,
+        y: height * 0.75,
+        targetX: centerX,
+        targetY: height * 0.75
+      });
+    }
+
+    simulation.nodes(nodes).stop();
 
     // Tick over a few to get stable initial state
-    // for (let i = 0; i < 128; i++) {
+    // for (let i = 0; i < 100; i++) {
     //   simulation.tick();
     // }
-    // simulation.nodes([]).stop();
 
-    // render();
-    // Additional nodes
-    // startTime = false;
-    // ticks = 0;
+    render();
 
-    // let count = requestAnimationFrame(t => animate(t, nodesToAdd));
+    
+    startTime = false;
+    ticks = 0;
+
+    
+    let count = requestAnimationFrame(t => animate(t, nodesToAdd));
+    
 
     // Run on unmount
     return () => {
@@ -151,7 +190,12 @@ export default props => {
       // ctx = null;
       // simulation = null;
       // render = null;
-      // animate = null;
+      animate = null;
+
+      // NOTE: THIS CAUSES AN ERROR ON UNMOUNT BECAUSE THE REQUESTANIMATIONFRAME FUNCTION IS
+      // STILL TRYING TO CALL ANIMATE AFTER UNMOUNT BUT THAT'S KINDA GOOD BECAUSE IT MEANS
+      // THAT THE INTERACTIVE STOPS TRYING TO ANIMATE
+      // PLEASE FIX LATER DOWN THE TRACK
     };
   }, []);
 
@@ -166,16 +210,24 @@ export default props => {
         setTimeout(() => setPageTitle('What is exponential growth?'), 100);
         break;
       case 'doublingweek1':
-        setTimeout(() => setPageTitle('Week 1'), 100);
+        setTimeout(() => {
+          setPageTitle('Week 1');
+        }, 100);
         break;
-        case 'doublingweek2':
-        setTimeout(() => setPageTitle('Week 2'), 100);
+      case 'doublingweek2':
+        setTimeout(() => {
+          setPageTitle('Week 2');
+        }, 1);
         break;
-        case 'doublingmonth':
-        setTimeout(() => setPageTitle('1 month'), 100);
+      case 'doublingmonth':
+        setTimeout(() => {
+          setPageTitle('1 month');
+        }, 1);
         break;
       default:
-        setTimeout(() => setPageTitle('What is exponential growth?'), 100);
+        setTimeout(() => {
+          setPageTitle('What is exponential growth?');
+        }, 1);
     }
   }, [props]);
 
@@ -226,7 +278,21 @@ export default props => {
   return (
     <div className={styles.root}>
       <canvas className={styles.canvas} ref={canvasEl} />
-      <Fade>{pageTitle ? <h1>{pageTitle}</h1> : ''}</Fade>
+      <Fade>
+        {pageTitle ? <h1>{pageTitle}</h1> : ''}
+
+        <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
+          <span className={`${styles.background}`}>When the number of cases doubles every week</span>
+        </div>
+
+        <div className={styles.label} style={{ top: `${label2Ypos}px` }}>
+          <span className={`${styles.background}`}>...doubles every 3 days</span>
+        </div>
+
+        <div className={`${styles.label}`} style={{ top: `${label3Ypos}px` }}>
+          <span className={`${styles.background}`}>...doubles every 2 days</span>
+        </div>
+      </Fade>
     </div>
   );
 };

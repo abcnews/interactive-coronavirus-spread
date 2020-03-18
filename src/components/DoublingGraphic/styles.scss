@@ -6,6 +6,8 @@
   padding-top: 5vh;
 
   h1 {
+    font-family: 'ABCSerif', serif;
+    font-weight: bold;
     text-align: center;
   }
 }
@@ -21,11 +23,19 @@
   pointer-events: none;
 }
 
-.heading {
-  > div {
-    text-align: center;
-    width: unset;
-  }
+.label {
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  color: #5d6d71;
+  font-size: 18px;
+}
+
+.background {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 10px;
 }
 
 // :global {
