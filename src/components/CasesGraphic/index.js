@@ -217,7 +217,7 @@ export default class CasesGraphic extends Component {
         .y(d => yScale(d.cases))(getDataCollection(d));
     const generatePlotPointTransform = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
     const generateLineEndTransform = d => generatePlotPointTransform(last(getDataCollection(d)));
-    const plotLabelForceClamp = (min, max) => {
+    const labelForceClamp = (min, max) => {
       let forceNodes;
 
       const force = () => {
@@ -404,7 +404,67 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 10. Add/remove/update plot labels (near ends of lines)
+    // Rendering > 10. Add/remove/update trend labels (near ends of lines)
+    const trendLabelForceNodes = visibleTrendsData.map(d => {
+      const dataCollection = getDataCollection(d);
+      return {
+        fx: 0,
+        // targetY: yScale(last(getDataCollection(d)).cases)
+        targetY: yScale(dataCollection[dataCollection.length - 2].cases)
+      };
+    });
+    const trendLabelsForceSimulation = forceSimulation()
+      .nodes(trendLabelForceNodes)
+      .force('collide', forceCollide(PLOT_LABEL_HEIGHT * 2))
+      .force('y', forceY(d => d.targetY).strength(1))
+      .force('clamp', labelForceClamp(0, chartHeight))
+      .stop();
+    for (let i = 0; i < 300; i++) {
+      trendLabelsForceSimulation.tick();
+    }
+    const trendLabelsData = visibleTrendsData.map((d, i) => ({
+      key: d.key,
+      html: `<tspan>${
+        i === 0
+          ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
+          : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
+      }every ${d.key}</tspan>`,
+      x: 6 + xScale(last(getDataCollection(d))[xPropName]),
+      y: trendLabelForceNodes[i].y
+    }));
+    const trendLabels = svg // Bind
+      .select(`.${styles.trendLabels}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
+      .selectAll(`.${styles.trendLabel}`)
+      .data(trendLabelsData);
+    const trendLabelsEnter = trendLabels // Enter
+      .enter()
+      .append('text')
+      .attr('data-doubling-days', d => d.doublingTimePeriods)
+      .classed(styles.trendLabel, true)
+      .classed(styles.highlighted, isTrendHighlighted)
+      .attr('text-anchor', (d, i) => (i === 0 ? 'end' : 'start'))
+      .attr('alignment-baseline', 'middle')
+      .html(d => d.html)
+      .attr('transform', (d, i) => `translate(${d.x - (i === 0 ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`)
+      .style('fill-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', null);
+    trendLabels // Update
+      .classed(styles.highlighted, isTrendHighlighted)
+      .style('fill-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attr('transform', (d, i) => `translate(${d.x - (i === 0 ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`);
+    trendLabels // Exit
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', 0)
+      .remove();
+
+    // Rendering > 11. Add/remove/update plot labels (near ends of lines)
     const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
     const plotLabelForceNodes = labelledCountriesData.map(d => {
       return {
@@ -416,7 +476,7 @@ export default class CasesGraphic extends Component {
       .nodes(plotLabelForceNodes)
       .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
       .force('y', forceY(d => d.targetY).strength(1))
-      .force('clamp', plotLabelForceClamp(0, chartHeight))
+      .force('clamp', labelForceClamp(0, chartHeight))
       .stop();
     for (let i = 0; i < 300; i++) {
       plotLabelsForceSimulation.tick();
@@ -452,7 +512,6 @@ export default class CasesGraphic extends Component {
       .transition()
       .duration(transformTransitionDuration)
       .attr('transform', d => `translate(${d.x}, ${d.y})`);
-
     plotLabels // Exit
       .exit()
       .transition()
@@ -480,6 +539,7 @@ export default class CasesGraphic extends Component {
           <text className={styles.xAxisLabel} />
           <g className={styles.yAxis} />
           <text className={styles.yAxisLabel} />
+          <g className={styles.trendLabels} />
           <g className={styles.plotLabels} />
         </svg>
       </div>

@@ -140,6 +140,27 @@
   stroke-width: 2;
 }
 
+.trendLabels {
+  fill: none;
+}
+
+.trendLabel {
+  color: #000;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  stroke: var(--bg);
+  stroke-opacity: 0.5;
+  stroke-width: 2;
+  paint-order: stroke;
+  font-size: 0.625rem;
+  letter-spacing: 0.025em;
+}
+
+.trendLabel.highlighted {
+  fill-opacity: 1;
+  stroke-opacity: 1;
+}
+
 .plotLabels {
   fill: none;
 }
