@@ -16,9 +16,10 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES } from '../../constants';
+import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
 import styles from './styles.css';
 
+const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
 const REM = 16;
 const MARGIN = {
   top: 3 * REM,
@@ -38,6 +39,10 @@ const TRANSITION_DURATIONS = {
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 
+const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
+const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
+const calculatePeriodsToIncrease = (increasePerPeriod, startingValue, endingValue) =>
+  Math.log(endingValue / startingValue) / Math.log(increasePerPeriod + 1);
 const last = x => x[x.length - 1];
 
 function checkScaleTypes(xScaleType, yScaleType) {
@@ -48,6 +53,50 @@ function checkScaleTypes(xScaleType, yScaleType) {
   if (Y_SCALE_TYPES.indexOf(yScaleType) === -1) {
     throw new Error(`Unrecognised yScaleType: ${yScaleType}`);
   }
+}
+
+function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) {
+  const data = [startingValue];
+
+  for (let i = 0; i < daysToSimulate - 1; i++) {
+    data.push(data[i] * (1 + increasePerPeriod));
+  }
+
+  return data;
+}
+
+function generateTrendsData(trends, startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= new Date(endDate)) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return trends.reduce((memo, trend) => {
+    const increasePerPeriod = calculateIncreasePerPeriod(trend.doublingTimePeriods);
+    const casesData = createTrendCasesData(increasePerPeriod, dates.length, 100).filter(count => count <= 100000);
+    const item = {
+      key: trend.name,
+      doublingTimePeriods: trend.doublingTimePeriods,
+      dailyTotals: casesData.map((cases, i) => ({ date: dates[i], cases })),
+      daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
+    };
+
+    const daysToHundredKCases = calculatePeriodsToIncrease(increasePerPeriod, 100, 100000);
+
+    if (daysToHundredKCases < dates.length) {
+      let fractionalDate = new Date(last(item.dailyTotals).date);
+
+      fractionalDate.setDate(fractionalDate.getDate() + daysToHundredKCases - item.dailyTotals.length + 2);
+
+      item.dailyTotals.push({ date: fractionalDate, cases: 100000 });
+      item.daysSince100CasesTotals.push({ day: daysToHundredKCases, cases: 100000 });
+    }
+
+    return memo.concat([item]);
+  }, []);
 }
 
 export default class CasesGraphic extends Component {
@@ -106,6 +155,7 @@ export default class CasesGraphic extends Component {
     this.mostCases = this.countriesData.reduce((memo, d) => {
       return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.cases)));
     }, 0);
+    this.trendsData = generateTrendsData(TRENDS, this.earliestDate, this.latestDate);
 
     this.state = {
       width: 0,
@@ -147,7 +197,12 @@ export default class CasesGraphic extends Component {
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const visibleCountriesData = this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1);
+    const visibleTrendsData = this.trendsData.filter(
+      d => trends === true || (Array.isArray(trends) && trends.indexOf(d.doublingTimePeriods) > -1)
+    );
+    const visibleCountriesData = this.countriesData.filter(
+      d => countries === true || (Array.isArray(countries) && countries.indexOf(d.key) > -1)
+    );
     const xPropName = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
@@ -163,7 +218,7 @@ export default class CasesGraphic extends Component {
         .y(d => yScale(d.cases))(getDataCollection(d));
     const generatePlotPointTransform = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
     const generateLineEndTransform = d => generatePlotPointTransform(last(getDataCollection(d)));
-    const plotLabelForceClamp = (min, max) => {
+    const labelForceClamp = (min, max) => {
       let forceNodes;
 
       const force = () => {
@@ -182,7 +237,10 @@ export default class CasesGraphic extends Component {
 
       return force;
     };
-    const isHighlighted = d =>
+    const isTrendHighlighted = d =>
+      highlightedTrends === true ||
+      (Array.isArray(highlightedTrends) && highlightedTrends.indexOf(d.doublingTimePeriods) > -1);
+    const isCountryHighlighted = d =>
       highlightedCountries === true ||
       (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
     const xAxisGenerator =
@@ -224,11 +282,17 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
-      .html(
-        yScaleType === 'linear'
-          ? 'Total cases'
-          : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
-      );
+      .call(selection => {
+        if (IS_TRIDENT) {
+          selection.text(yScaleType === 'linear' ? 'Total cases' : `Cumulative number of cases since the 100th case`);
+        } else {
+          selection.html(
+            yScaleType === 'linear'
+              ? 'Total cases'
+              : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+          );
+        }
+      });
 
     // Rendering > 6. Add/Update y-axis gridlines
     svg
@@ -238,7 +302,44 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
-    // Rendering > 7. Add/remove/update plot lines
+    // Rendering > 7. Add/remove/update trend lines
+    const trendLines = svg // Bind
+      .select(`.${styles.trendLines}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
+      .selectAll(`.${styles.trendLine}`)
+      .data(visibleTrendsData);
+    const trendLinesEnter = trendLines // Enter
+      .enter()
+      .append('path')
+      .attr('data-doubling-days', d => d.doublingTimePeriods)
+      .classed(styles.trendLine, true)
+      .classed(styles.highlighted, isTrendHighlighted)
+      .attr('d', generateLinePath)
+      .style('stroke-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', null);
+    trendLines // Update
+      .classed(styles.highlighted, isTrendHighlighted)
+      .style('stroke-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attrTween('d', function(d) {
+        const currentPath = generateLinePath(d);
+
+        const previous = select(this);
+        const previousPath = previous.empty() ? currentPath : previous.attr('d');
+
+        return interpolatePath(previousPath, currentPath);
+      });
+    trendLines // Exit
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', 0)
+      .remove();
+
+    // Rendering > 8. Add/remove/update plot lines
     const plotLines = svg // Bind
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -249,14 +350,14 @@ export default class CasesGraphic extends Component {
       .append('path')
       .attr('data-country', d => d.key)
       .classed(styles.plotLine, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('d', generateLinePath)
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
     plotLines // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
@@ -275,7 +376,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 8. Add/remove/update plot dots (at ends of lines)
+    // Rendering > 9. Add/remove/update plot dots (at ends of lines)
     const plotDots = svg // Bind
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -286,7 +387,7 @@ export default class CasesGraphic extends Component {
       .append('circle')
       .attr('data-country', d => d.key)
       .classed(styles.plotDot, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('r', 2)
       .attr('transform', generateLineEndTransform)
       .style('fill-opacity', 0)
@@ -296,7 +397,7 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .style('stroke-opacity', null);
     plotDots // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()
@@ -310,7 +411,81 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 9. Add/remove/update plot labels (near ends of lines)
+    // Rendering > 10. Add/remove/update trend labels (near ends of lines)
+    const trendLabelForceNodes = visibleTrendsData.map(d => {
+      const dataCollection = getDataCollection(d);
+      return {
+        fx: 0,
+        // targetY: yScale(last(getDataCollection(d)).cases)
+        targetY: yScale(dataCollection[dataCollection.length - 2].cases)
+      };
+    });
+    const trendLabelsForceSimulation = forceSimulation()
+      .nodes(trendLabelForceNodes)
+      .force('collide', forceCollide(PLOT_LABEL_HEIGHT * 2))
+      .force('y', forceY(d => d.targetY).strength(1))
+      .force('clamp', labelForceClamp(0, chartHeight))
+      .stop();
+    for (let i = 0; i < 300; i++) {
+      trendLabelsForceSimulation.tick();
+    }
+    const trendLabelsData = visibleTrendsData.map((d, i) => ({
+      key: d.key,
+      text: `${i === 0 ? `Number of cases ` : '...'}doubles every ${d.key}`,
+      html: `<tspan>${
+        i === 0
+          ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
+          : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
+      }every ${d.key}</tspan>`,
+      doublingTimePeriods: d.doublingTimePeriods,
+      x: 6 + xScale(last(getDataCollection(d))[xPropName]),
+      y: trendLabelForceNodes[i].y
+    }));
+    const trendLabels = svg // Bind
+      .select(`.${styles.trendLabels}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
+      .selectAll(`.${styles.trendLabel}`)
+      .data(trendLabelsData);
+    const trendLabelsEnter = trendLabels // Enter
+      .enter()
+      .append('text')
+      .attr('data-doubling-days', d => d.doublingTimePeriods)
+      .classed(styles.trendLabel, true)
+      .classed(styles.highlighted, isTrendHighlighted)
+      .attr('text-anchor', (d, i) => (i === 0 || IS_TRIDENT ? 'end' : 'start'))
+      .attr('alignment-baseline', 'middle')
+      .call(selection => {
+        if (IS_TRIDENT) {
+          selection.text(d => d.text);
+        } else {
+          selection.html(d => d.html);
+        }
+      })
+      .attr(
+        'transform',
+        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+      )
+      .style('fill-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', null);
+    trendLabels // Update
+      .classed(styles.highlighted, isTrendHighlighted)
+      .style('fill-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attr(
+        'transform',
+        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+      );
+    trendLabels // Exit
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('fill-opacity', 0)
+      .remove();
+
+    // Rendering > 11. Add/remove/update plot labels (near ends of lines)
     const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
     const plotLabelForceNodes = labelledCountriesData.map(d => {
       return {
@@ -322,7 +497,7 @@ export default class CasesGraphic extends Component {
       .nodes(plotLabelForceNodes)
       .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
       .force('y', forceY(d => d.targetY).strength(1))
-      .force('clamp', plotLabelForceClamp(0, chartHeight))
+      .force('clamp', labelForceClamp(0, chartHeight))
       .stop();
     for (let i = 0; i < 300; i++) {
       plotLabelsForceSimulation.tick();
@@ -344,7 +519,7 @@ export default class CasesGraphic extends Component {
       .append('text')
       .attr('data-country', d => d.key)
       .classed(styles.plotLabel, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('alignment-baseline', 'middle')
       .text(d => d.text)
       .attr('transform', d => `translate(${d.x}, ${d.y})`)
@@ -353,12 +528,11 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
     plotLabels // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
       .attr('transform', d => `translate(${d.x}, ${d.y})`);
-
     plotLabels // Exit
       .exit()
       .transition()
@@ -379,12 +553,14 @@ export default class CasesGraphic extends Component {
       <div ref={this.rootRef} className={styles.root}>
         <svg ref={this.svgRef} className={styles.svg}>
           <g className={styles.yAxisGridlines} />
+          <g className={styles.trendLines} />
           <g className={styles.plotLines} />
           <g className={styles.plotDots} />
           <g className={styles.xAxis} />
           <text className={styles.xAxisLabel} />
           <g className={styles.yAxis} />
           <text className={styles.yAxisLabel} />
+          <g className={styles.trendLabels} />
           <g className={styles.plotLabels} />
         </svg>
       </div>
