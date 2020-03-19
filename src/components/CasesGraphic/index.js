@@ -40,6 +40,8 @@ const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
+const calculatePeriodsToIncrease = (increasePerPeriod, startingValue, endingValue) =>
+  Math.log(endingValue / startingValue) / Math.log(increasePerPeriod + 1);
 const last = x => x[x.length - 1];
 
 function checkScaleTypes(xScaleType, yScaleType) {
@@ -52,8 +54,7 @@ function checkScaleTypes(xScaleType, yScaleType) {
   }
 }
 
-function createTrendCasesData(doublingTimePeriods, daysToSimulate, startingValue) {
-  const increasePerPeriod = calculateIncreasePerPeriod(doublingTimePeriods);
+function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) {
   const data = [startingValue];
 
   for (let i = 0; i < daysToSimulate - 1; i++) {
@@ -73,15 +74,25 @@ function generateTrendsData(trends, startDate, endDate) {
   }
 
   return trends.reduce((memo, trend) => {
-    const casesData = createTrendCasesData(trend.doublingTimePeriods, dates.length, 100).filter(
-      count => count <= 100000
-    );
+    const increasePerPeriod = calculateIncreasePerPeriod(trend.doublingTimePeriods);
+    const casesData = createTrendCasesData(increasePerPeriod, dates.length, 100).filter(count => count <= 100000);
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
       dailyTotals: casesData.map((cases, i) => ({ date: dates[i], cases })),
       daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
     };
+
+    const daysToHundredKCases = calculatePeriodsToIncrease(increasePerPeriod, 100, 100000);
+
+    if (daysToHundredKCases < dates.length) {
+      let fractionalDate = new Date(last(item.dailyTotals).date);
+
+      fractionalDate.setDate(fractionalDate.getDate() + daysToHundredKCases - item.dailyTotals.length + 2);
+
+      item.dailyTotals.push({ date: fractionalDate, cases: 100000 });
+      item.daysSince100CasesTotals.push({ day: daysToHundredKCases, cases: 100000 });
+    }
 
     return memo.concat([item]);
   }, []);

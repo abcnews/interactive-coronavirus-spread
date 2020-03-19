@@ -104,7 +104,7 @@ export const TRENDS = [
   // { name: 'Number of cases doubles every 4 days', doublingTimePeriods: 4 },
   // { name: 'Number of cases doubles every 5 days', doublingTimePeriods: 5 },
   // { name: 'Number of cases doubles every 6 days', doublingTimePeriods: 6 },
-  { name: 'Number of cases doubles every week', doublingTimePeriods: 7 },
+  { name: 'Number of cases doubles every week', doublingTimePeriods: 7 }
   // { name: 'Number of cases doubles every 2 weeks', doublingTimePeriods: 14 },
-  { name: 'Number of cases doubles every month', doublingTimePeriods: 28 }
+  // { name: 'Number of cases doubles every month', doublingTimePeriods: 28 }
 ];
