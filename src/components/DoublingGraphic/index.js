@@ -5,9 +5,14 @@ import { Fade } from 'react-reveal';
 import scaleCanvas from './scaleCanvas';
 import styles from './styles.scss';
 
+import { useWindowSize } from './useWindowSize';
+
 const ANIMATION_TICK_LIMIT = 600;
-const INITIAL_DOT_COUNT = 1;
 const RANDOM_INIT_DISTANCE = 100;
+
+let dot1ypos = 0.333;
+let dot2ypos = 0.5;
+let dot3ypos = 0.666;
 
 // Init these so we can unload them later on dismount
 let canvas;
@@ -23,19 +28,22 @@ let centerY = height / 2;
 
 let nodes = [];
 let nodesToAdd = [];
-const duration = 2000; // In milliseconds
+let duration = 2000; // In milliseconds
 let initialDotState = [];
 let week1DotState = [];
 let week2DotState = [];
-let month1DotState = [];
+let week3DotState = [];
 
 let ticks = 0;
 let startTime = false;
 let runAnimation = false;
+let isAnimating = false;
 
 export default props => {
   // Get a reference to our canvas
   const canvasEl = useRef(null);
+
+  const size = useWindowSize();
 
   // Set up state
   const [pageTitle, setPageTitle] = useState(null);
@@ -134,9 +142,12 @@ export default props => {
       ticks++;
 
       if ((runAnimation && ticks < ANIMATION_TICK_LIMIT) || nodesToAdd.length > 0) {
+        isAnimating = true;
         requestAnimationFrame(t => {
           animate(t, nodesToAdd);
         });
+      } else {
+        isAnimating = false;
       }
     };
 
@@ -168,6 +179,25 @@ export default props => {
   }, []);
 
   useEffect(() => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    centerX = width / 2;
+    centerY = height / 2;
+
+    canvas.attr('width', width).attr('height', height);
+
+    ctx = canvas.node().getContext('2d');
+
+    // Fit to retina devices
+    scaleCanvas(canvas.node(), ctx, width, height);
+
+    console.log(size);
+    setLabel1Ypos(height * dot1ypos);
+    setLabel2Ypos(height * dot2ypos);
+    setLabel3Ypos(height * dot3ypos);
+  }, [size.width, size.height]);
+
+  useEffect(() => {
     console.log(props);
 
     // Delay transitions to animate
@@ -176,6 +206,8 @@ export default props => {
     switch (props.marker) {
       case 'doublinginit':
         setTimeout(() => {
+          nodesToAdd = [];
+
           setPageTitle('What is exponential growth?');
 
           initialDotState = [];
@@ -185,9 +217,9 @@ export default props => {
             initialDotState.push({
               groupName: 'one',
               x: centerX + Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2,
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
@@ -205,9 +237,9 @@ export default props => {
             initialDotState.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
           simulation.nodes(initialDotState).stop();
@@ -228,9 +260,9 @@ export default props => {
             week1DotState.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
@@ -248,9 +280,9 @@ export default props => {
             week1DotState.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
@@ -265,10 +297,10 @@ export default props => {
             nodesToAdd.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
@@ -287,16 +319,18 @@ export default props => {
             nodesToAdd.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
-          requestAnimationFrame(t => {
-            animate(t, nodesToAdd);
-          });
+          if (!isAnimating) {
+            requestAnimationFrame(t => {
+              animate(t, nodesToAdd);
+            });
+          }
         }, 100);
 
         break;
@@ -311,9 +345,9 @@ export default props => {
             week2DotState.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
@@ -331,9 +365,9 @@ export default props => {
             week2DotState.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
@@ -349,14 +383,14 @@ export default props => {
             nodesToAdd.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
-          for (let i = 0; i < 2 ** (14 / 3) - 4; i++) {
+          for (let i = 0; i < 2 ** (14 / 3) - 2 ** (7 / 3); i++) {
             nodesToAdd.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
@@ -367,20 +401,22 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (14 / 2) - 6; i++) {
+          for (let i = 0; i < 2 ** (14 / 2) - 2 ** (7 / 2); i++) {
             nodesToAdd.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
-          requestAnimationFrame(t => {
-            animate(t, nodesToAdd);
-          });
+          if (!isAnimating) {
+            requestAnimationFrame(t => {
+              animate(t, nodesToAdd);
+            });
+          }
         }, 100);
 
         break;
@@ -388,21 +424,21 @@ export default props => {
         setTimeout(() => {
           setPageTitle('3 weeks');
 
-          month1DotState = [];
+          week3DotState = [];
 
           // After 2 weeks
           for (let i = 0; i < 2 ** (14 / 7); i++) {
-            month1DotState.push({
+            week3DotState.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
           for (let i = 0; i < 2 ** (14 / 3); i++) {
-            month1DotState.push({
+            week3DotState.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: centerY + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
@@ -412,16 +448,16 @@ export default props => {
           }
 
           for (let i = 0; i < 2 ** (14 / 2); i++) {
-            month1DotState.push({
+            week3DotState.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
-          simulation.nodes(month1DotState).stop();
+          simulation.nodes(week3DotState).stop();
 
           startTime = false;
           ticks = 0;
@@ -429,18 +465,18 @@ export default props => {
           // Add nodes after the mark
           nodesToAdd = [];
 
-          for (let i = 0; i < 16; i++) {
+          for (let i = 0; i < 2 ** (21 / 7) - 2 ** (14 / 7); i++) {
             nodesToAdd.push({
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.25 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.25
+              targetY: height * dot1ypos
             });
           }
 
-          for (let i = 0; i < 2 ** (21 / 3) - 11.31; i++) {
+          for (let i = 0; i < 2 ** (21 / 3) - 2 ** (14 / 3); i++) {
             nodesToAdd.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
@@ -451,20 +487,22 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (21 / 2) - (2 ** (14 / 2)); i++) {
+          for (let i = 0; i < 2 ** (21 / 2) - 2 ** (14 / 2); i++) {
             nodesToAdd.push({
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.75 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.75
+              targetY: height * dot3ypos
             });
           }
 
-          requestAnimationFrame(t => {
-            animate(t, nodesToAdd);
-          });
+          if (!isAnimating) {
+            requestAnimationFrame(t => {
+              animate(t, nodesToAdd);
+            });
+          }
         }, 100);
         break;
       default:
@@ -472,53 +510,9 @@ export default props => {
           setPageTitle('What is exponential growth?');
         }, 100);
     }
-  }, [props]);
+  }, [props, size.width, size.height]);
 
   useLayoutEffect(() => {}, [props]);
-
-  // useEffect(() => {
-  //   if (props.marker === 'doubling') {
-  //     simulation.nodes([]).stop();
-  //     return;
-  //   }
-
-  //   // Reset animation timers
-  //   startTime = false;
-  //   ticks = 0;
-
-  //   for (let i = 0; i < 16; i++) {
-  //     nodesToAdd.push({
-  //       groupName: 'one',
-  //       x: width * 0.25, //centerX,
-  //       y: centerY, //height * 0.25,
-  //       delay: Math.random() * duration,
-  //       targetX: width * 0.25,
-  //       targetY: height * 0.5
-  //     });
-  //   }
-
-  //   for (let i = 0; i < 128; i++) {
-  //     nodesToAdd.push({
-  //       groupName: 'two',
-  //       x: width * 0.5, //centerX,
-  //       y: centerY, //height * 0.5,
-  //       delay: Math.random() * duration,
-  //       targetX: centerX,
-  //       targetY: height * 0.5
-  //     });
-  //   }
-
-  //   for (let i = 0; i < 645; i++) {
-  //     nodesToAdd.push({
-  //       groupName: 'three',
-  //       x: width * 0.75, //centerX,
-  //       y: centerY, //height * 0.75,
-  //       delay: Math.random() * duration,
-  //       targetX: width * 0.75, //centerX,
-  //       targetY: height * 0.5
-  //     });
-  //   }
-  // }, [props.marker]);
 
   return (
     <div className={styles.root}>
@@ -527,11 +521,11 @@ export default props => {
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
         <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
-          <span className={`${styles.background}`}>When the number of cases doubles every week</span>
+          <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
         </div>
 
         <div className={styles.label} style={{ top: `${label2Ypos}px` }}>
-          <span className={`${styles.background}`}>...doubles every 3 days</span>
+          <span className={`${styles.noBackground}`}>...doubles every 3 days</span>
         </div>
 
         <div className={`${styles.label}`} style={{ top: `${label3Ypos}px` }}>

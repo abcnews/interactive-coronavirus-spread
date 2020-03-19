@@ -3,12 +3,13 @@
   text-align: center;
   height: 100vh;
   color: #3e494c;
-  padding-top: 5vh;
 
   h1 {
     font-family: 'ABCSerif', serif;
     font-weight: bold;
     text-align: center;
+    position: relative;
+    top: 3vh;
   }
 }
 
@@ -31,6 +32,7 @@
   right: 0;
   color: #5d6d71;
   font-size: 18px;
+  font-weight: bold;
 }
 
 .background {
