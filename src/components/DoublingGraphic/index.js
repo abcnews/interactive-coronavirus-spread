@@ -8,11 +8,14 @@ import styles from './styles.scss';
 import { useWindowSize } from './useWindowSize';
 
 const ANIMATION_TICK_LIMIT = 600;
-const RANDOM_INIT_DISTANCE = 100;
+const RANDOM_INIT_DISTANCE = 80;
+const MULTIPLY_DELAY = 100;
 
-let dot1ypos = 0.333;
+let dot1ypos = 0.3;
 let dot2ypos = 0.5;
-let dot3ypos = 0.666;
+let dot3ypos = 0.7;
+
+let dotsOffset = 1.0;
 
 // Init these so we can unload them later on dismount
 let canvas;
@@ -26,7 +29,6 @@ let height = window.innerHeight;
 let centerX = width / 2;
 let centerY = height / 2;
 
-let nodes = [];
 let nodesToAdd = [];
 let duration = 2000; // In milliseconds
 let initialDotState = [];
@@ -128,6 +130,16 @@ export default props => {
       for (let i = 0; i < nodesToAdd.length; i++) {
         const node = nodesToAdd[i];
         if (node.delay < progress) {
+          // Here we are simulating new dots "dividing" from dots already there
+          for (const currentNode of nodes) {
+            const randomNode = getRandomInt(0, nodes.length - 1);
+            if (nodes[randomNode].groupName === node.groupName) {
+              node.y = nodes[randomNode].y;
+              node.x = nodes[randomNode].x;
+              break;
+            }
+          }
+
           newNodes.push(node);
           nodesToAdd.splice(i, 1);
           i--;
@@ -191,7 +203,6 @@ export default props => {
     // Fit to retina devices
     scaleCanvas(canvas.node(), ctx, width, height);
 
-    console.log(size);
     setLabel1Ypos(height * dot1ypos);
     setLabel2Ypos(height * dot2ypos);
     setLabel3Ypos(height * dot3ypos);
@@ -205,56 +216,52 @@ export default props => {
 
     switch (props.marker) {
       case 'doublinginit':
+        initialDotState = [];
+        nodesToAdd = [];
+
+        // Add initial nodes to simulation
+        for (let i = 0; i < 1; i++) {
+          initialDotState.push({
+            groupName: 'one',
+            x: centerX + Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2,
+            y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+            targetX: centerX,
+            targetY: height * dot1ypos
+          });
+        }
+
+        for (let i = 0; i < 1; i++) {
+          initialDotState.push({
+            groupName: 'two',
+            x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+            y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+            targetX: centerX,
+            targetY: height * dot2ypos
+          });
+        }
+
+        for (let i = 0; i < 1; i++) {
+          initialDotState.push({
+            groupName: 'three',
+            x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+            y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+            targetX: centerX,
+            targetY: height * dot3ypos
+          });
+        }
+        simulation.nodes(initialDotState).stop();
+
+        startTime = false;
+        ticks = 0;
+
         setTimeout(() => {
-          nodesToAdd = [];
-
           setPageTitle('What is exponential growth?');
-
-          initialDotState = [];
-
-          // Add initial nodes to simulation
-          for (let i = 0; i < 1; i++) {
-            initialDotState.push({
-              groupName: 'one',
-              x: centerX + Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2,
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
-
-          for (let i = 0; i < 1; i++) {
-            initialDotState.push({
-              groupName: 'two',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: centerY + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: centerY
-            });
-          }
-
-          for (let i = 0; i < 1; i++) {
-            initialDotState.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
-          simulation.nodes(initialDotState).stop();
-
-          startTime = false;
-          ticks = 0;
         }, 100);
 
         break;
       case 'doublingweek1':
-        setTimeout(() => {
-          setPageTitle('Week 1');
-
+        if (simulation.nodes().length !== 3) {
           week1DotState = [];
-
           // After 1 week first state
           for (let i = 0; i < 1; i++) {
             week1DotState.push({
@@ -270,9 +277,9 @@ export default props => {
             week1DotState.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: centerY + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: centerY
+              targetY: height * dot2ypos
             });
           }
 
@@ -285,12 +292,20 @@ export default props => {
               targetY: height * dot3ypos
             });
           }
+        } else {
+          week1DotState = simulation.nodes();
+        }
 
-          simulation.nodes(week1DotState).stop();
+        simulation.nodes(week1DotState).stop();
 
-          startTime = false;
-          ticks = 0;
+        startTime = false;
+        ticks = 0;
 
+        setTimeout(() => {
+          setPageTitle('Week 1');
+        }, 100);
+
+        setTimeout(() => {
           nodesToAdd = [];
 
           for (let i = 0; i < 2 - 1; i++) {
@@ -308,10 +323,10 @@ export default props => {
             nodesToAdd.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.5 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.5
+              targetY: height * dot2ypos
             });
           }
 
@@ -331,13 +346,11 @@ export default props => {
               animate(t, nodesToAdd);
             });
           }
-        }, 100);
+        }, MULTIPLY_DELAY);
 
         break;
       case 'doublingweek2':
-        setTimeout(() => {
-          setPageTitle('Week 2');
-
+        if (simulation.nodes().length !== 20) {
           week2DotState = [];
 
           // After 2 weeks
@@ -355,9 +368,9 @@ export default props => {
             week2DotState.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: centerY + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: centerY
+              targetY: height * dot2ypos
             });
           }
 
@@ -370,12 +383,20 @@ export default props => {
               targetY: height * dot3ypos
             });
           }
+        } else {
+          week2DotState = simulation.nodes();
+        }
 
-          simulation.nodes(week2DotState).stop();
+        simulation.nodes(week2DotState).stop();
 
-          startTime = false;
-          ticks = 0;
+        startTime = false;
+        ticks = 0;
 
+        setTimeout(() => {
+          setPageTitle('Week 2');
+        }, 100);
+
+        setTimeout(() => {
           // Add nodes after the mark
           nodesToAdd = [];
 
@@ -394,10 +415,10 @@ export default props => {
             nodesToAdd.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.5 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.5
+              targetY: height * dot2ypos
             });
           }
 
@@ -417,13 +438,11 @@ export default props => {
               animate(t, nodesToAdd);
             });
           }
-        }, 100);
+        }, MULTIPLY_DELAY);
 
         break;
       case 'doublingmonth':
-        setTimeout(() => {
-          setPageTitle('3 weeks');
-
+        if (simulation.nodes().length !== 160) {
           week3DotState = [];
 
           // After 2 weeks
@@ -441,9 +460,9 @@ export default props => {
             week3DotState.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: centerY + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               targetX: centerX,
-              targetY: centerY
+              targetY: height * dot2ypos
             });
           }
 
@@ -456,12 +475,20 @@ export default props => {
               targetY: height * dot3ypos
             });
           }
+        } else {
+          week3DotState = simulation.nodes();
+        }
 
-          simulation.nodes(week3DotState).stop();
+        simulation.nodes(week3DotState).stop();
 
-          startTime = false;
-          ticks = 0;
+        startTime = false;
+        ticks = 0;
 
+        setTimeout(() => {
+          setPageTitle('3 weeks');
+        }, 100);
+
+        setTimeout(() => {
           // Add nodes after the mark
           nodesToAdd = [];
 
@@ -480,10 +507,10 @@ export default props => {
             nodesToAdd.push({
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * 0.5 + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               delay: Math.random() * duration,
               targetX: centerX,
-              targetY: height * 0.5
+              targetY: height * dot2ypos
             });
           }
 
@@ -503,7 +530,7 @@ export default props => {
               animate(t, nodesToAdd);
             });
           }
-        }, 100);
+        }, MULTIPLY_DELAY);
         break;
       default:
         setTimeout(() => {
@@ -520,7 +547,7 @@ export default props => {
       <Fade>
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
-        <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
+        {/* <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
           <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
         </div>
 
@@ -530,8 +557,14 @@ export default props => {
 
         <div className={`${styles.label}`} style={{ top: `${label3Ypos}px` }}>
           <span className={`${styles.background}`}>...doubles every 2 days</span>
-        </div>
+        </div> */}
       </Fade>
     </div>
   );
 };
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
