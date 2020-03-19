@@ -185,7 +185,12 @@ export default class CasesGraphic extends Component {
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const visibleCountriesData = this.countriesData.filter(d => countries === true || countries.indexOf(d.key) > -1);
+    const visibleTrendsData = this.trendsData.filter(
+      d => trends === true || (Array.isArray(trends) && trends.indexOf(d.doublingTimePeriods) > -1)
+    );
+    const visibleCountriesData = this.countriesData.filter(
+      d => countries === true || (Array.isArray(countries) && countries.indexOf(d.key) > -1)
+    );
     const xPropName = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
@@ -220,7 +225,10 @@ export default class CasesGraphic extends Component {
 
       return force;
     };
-    const isHighlighted = d =>
+    const isTrendHighlighted = d =>
+      highlightedTrends === true ||
+      (Array.isArray(highlightedTrends) && highlightedTrends.indexOf(d.doublingTimePeriods) > -1);
+    const isCountryHighlighted = d =>
       highlightedCountries === true ||
       (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
     const xAxisGenerator =
@@ -276,7 +284,44 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
-    // Rendering > 7. Add/remove/update plot lines
+    // Rendering > 7. Add/remove/update trend lines
+    const trendLines = svg // Bind
+      .select(`.${styles.trendLines}`)
+      .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
+      .selectAll(`.${styles.trendLine}`)
+      .data(visibleTrendsData);
+    const trendLinesEnter = trendLines // Enter
+      .enter()
+      .append('path')
+      .attr('data-doubling-days', d => d.doublingTimePeriods)
+      .classed(styles.trendLine, true)
+      .classed(styles.highlighted, isTrendHighlighted)
+      .attr('d', generateLinePath)
+      .style('stroke-opacity', 0)
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', null);
+    trendLines // Update
+      .classed(styles.highlighted, isTrendHighlighted)
+      .style('stroke-opacity', null)
+      .transition()
+      .duration(transformTransitionDuration)
+      .attrTween('d', function(d) {
+        const currentPath = generateLinePath(d);
+
+        const previous = select(this);
+        const previousPath = previous.empty() ? currentPath : previous.attr('d');
+
+        return interpolatePath(previousPath, currentPath);
+      });
+    trendLines // Exit
+      .exit()
+      .transition()
+      .duration(opacityTransitionDuration)
+      .style('stroke-opacity', 0)
+      .remove();
+
+    // Rendering > 8. Add/remove/update plot lines
     const plotLines = svg // Bind
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -287,14 +332,14 @@ export default class CasesGraphic extends Component {
       .append('path')
       .attr('data-country', d => d.key)
       .classed(styles.plotLine, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('d', generateLinePath)
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
     plotLines // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
@@ -313,7 +358,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 8. Add/remove/update plot dots (at ends of lines)
+    // Rendering > 9. Add/remove/update plot dots (at ends of lines)
     const plotDots = svg // Bind
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -324,7 +369,7 @@ export default class CasesGraphic extends Component {
       .append('circle')
       .attr('data-country', d => d.key)
       .classed(styles.plotDot, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('r', 2)
       .attr('transform', generateLineEndTransform)
       .style('fill-opacity', 0)
@@ -334,7 +379,7 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .style('stroke-opacity', null);
     plotDots // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()
@@ -348,7 +393,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 9. Add/remove/update plot labels (near ends of lines)
+    // Rendering > 10. Add/remove/update plot labels (near ends of lines)
     const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
     const plotLabelForceNodes = labelledCountriesData.map(d => {
       return {
@@ -382,7 +427,7 @@ export default class CasesGraphic extends Component {
       .append('text')
       .attr('data-country', d => d.key)
       .classed(styles.plotLabel, true)
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .attr('alignment-baseline', 'middle')
       .text(d => d.text)
       .attr('transform', d => `translate(${d.x}, ${d.y})`)
@@ -391,7 +436,7 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
     plotLabels // Update
-      .classed(styles.highlighted, isHighlighted)
+      .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
@@ -417,6 +462,7 @@ export default class CasesGraphic extends Component {
       <div ref={this.rootRef} className={styles.root}>
         <svg ref={this.svgRef} className={styles.svg}>
           <g className={styles.yAxisGridlines} />
+          <g className={styles.trendLines} />
           <g className={styles.plotLines} />
           <g className={styles.plotDots} />
           <g className={styles.xAxis} />

@@ -84,6 +84,26 @@
   fill: none;
 }
 
+.trendLines {
+  fill: none;
+}
+
+.trendLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-opacity: 0.5;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  stroke-linejoin: round;
+  stroke-linecap: square;
+}
+
+.trendLine.highlighted {
+  stroke-opacity: 1;
+  stroke-width: 2;
+  stroke-dasharray: 2 5;
+}
+
 .plotLines {
   fill: none;
 }

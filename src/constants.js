@@ -21,7 +21,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: true,
     highlightedCountries: KEY_COUNTRIES,
-    trends: false
+    trends: true
   },
   china: {
     graphic: 'cases',
@@ -77,7 +77,7 @@ export const PRESETS = {
     yScaleType: 'logarithmic',
     countries: KEY_COUNTRIES,
     highlightedCountries: true,
-    trends: false
+    trends: true
   },
   trends: {
     graphic: 'cases',
@@ -98,10 +98,13 @@ export const PRESETS = {
 };
 
 export const TRENDS = [
+  // { name: 'Number of cases doubles every day', doublingTimePeriods: 1 },
   { name: 'Number of cases doubles every 2 days', doublingTimePeriods: 2 },
   { name: 'Number of cases doubles every 3 days', doublingTimePeriods: 3 },
   // { name: 'Number of cases doubles every 4 days', doublingTimePeriods: 4 },
-  { name: 'Number of cases doubles every week', doublingTimePeriods: 7 }
+  // { name: 'Number of cases doubles every 5 days', doublingTimePeriods: 5 },
+  // { name: 'Number of cases doubles every 6 days', doublingTimePeriods: 6 },
+  { name: 'Number of cases doubles every week', doublingTimePeriods: 7 },
   // { name: 'Number of cases doubles every 2 weeks', doublingTimePeriods: 14 },
-  // { name: 'Number of cases doubles every month', doublingTimePeriods: 28 }
+  { name: 'Number of cases doubles every month', doublingTimePeriods: 28 }
 ];
