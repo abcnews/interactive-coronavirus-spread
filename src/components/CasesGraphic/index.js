@@ -19,6 +19,7 @@ import React, { Component, createRef } from 'react';
 import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
 import styles from './styles.css';
 
+const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
 const REM = 16;
 const MARGIN = {
   top: 3 * REM,
@@ -281,11 +282,17 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
-      .html(
-        yScaleType === 'linear'
-          ? 'Total cases'
-          : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
-      );
+      .call(selection => {
+        if (IS_TRIDENT) {
+          selection.text(yScaleType === 'linear' ? 'Total cases' : `Cumulative number of cases since the 100th case`);
+        } else {
+          selection.html(
+            yScaleType === 'linear'
+              ? 'Total cases'
+              : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+          );
+        }
+      });
 
     // Rendering > 6. Add/Update y-axis gridlines
     svg
@@ -424,6 +431,7 @@ export default class CasesGraphic extends Component {
     }
     const trendLabelsData = visibleTrendsData.map((d, i) => ({
       key: d.key,
+      text: `${i === 0 ? `Number of cases ` : '...'}doubles every ${d.key}`,
       html: `<tspan>${
         i === 0
           ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
@@ -443,10 +451,19 @@ export default class CasesGraphic extends Component {
       .attr('data-doubling-days', d => d.doublingTimePeriods)
       .classed(styles.trendLabel, true)
       .classed(styles.highlighted, isTrendHighlighted)
-      .attr('text-anchor', (d, i) => (i === 0 ? 'end' : 'start'))
+      .attr('text-anchor', (d, i) => (i === 0 || IS_TRIDENT ? 'end' : 'start'))
       .attr('alignment-baseline', 'middle')
-      .html(d => d.html)
-      .attr('transform', (d, i) => `translate(${d.x - (i === 0 ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`)
+      .call(selection => {
+        if (IS_TRIDENT) {
+          selection.text(d => d.text);
+        } else {
+          selection.html(d => d.html);
+        }
+      })
+      .attr(
+        'transform',
+        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+      )
       .style('fill-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
@@ -456,7 +473,10 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attr('transform', (d, i) => `translate(${d.x - (i === 0 ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`);
+      .attr(
+        'transform',
+        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+      );
     trendLabels // Exit
       .exit()
       .transition()
