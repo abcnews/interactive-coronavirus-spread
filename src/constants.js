@@ -3,6 +3,7 @@ export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/
 export const AFTER_100_CASES_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/after-100-cases.json';
 
 export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Korea, South', 'Singapore', 'United Kingdom', 'US'];
+// export const KEY_COUNTRIES = ['China', 'Italy', 'Korea, South', 'US', 'United Kingdom', 'Australia', 'Singapore'];
 
 export const ALIASES = {
   'Korea, South': 'South Korea',

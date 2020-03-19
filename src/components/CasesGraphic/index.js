@@ -125,12 +125,15 @@ export default class CasesGraphic extends Component {
           .filter(({ cases }) => cases >= 100)
           .map(({ cases }, index) => ({ day: index, cases }));
 
-        return { key: country, dailyTotals, daysSince100CasesTotals };
+        return { key: country, cases: last(dailyTotals).cases, dailyTotals, daysSince100CasesTotals };
       })
-      // .filter(d => d.dailyTotals.length > 0)
       .filter(d => d.daysSince100CasesTotals.length > 0)
-      .sort((a, b) => last(a.dailyTotals).cases - last(b.dailyTotals).cases)
-      .sort((a, b) => (KEY_COUNTRIES.indexOf(a.key) > -1 ? -1 : 1));
+      .sort((a, b) => b.cases - a.cases);
+
+    this.countriesData = this.countriesData
+      .filter(x => KEY_COUNTRIES.indexOf(x.key) > -1)
+      .concat(this.countriesData.filter(x => KEY_COUNTRIES.indexOf(x.key) === -1));
+
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
 
@@ -357,6 +360,7 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
     plotLines // Update
+      .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
       .style('stroke-opacity', null)
       .transition()
@@ -397,6 +401,7 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .style('stroke-opacity', null);
     plotDots // Update
+      .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
@@ -528,8 +533,10 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
     plotLabels // Update
+      .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
       .style('fill-opacity', null)
+      .text(d => d.text)
       .transition()
       .duration(transformTransitionDuration)
       .attr('transform', d => `translate(${d.x}, ${d.y})`);
