@@ -437,6 +437,7 @@ export default class CasesGraphic extends Component {
           ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
           : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
       }every ${d.key}</tspan>`,
+      doublingTimePeriods: d.doublingTimePeriods,
       x: 6 + xScale(last(getDataCollection(d))[xPropName]),
       y: trendLabelForceNodes[i].y
     }));
