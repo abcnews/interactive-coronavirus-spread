@@ -16,7 +16,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES } from '../../constants';
+import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
 import styles from './styles.css';
 
 const REM = 16;
@@ -38,6 +38,8 @@ const TRANSITION_DURATIONS = {
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 
+const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
+const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
 const last = x => x[x.length - 1];
 
 function checkScaleTypes(xScaleType, yScaleType) {
@@ -48,6 +50,41 @@ function checkScaleTypes(xScaleType, yScaleType) {
   if (Y_SCALE_TYPES.indexOf(yScaleType) === -1) {
     throw new Error(`Unrecognised yScaleType: ${yScaleType}`);
   }
+}
+
+function createTrendCasesData(doublingTimePeriods, daysToSimulate, startingValue) {
+  const increasePerPeriod = calculateIncreasePerPeriod(doublingTimePeriods);
+  const data = [startingValue];
+
+  for (let i = 0; i < daysToSimulate - 1; i++) {
+    data.push(data[i] * (1 + increasePerPeriod));
+  }
+
+  return data;
+}
+
+function generateTrendsData(trends, startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= new Date(endDate)) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return trends.reduce((memo, trend) => {
+    const casesData = createTrendCasesData(trend.doublingTimePeriods, dates.length, 100).filter(
+      count => count <= 100000
+    );
+    const item = {
+      key: trend.name,
+      doublingTimePeriods: trend.doublingTimePeriods,
+      dailyTotals: casesData.map((cases, i) => ({ date: dates[i], cases })),
+      daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
+    };
+
+    return memo.concat([item]);
+  }, []);
 }
 
 export default class CasesGraphic extends Component {
@@ -106,6 +143,7 @@ export default class CasesGraphic extends Component {
     this.mostCases = this.countriesData.reduce((memo, d) => {
       return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.cases)));
     }, 0);
+    this.trendsData = generateTrendsData(TRENDS, this.earliestDate, this.latestDate);
 
     this.state = {
       width: 0,

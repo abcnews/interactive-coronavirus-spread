@@ -93,6 +93,15 @@ export const PRESETS = {
     yScaleType: 'logarithmic',
     countries: KEY_COUNTRIES,
     trends: true,
-    highlightedTrends: ['low']
+    highlightedTrends: [7]
   }
 };
+
+export const TRENDS = [
+  { name: 'Number of cases doubles every 2 days', doublingTimePeriods: 2 },
+  { name: 'Number of cases doubles every 3 days', doublingTimePeriods: 3 },
+  // { name: 'Number of cases doubles every 4 days', doublingTimePeriods: 4 },
+  { name: 'Number of cases doubles every week', doublingTimePeriods: 7 }
+  // { name: 'Number of cases doubles every 2 weeks', doublingTimePeriods: 14 },
+  // { name: 'Number of cases doubles every month', doublingTimePeriods: 28 }
+];
