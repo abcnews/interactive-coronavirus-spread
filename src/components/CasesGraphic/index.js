@@ -255,7 +255,7 @@ export default class CasesGraphic extends Component {
     const visibleCountriesData = this.countriesData.filter(isCountryVisible);
     const visibleTrendsData = this.trendsData.filter(isTrendVisible);
     const xAxisGenerator =
-      xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale);
+      xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%-d/%-m')) : axisBottom(xScale);
     const yAxisGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType])
       .tickFormat(format(',.1s'));
