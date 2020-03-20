@@ -9,7 +9,7 @@ import { useWindowSize } from './useWindowSize';
 import { set } from 'd3';
 
 const ANIMATION_TICK_LIMIT = 600;
-const RANDOM_INIT_DISTANCE = 20;
+const RANDOM_INIT_DISTANCE = 80;
 const MULTIPLY_DELAY = 100;
 
 let dot1ypos = 0.333333;
