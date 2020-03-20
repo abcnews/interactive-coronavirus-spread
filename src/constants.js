@@ -109,10 +109,12 @@ export const PRESETS = {
   },
   trends: {
     graphic: 'cases',
+    highlightedCountries: false,
     highlightedTrends: true
   },
   lowtrend: {
     graphic: 'cases',
+    highlightedCountries: false,
     highlightedTrends: [7]
   },
   singapore: {
