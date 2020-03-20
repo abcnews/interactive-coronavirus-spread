@@ -4,7 +4,7 @@ export const JOHN_HOPKINS_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}country-totals.j
 export const WHO_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/who-country-totals.json`;
 export const COUNTRY_TOTALS_URL = JOHN_HOPKINS_COUNTRY_TOTALS_URL;
 export const AFTER_100_CASES_URL = `${DATA_ENDPOINT}after-100-cases.json`;
-export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Singapore', 'South Korea', 'UK', 'US'];
+export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'South Korea', 'Taiwan', 'UK', 'US'];
 export const EUROPEAN_COUNTRIES = [];
 export const KEY_TRENDS = [2, 3, 7];
 

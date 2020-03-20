@@ -184,7 +184,9 @@
 }
 
 path.plotLine[data-country='Australia'],
-circle.plotDot[data-country='Australia'] {
+path.plotLine[data-country='Europe'],
+circle.plotDot[data-country='Australia'],
+circle.plotDot[data-country='Europe'] {
   color: #000000;
 }
 
@@ -198,6 +200,11 @@ circle.plotDot[data-country='Italy'] {
   color: #ff6100;
 }
 
+path.plotLine[data-country='Japan'],
+circle.plotDot[data-country='Japan'] {
+  color: #5cad5d;
+}
+
 path.plotLine[data-country='Singapore'],
 circle.plotDot[data-country='Singapore'] {
   color: #01cfff;
@@ -206,6 +213,11 @@ circle.plotDot[data-country='Singapore'] {
 path.plotLine[data-country='South Korea'],
 circle.plotDot[data-country='South Korea'] {
   color: #8272d6;
+}
+
+path.plotLine[data-country='Taiwan'],
+circle.plotDot[data-country='Taiwan'] {
+  color: #bf6643;
 }
 
 path.plotLine[data-country='UK'],
@@ -218,7 +230,8 @@ circle.plotDot[data-country='US'] {
   color: #248bc9;
 }
 
-text.plotLabel[data-country='Australia'] {
+text.plotLabel[data-country='Australia'],
+text.plotLabel[data-country='Europe'] {
   color: #000000;
 }
 
@@ -230,12 +243,20 @@ text.plotLabel[data-country='Italy'] {
   color: #cf4200;
 }
 
+text.plotLabel[data-country='Japan'] {
+  color: #49804c;
+}
+
 text.plotLabel[data-country='Singapore'] {
   color: #047ca5;
 }
 
 text.plotLabel[data-country='South Korea'] {
   color: #7462cc;
+}
+
+text.plotLabel[data-country='Taiwan'] {
+  color: #b25b45;
 }
 
 text.plotLabel[data-country='UK'] {
