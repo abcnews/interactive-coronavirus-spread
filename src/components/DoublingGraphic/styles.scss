@@ -11,6 +11,10 @@
     text-align: center;
     position: relative;
     top: 5vh;
+
+    @media (min-width: 641px) {
+      font-size: 26px;
+    }
   }
 }
 
@@ -48,7 +52,7 @@
   margin-top: -40px;
 
   @media (min-width: 641px) {
-    font-size: 15x;
+    font-size: 15px;
   }
 }
 
