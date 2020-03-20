@@ -15,41 +15,29 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    countries: true,
-    highlightedCountries: KEY_COUNTRIES,
-    trends: KEY_TRENDS
+    countries: true
   },
   china: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
     countries: ['China'],
-    highlightedCountries: true,
-    trends: KEY_TRENDS
+    highlightedCountries: true
   },
   all: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    countries: true,
-    highlightedCountries: KEY_COUNTRIES,
-    trends: KEY_TRENDS
+    countries: true
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
-    yScaleType: 'linear',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: KEY_TRENDS
+    yScaleType: 'linear'
   },
   hundred: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'linear',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: KEY_TRENDS
+    yScaleType: 'linear'
   },
   doublinginit: {
     graphic: 'doubling',
@@ -68,27 +56,14 @@ export const PRESETS = {
     marker: 'doublingmonth'
   },
   logarithmic: {
-    graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: KEY_TRENDS
+    graphic: 'cases'
   },
   trends: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    trends: KEY_TRENDS,
     highlightedTrends: true
   },
   lowtrend: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    trends: KEY_TRENDS,
     highlightedTrends: [7]
   }
 };

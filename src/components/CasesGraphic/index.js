@@ -16,7 +16,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
+import { ALIASES, KEY_COUNTRIES, KEY_TRENDS, TRENDS } from '../../constants';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -38,6 +38,14 @@ const TRANSITION_DURATIONS = {
 };
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
+const DEFAULT_PROPS = {
+  xScaleType: X_SCALE_TYPES[1],
+  yScaleType: Y_SCALE_TYPES[1],
+  countries: KEY_COUNTRIES,
+  highlightedCountries: KEY_COUNTRIES,
+  trends: KEY_TRENDS,
+  highlightedTrends: false
+};
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
@@ -103,7 +111,7 @@ export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
 
-    const { countryTotals, xScaleType, yScaleType } = props;
+    const { countryTotals, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
 
     checkScaleTypes(xScaleType, yScaleType);
 
@@ -185,7 +193,10 @@ export default class CasesGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    const { countries, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = nextProps;
+    const { countries, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = {
+      ...DEFAULT_PROPS,
+      ...nextProps
+    };
     const { width, height } = nextState;
 
     const wasResize = width !== prevState.width || height !== prevState.height;
@@ -200,12 +211,6 @@ export default class CasesGraphic extends Component {
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const visibleTrendsData = this.trendsData.filter(
-      d => trends === true || (Array.isArray(trends) && trends.indexOf(d.doublingTimePeriods) > -1)
-    );
-    const visibleCountriesData = this.countriesData.filter(
-      d => countries === true || (Array.isArray(countries) && countries.indexOf(d.key) > -1)
-    );
     const xPropName = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
@@ -219,8 +224,8 @@ export default class CasesGraphic extends Component {
       line()
         .x(d => xScale(d[xPropName]))
         .y(d => yScale(d.cases))(getDataCollection(d));
-    const generatePlotPointTransform = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
-    const generateLineEndTransform = d => generatePlotPointTransform(last(getDataCollection(d)));
+    const plotPointTransformGenerator = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
+    const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
       let forceNodes;
 
@@ -240,12 +245,16 @@ export default class CasesGraphic extends Component {
 
       return force;
     };
-    const isTrendHighlighted = d =>
-      highlightedTrends === true ||
-      (Array.isArray(highlightedTrends) && highlightedTrends.indexOf(d.doublingTimePeriods) > -1);
-    const isCountryHighlighted = d =>
-      highlightedCountries === true ||
-      (Array.isArray(highlightedCountries) && highlightedCountries.indexOf(d.key) > -1);
+    const inclusionCheckGenerator = (collection, itemPropName) => d =>
+      typeof collection === 'boolean'
+        ? collection
+        : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
+    const isCountryVisible = inclusionCheckGenerator(countries, 'key');
+    const isCountryHighlighted = inclusionCheckGenerator(highlightedCountries, 'key');
+    const isTrendVisible = inclusionCheckGenerator(trends, 'doublingTimePeriods');
+    const isTrendHighlighted = inclusionCheckGenerator(highlightedTrends, 'doublingTimePeriods');
+    const visibleCountriesData = this.countriesData.filter(isCountryVisible);
+    const visibleTrendsData = this.trendsData.filter(isTrendVisible);
     const xAxisGenerator =
       xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%d/%m')) : axisBottom(xScale);
     const yAxisGenerator = axisLeft(yScale)
@@ -393,7 +402,7 @@ export default class CasesGraphic extends Component {
       .classed(styles.plotDot, true)
       .classed(styles.highlighted, isCountryHighlighted)
       .attr('r', 2)
-      .attr('transform', generateLineEndTransform)
+      .attr('transform', lineEndTransformGenerator)
       .style('fill-opacity', 0)
       .style('stroke-opacity', 0)
       .transition()
@@ -407,7 +416,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attr('transform', generateLineEndTransform);
+      .attr('transform', lineEndTransformGenerator);
     plotDots // Exit
       .exit()
       .transition()
