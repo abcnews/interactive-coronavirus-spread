@@ -157,6 +157,7 @@ export default props => {
           // TODO: Maybe optimise this ... OK that should be pretty optimised
 
           // Make an array of random numbers
+          // and go through until we find one
           for (var a = [], j = 0; j < nodes.length; ++j) a[j] = j;
           const shuffledArray = shuffle(a);
 
@@ -636,6 +637,7 @@ function getRandomInt(min, max) {
 }
 
 // http://stackoverflow.com/questions/962802#962890
+// Shuffles an array
 function shuffle(array) {
   var tmp,
     current,

@@ -11,6 +11,10 @@
     text-align: center;
     position: relative;
     top: 5vh;
+
+    @media (min-width: 641px) {
+      font-size: 26px;
+    }
   }
 }
 
@@ -42,13 +46,13 @@
   left: 0;
   right: 0;
   color: #5c6c70;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: bold;
   transition: top 0.5s;
   margin-top: -40px;
 
   @media (min-width: 641px) {
-    font-size: 15x;
+    font-size: 15px;
   }
 }
 
