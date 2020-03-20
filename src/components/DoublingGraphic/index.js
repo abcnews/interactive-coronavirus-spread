@@ -6,16 +6,20 @@ import scaleCanvas from './scaleCanvas';
 import styles from './styles.scss';
 
 import { useWindowSize } from './useWindowSize';
+import { set } from 'd3';
 
 const ANIMATION_TICK_LIMIT = 600;
-const RANDOM_INIT_DISTANCE = 80;
+const RANDOM_INIT_DISTANCE = 20;
 const MULTIPLY_DELAY = 100;
 
-let dot1ypos = 0.3;
+let dot1ypos = 0.333333;
 let dot2ypos = 0.5;
-let dot3ypos = 0.7;
+let dot3ypos = 0.666666;
 
 let dotsOffset = 1.0;
+
+let manyBodyForceStrength = -12;
+let dotSize = 4;
 
 // Init these so we can unload them later on dismount
 let canvas;
@@ -49,9 +53,10 @@ export default props => {
 
   // Set up state
   const [pageTitle, setPageTitle] = useState(null);
-  const [label1Ypos, setLabel1Ypos] = useState(height * 0.25);
-  const [label2Ypos, setLabel2Ypos] = useState(height * 0.5);
-  const [label3Ypos, setLabel3Ypos] = useState(height * 0.75);
+  const [label1Ypos, setLabel1Ypos] = useState(height * dot1ypos);
+  const [label2Ypos, setLabel2Ypos] = useState(height * dot2ypos);
+  const [label3Ypos, setLabel3Ypos] = useState(height * dot3ypos);
+  const [dot3Background, setDot3Background] = useState(false);
 
   useLayoutEffect(() => {
     console.log('Mounting D3 vis...');
@@ -88,7 +93,7 @@ export default props => {
         'charge',
         d3
           .forceManyBodyReuse()
-          .strength(-30)
+          .strength(manyBodyForceStrength)
           .theta(0.9)
       )
       .alpha(1)
@@ -105,8 +110,24 @@ export default props => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
 
+        // Help position labels
+        // if (node.groupName === 'one' && node.y < oneTopY) {
+        //   oneTopY = node.y;
+        //   setLabel1Ypos(oneTopY - 33);
+        // }
+
+        // if (node.groupName === 'two' && node.y < twoTopY) {
+        //   twoTopY = node.y;
+        //   setLabel2Ypos(twoTopY - 33);
+        // }
+
+        // if (node.groupName === 'three' && node.y < threeTopY) {
+        //   threeTopY = node.y;
+        //   setLabel3Ypos(threeTopY + 30);
+        // }
+
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI);
+        ctx.arc(node.x, node.y, dotSize, 0, 2 * Math.PI);
         ctx.fillStyle = '#8EC3CE';
         // ctx.strokeStyle = '#5FA9BA';
         // ctx.stroke();
@@ -216,8 +237,14 @@ export default props => {
 
     switch (props.marker) {
       case 'doublinginit':
+        // Reset some things
         initialDotState = [];
         nodesToAdd = [];
+
+        // Reset labels
+        setLabel1Ypos(height * dot1ypos);
+        setLabel2Ypos(height * dot2ypos);
+        setLabel3Ypos(height * dot3ypos);
 
         // Add initial nodes to simulation
         for (let i = 0; i < 1; i++) {
@@ -260,6 +287,10 @@ export default props => {
 
         break;
       case 'doublingweek1':
+        setLabel1Ypos(height * dot1ypos - 4);
+        setLabel2Ypos(height * dot2ypos - 8);
+        setLabel3Ypos(height * dot3ypos - 10);
+
         if (simulation.nodes().length !== 3) {
           week1DotState = [];
           // After 1 week first state
@@ -350,6 +381,10 @@ export default props => {
 
         break;
       case 'doublingweek2':
+        setLabel1Ypos(height * dot1ypos - 8);
+        setLabel2Ypos(height * dot2ypos - 26);
+        setLabel3Ypos(height * dot3ypos - 38);
+
         if (simulation.nodes().length !== 20) {
           week2DotState = [];
 
@@ -442,6 +477,12 @@ export default props => {
 
         break;
       case 'doublingmonth':
+        setDot3Background(true);
+
+        setLabel1Ypos(height * dot1ypos - 105);
+        setLabel2Ypos(height * dot2ypos - 140);
+        setLabel3Ypos(height * dot3ypos - 120);
+
         if (simulation.nodes().length !== 160) {
           week3DotState = [];
 
@@ -485,7 +526,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('3 weeks');
+          setPageTitle('Week 3');
         }, 100);
 
         setTimeout(() => {
@@ -547,7 +588,7 @@ export default props => {
       <Fade>
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
-        {/* <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
+        <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
           <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
         </div>
 
@@ -556,8 +597,8 @@ export default props => {
         </div>
 
         <div className={`${styles.label}`} style={{ top: `${label3Ypos}px` }}>
-          <span className={`${styles.background}`}>...doubles every 2 days</span>
-        </div> */}
+          <span className={`${dot3Background && styles.background}`}>...doubles every 2 days</span>
+        </div>
       </Fade>
     </div>
   );
