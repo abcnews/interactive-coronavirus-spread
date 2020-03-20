@@ -26,7 +26,7 @@ export default ({ scrollyData, countryTotals }) => {
   }
 
   return (
-    <Scrollyteller panels={scrollyData.panels} onMarker={onMarker}>
+    <Scrollyteller panels={scrollyData.panels} panelClassName={styles.scrollyPanel} onMarker={onMarker}>
       <div>{Graphic ? <Graphic preset={preset} {...graphicProps} /> : null}</div>
     </Scrollyteller>
   );

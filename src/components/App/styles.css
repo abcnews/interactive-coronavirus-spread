@@ -24,3 +24,80 @@ html {
   width: 100%;
   height: 100%;
 }
+
+.scrollyPanel {
+}
+
+.scrollyPanel::before {
+  background-color: rgba(243, 252, 252, 0.75);
+}
+
+.scrollyPanel > * {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  width: 66.666667%;
+  font-size: 1.375rem;
+  line-height: 1.666666667;
+  color: #000 !important;
+}
+
+@media only screen and (max-width: 667px) {
+  .scrollyPanel > * {
+    width: 83.333333%;
+    font-size: 1.125rem;
+    line-height: 1.555555556;
+  }
+}
+
+.scrollyPanel > :not(:last-child) {
+  margin-bottom: 1.5rem;
+}
+
+.scrollyPanel > h2,
+.scrollyPanel > h3 {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 24rem;
+  max-width: 90%;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: none;
+}
+
+.scrollyPanel > h2 {
+  font-size: 2.25rem;
+}
+
+.scrollyPanel > h3 {
+  font-size: 1.75rem;
+}
+
+.scrollyPanel a:link,
+.scrollyPanel a:hover,
+.scrollyPanel a:active,
+.scrollyPanel a:visited {
+  color: inherit !important;
+  text-decoration: underline !important;
+  text-decoration-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.scrollyPanel a:hover,
+.scrollyPanel a:active {
+  text-decoration-color: #fff !important;
+}
+
+@media only screen and (min-width: 668px) and (max-width: 1022px) {
+  .scrollyPanel {
+    width: 42rem;
+  }
+}
+
+@media only screen and (min-width: 1023px) {
+  .scrollyPanel :nth-of-type(2)[data-align='left'],
+  .scrollyPanel :nth-of-type(2)[data-align='right'] {
+    margin-top: 40vh;
+  }
+}
