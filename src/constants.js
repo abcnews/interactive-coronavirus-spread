@@ -5,7 +5,58 @@ export const WHO_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/who-country-totals.json`
 export const COUNTRY_TOTALS_URL = JOHN_HOPKINS_COUNTRY_TOTALS_URL;
 export const AFTER_100_CASES_URL = `${DATA_ENDPOINT}after-100-cases.json`;
 export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'South Korea', 'Taiwan', 'UK', 'US'];
-export const EUROPEAN_COUNTRIES = [];
+export const EUROPEAN_COUNTRIES = [
+  'Albania',
+  'Andorra',
+  'Armenia',
+  'Austria',
+  'Azerbaijan',
+  'Belarus',
+  'Belgium',
+  'Bosnia and Herzegovina',
+  'Bulgaria',
+  'Croatia',
+  'Cyprus',
+  'Czech Republic',
+  'Denmark',
+  'Estonia',
+  'Finland',
+  'France',
+  'Georgia',
+  'Germany',
+  'Greece',
+  'Hungary',
+  'Iceland',
+  'Ireland',
+  'Italy',
+  'Kazakhstan',
+  'Latvia',
+  'Liechtenstein',
+  'Lithuania',
+  'Luxembourg',
+  'Macedonia',
+  'Malta',
+  'Moldova',
+  'Monaco',
+  'Montenegro',
+  'Netherlands',
+  'Norway',
+  'Poland',
+  'Portugal',
+  'Romania',
+  'Russia',
+  'San Marino',
+  'Serbia',
+  'Slovakia',
+  'Slovenia',
+  'Spain',
+  'Sweden',
+  'Switzerland',
+  'Turkey',
+  'Ukraine',
+  'UK',
+  'Vatican City'
+];
 export const KEY_TRENDS = [2, 3, 7];
 
 export const PRESETS = {
@@ -89,8 +140,8 @@ export const PRESETS = {
   },
   europe: {
     graphic: 'cases',
-    countries: EUROPEAN_COUNTRIES.concat(['Australia']),
-    highlightedCountries: true
+    countries: true,
+    highlightedCountries: EUROPEAN_COUNTRIES.concat(['Australia'])
   },
   koreatoitaly: {
     graphic: 'cases',

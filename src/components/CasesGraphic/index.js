@@ -16,7 +16,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { KEY_COUNTRIES, KEY_TRENDS, TRENDS } from '../../constants';
+import { KEY_COUNTRIES, KEY_TRENDS, TRENDS, EUROPEAN_COUNTRIES } from '../../constants';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -499,7 +499,10 @@ export default class CasesGraphic extends Component {
       .remove();
 
     // Rendering > 11. Add/remove/update plot labels (near ends of lines)
-    const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
+    // const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
+    const labelledCountriesData = visibleCountriesData.filter(
+      d => KEY_COUNTRIES.concat(preset === 'europe' ? EUROPEAN_COUNTRIES : []).indexOf(d.key) > -1
+    );
     const plotLabelForceNodes = labelledCountriesData.map(d => {
       return {
         fx: 0,
