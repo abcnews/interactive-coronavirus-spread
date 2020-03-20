@@ -18,7 +18,7 @@ let dot3ypos = 0.666666;
 
 let dotsOffset = 1.0;
 
-let manyBodyForceStrength = -12;
+let manyBodyForceStrength = -13;
 let dotSize = 4;
 
 // Init these so we can unload them later on dismount
@@ -100,7 +100,7 @@ export default props => {
       .alpha(1)
       .alphaDecay(0.2)
       .alphaMin(0.001)
-      .velocityDecay(0.7)
+      .velocityDecay(0.6)
       .stop();
 
     // Function that paints to canvas
@@ -129,7 +129,7 @@ export default props => {
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, dotSize, 0, 2 * Math.PI);
-        ctx.fillStyle = '#8EC3CE';
+        ctx.fillStyle = 'rgba(140, 193, 204, 0.9)';
         // ctx.strokeStyle = '#5FA9BA';
         // ctx.stroke();
         ctx.fill();
@@ -153,11 +153,18 @@ export default props => {
         const node = nodesToAdd[i];
         if (node.delay < progress) {
           // Here we are simulating new dots "dividing" from dots already there
-          for (const currentNode of nodes) {
-            const randomNode = getRandomInt(0, nodes.length - 1);
-            if (nodes[randomNode].groupName === node.groupName) {
-              node.y = nodes[randomNode].y;
-              node.x = nodes[randomNode].x;
+          // So we randomly select nodes until we find one that matches
+          // TODO: Maybe optimise this ... OK that should be pretty optimised
+
+          // Make an array of random numbers
+          for (var a = [], j = 0; j < nodes.length; ++j) a[j] = j;
+          const shuffledArray = shuffle(a);
+
+          for (let randomNumber of shuffledArray) {
+            // const randomNode = getRandomInt(0, nodes.length - 1);
+            if (nodes[randomNumber].groupName === node.groupName) {
+              node.y = nodes[randomNumber].y;
+              node.x = nodes[randomNumber].x;
               break;
             }
           }
@@ -231,10 +238,13 @@ export default props => {
 
     // On iPhone SE and very small screens dots go off screen
     // So bump down
-    if (size.width > 320) {
+    if (size.width > 400) {
       setLabeloffsets(0);
+    }
+    else if (size.width > 320) {
+      setLabeloffsets(50);
     } else {
-      setLabeloffsets(40);
+      setLabeloffsets(60);
     }
   }, [size.width, size.height]);
 
@@ -254,6 +264,8 @@ export default props => {
         setLabel1Ypos(height * dot1ypos);
         setLabel2Ypos(height * dot2ypos);
         setLabel3Ypos(height * dot3ypos);
+
+        setDot3Background(false)
 
         // Add initial nodes to simulation
         for (let i = 0; i < 1; i++) {
@@ -299,6 +311,8 @@ export default props => {
         setLabel1Ypos(height * dot1ypos - 4);
         setLabel2Ypos(height * dot2ypos - 8);
         setLabel3Ypos(height * dot3ypos - 10);
+
+        setDot3Background(false)
 
         if (simulation.nodes().length !== 3) {
           week1DotState = [];
@@ -390,9 +404,11 @@ export default props => {
 
         break;
       case 'doublingweek2':
-        setLabel1Ypos(height * dot1ypos - 8);
-        setLabel2Ypos(height * dot2ypos - 26);
-        setLabel3Ypos(height * dot3ypos - 38);
+        setLabel1Ypos(height * dot1ypos - 12);
+        setLabel2Ypos(height * dot2ypos - 30);
+        setLabel3Ypos(height * dot3ypos - 42);
+
+        setDot3Background(false)
 
         if (simulation.nodes().length !== 20) {
           week2DotState = [];
@@ -617,4 +633,19 @@ function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// http://stackoverflow.com/questions/962802#962890
+function shuffle(array) {
+  var tmp,
+    current,
+    top = array.length;
+  if (top)
+    while (--top) {
+      current = Math.floor(Math.random() * (top + 1));
+      tmp = array[current];
+      array[current] = array[top];
+      array[top] = tmp;
+    }
+  return array;
 }

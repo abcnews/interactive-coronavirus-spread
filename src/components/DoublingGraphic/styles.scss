@@ -6,10 +6,11 @@
 
   h1 {
     font-family: 'ABCSerif', serif;
-    font-weight: bold;
+    font-size: 21px;
+    font-weight: 600;
     text-align: center;
     position: relative;
-    top: 3vh;
+    top: 5vh;
   }
 }
 
@@ -22,13 +23,17 @@
   display: block;
   position: absolute;
   pointer-events: none;
-  margin-top: 40px; // Bump down on small screens
+  margin-top: 60px; // Bump down on small screens
 
   @media (min-width: 321px) {
+    margin-top: 50px;
+  }
+
+  @media (min-width: 401px) {
     margin-top: 0px;
   }
 }
- 
+
 .label {
   position: absolute;
   top: 0;
@@ -36,19 +41,19 @@
   margin-right: auto;
   left: 0;
   right: 0;
-  color: #5d6d71;
+  color: #5c6c70;
   font-size: 14px;
   font-weight: bold;
   transition: top 0.5s;
-  margin-top: -45px;
+  margin-top: -40px;
 
   @media (min-width: 641px) {
-    font-size: 18px;
+    font-size: 15x;
   }
 }
 
 .background {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(243, 252, 252, 0.75);
   padding: 10px;
 }
 
