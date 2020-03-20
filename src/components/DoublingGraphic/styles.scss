@@ -22,13 +22,13 @@
   display: block;
   position: absolute;
   pointer-events: none;
-  margin-top: 70px;
+  margin-top: 40px; // Bump down on small screens
 
   @media (min-width: 321px) {
     margin-top: 0px;
   }
 }
-
+ 
 .label {
   position: absolute;
   top: 0;

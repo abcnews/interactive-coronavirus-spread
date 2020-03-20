@@ -56,6 +56,7 @@ export default props => {
   const [label1Ypos, setLabel1Ypos] = useState(height * dot1ypos);
   const [label2Ypos, setLabel2Ypos] = useState(height * dot2ypos);
   const [label3Ypos, setLabel3Ypos] = useState(height * dot3ypos);
+  const [labelOffsets, setLabeloffsets] = useState(70);
   const [dot3Background, setDot3Background] = useState(false);
 
   useLayoutEffect(() => {
@@ -227,6 +228,14 @@ export default props => {
     setLabel1Ypos(height * dot1ypos);
     setLabel2Ypos(height * dot2ypos);
     setLabel3Ypos(height * dot3ypos);
+
+    // On iPhone SE and very small screens dots go off screen
+    // So bump down
+    if (size.width > 320) {
+      setLabeloffsets(0);
+    } else {
+      setLabeloffsets(40);
+    }
   }, [size.width, size.height]);
 
   useEffect(() => {
@@ -481,7 +490,7 @@ export default props => {
 
         setLabel1Ypos(height * dot1ypos - 105);
         setLabel2Ypos(height * dot2ypos - 140);
-        setLabel3Ypos(height * dot3ypos - 120);
+        setLabel3Ypos(height * dot3ypos - 80);
 
         if (simulation.nodes().length !== 160) {
           week3DotState = [];
@@ -588,15 +597,15 @@ export default props => {
       <Fade>
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
-        <div className={styles.label} style={{ top: `${label1Ypos}px` }}>
+        <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
           <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
         </div>
 
-        <div className={styles.label} style={{ top: `${label2Ypos}px` }}>
+        <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
           <span className={`${styles.noBackground}`}>...doubles every 3 days</span>
         </div>
 
-        <div className={`${styles.label}`} style={{ top: `${label3Ypos}px` }}>
+        <div className={`${styles.label}`} style={{ top: `${label3Ypos + labelOffsets}px` }}>
           <span className={`${dot3Background && styles.background}`}>...doubles every 2 days</span>
         </div>
       </Fade>
