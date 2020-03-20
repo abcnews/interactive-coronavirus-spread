@@ -16,7 +16,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { ALIASES, KEY_COUNTRIES, KEY_TRENDS, TRENDS } from '../../constants';
+import { KEY_COUNTRIES, KEY_TRENDS, TRENDS } from '../../constants';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -128,7 +128,6 @@ export default class CasesGraphic extends Component {
             cases: countryTotals[country][date]
           }))
           .filter(({ cases }) => cases >= 1);
-        // .filter(({ cases }) => cases >= 100);
         const daysSince100CasesTotals = dailyTotals
           .filter(({ cases }) => cases >= 100)
           .map(({ cases }, index) => ({ day: index, cases }));
@@ -518,7 +517,7 @@ export default class CasesGraphic extends Component {
     }
     const plotLabelsData = labelledCountriesData.map((d, i) => ({
       key: d.key,
-      text: ALIASES[d.key] || d.key,
+      text: d.key,
       x: 6 + xScale(last(getDataCollection(d))[xPropName]),
       y: plotLabelForceNodes[i].y
     }));

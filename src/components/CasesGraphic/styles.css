@@ -203,13 +203,13 @@ circle.plotDot[data-country='Singapore'] {
   color: #01cfff;
 }
 
-path.plotLine[data-country='Korea, South'],
-circle.plotDot[data-country='Korea, South'] {
+path.plotLine[data-country='South Korea'],
+circle.plotDot[data-country='South Korea'] {
   color: #8272d6;
 }
 
-path.plotLine[data-country='United Kingdom'],
-circle.plotDot[data-country='United Kingdom'] {
+path.plotLine[data-country='UK'],
+circle.plotDot[data-country='UK'] {
   color: #ea526f;
 }
 
@@ -234,11 +234,11 @@ text.plotLabel[data-country='Singapore'] {
   color: #047ca5;
 }
 
-text.plotLabel[data-country='Korea, South'] {
+text.plotLabel[data-country='South Korea'] {
   color: #7462cc;
 }
 
-text.plotLabel[data-country='United Kingdom'] {
+text.plotLabel[data-country='UK'] {
   color: #e01b3f;
 }
 
