@@ -9,8 +9,6 @@ const PROJECT_NAME = 'interactive-coronavirus-spread';
 const root = document.querySelector(`[data-${PROJECT_NAME}-root]`);
 
 function renderApps(scrollyDatas, countryTotals) {
-  console.debug(scrollyDatas, countryTotals);
-
   scrollyDatas.forEach(scrollyData =>
     render(<App scrollyData={scrollyData} countryTotals={countryTotals} />, scrollyData.mountNode)
   );

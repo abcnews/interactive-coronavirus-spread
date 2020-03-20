@@ -16,7 +16,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { ABBREVIATIONS, ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
+import { ALIASES, KEY_COUNTRIES, TRENDS } from '../../constants';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -509,7 +509,6 @@ export default class CasesGraphic extends Component {
     }
     const plotLabelsData = labelledCountriesData.map((d, i) => ({
       key: d.key,
-      // text: ABBREVIATIONS[d.key] || ALIASES[d.key] || d.key,
       text: ALIASES[d.key] || d.key,
       x: 6 + xScale(last(getDataCollection(d))[xPropName]),
       y: plotLabelForceNodes[i].y

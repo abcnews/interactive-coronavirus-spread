@@ -3,15 +3,10 @@ export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/
 export const AFTER_100_CASES_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/after-100-cases.json';
 
 export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Korea, South', 'Singapore', 'United Kingdom', 'US'];
-// export const KEY_COUNTRIES = ['China', 'Italy', 'Korea, South', 'US', 'United Kingdom', 'Australia', 'Singapore'];
+export const KEY_TRENDS = [2, 3, 7];
 
 export const ALIASES = {
   'Korea, South': 'South Korea',
-  'United Kingdom': 'UK'
-};
-
-export const ABBREVIATIONS = {
-  Australia: 'Aus',
   'United Kingdom': 'UK'
 };
 
@@ -22,7 +17,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: true,
     highlightedCountries: KEY_COUNTRIES,
-    trends: true
+    trends: KEY_TRENDS
   },
   china: {
     graphic: 'cases',
@@ -30,7 +25,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: ['China'],
     highlightedCountries: true,
-    trends: true
+    trends: KEY_TRENDS
   },
   all: {
     graphic: 'cases',
@@ -38,7 +33,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: true,
     highlightedCountries: KEY_COUNTRIES,
-    trends: true
+    trends: KEY_TRENDS
   },
   key: {
     graphic: 'cases',
@@ -46,7 +41,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: KEY_COUNTRIES,
     highlightedCountries: true,
-    trends: true
+    trends: KEY_TRENDS
   },
   hundred: {
     graphic: 'cases',
@@ -54,7 +49,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     countries: KEY_COUNTRIES,
     highlightedCountries: true,
-    trends: true
+    trends: KEY_TRENDS
   },
   doublinginit: {
     graphic: 'doubling',
@@ -78,14 +73,14 @@ export const PRESETS = {
     yScaleType: 'logarithmic',
     countries: KEY_COUNTRIES,
     highlightedCountries: true,
-    trends: true
+    trends: KEY_TRENDS
   },
   trends: {
     graphic: 'cases',
     xScaleType: 'days',
     yScaleType: 'logarithmic',
     countries: KEY_COUNTRIES,
-    trends: true,
+    trends: KEY_TRENDS,
     highlightedTrends: true
   },
   lowtrend: {
@@ -93,19 +88,19 @@ export const PRESETS = {
     xScaleType: 'days',
     yScaleType: 'logarithmic',
     countries: KEY_COUNTRIES,
-    trends: true,
+    trends: KEY_TRENDS,
     highlightedTrends: [7]
   }
 };
 
 export const TRENDS = [
-  // { name: 'day', doublingTimePeriods: 1 },
+  { name: 'day', doublingTimePeriods: 1 },
   { name: '2 days', doublingTimePeriods: 2 },
   { name: '3 days', doublingTimePeriods: 3 },
-  // { name: '4 days', doublingTimePeriods: 4 },
-  // { name: '5 days', doublingTimePeriods: 5 },
-  // { name: '6 days', doublingTimePeriods: 6 },
-  { name: 'week', doublingTimePeriods: 7 }
-  // { name: '2 weeks', doublingTimePeriods: 14 },
-  // { name: 'month', doublingTimePeriods: 28 }
+  { name: '4 days', doublingTimePeriods: 4 },
+  { name: '5 days', doublingTimePeriods: 5 },
+  { name: '6 days', doublingTimePeriods: 6 },
+  { name: 'week', doublingTimePeriods: 7 },
+  { name: '2 weeks', doublingTimePeriods: 14 },
+  { name: 'month', doublingTimePeriods: 28 }
 ];
