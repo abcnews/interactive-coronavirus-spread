@@ -1,60 +1,41 @@
-export const DATA_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/data.json';
-export const COUNTRY_TOTALS_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/country-totals.json';
-export const AFTER_100_CASES_URL = 'https://www.abc.net.au/dat/news/interactives/covid19-data/after-100-cases.json';
-
-export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Korea, South', 'Singapore', 'United Kingdom', 'US'];
-// export const KEY_COUNTRIES = ['China', 'Italy', 'Korea, South', 'US', 'United Kingdom', 'Australia', 'Singapore'];
-
-export const ALIASES = {
-  'Korea, South': 'South Korea',
-  'United Kingdom': 'UK'
-};
-
-export const ABBREVIATIONS = {
-  Australia: 'Aus',
-  'United Kingdom': 'UK'
-};
+export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
+export const JOHN_HOPKINS_DATA_URL = `${DATA_ENDPOINT}data.json`;
+export const JOHN_HOPKINS_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}country-totals.json`;
+export const WHO_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/who-country-totals.json`;
+export const COUNTRY_TOTALS_URL = JOHN_HOPKINS_COUNTRY_TOTALS_URL;
+export const AFTER_100_CASES_URL = `${DATA_ENDPOINT}after-100-cases.json`;
+export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'South Korea', 'Taiwan', 'UK', 'US'];
+export const EUROPEAN_COUNTRIES = [];
+export const KEY_TRENDS = [2, 3, 7];
 
 export const PRESETS = {
   initial: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    countries: true,
-    highlightedCountries: KEY_COUNTRIES,
-    trends: true
+    countries: true
   },
   china: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
     countries: ['China'],
-    highlightedCountries: true,
-    trends: true
+    highlightedCountries: true
   },
   all: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    countries: true,
-    highlightedCountries: KEY_COUNTRIES,
-    trends: true
+    countries: true
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
-    yScaleType: 'linear',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: true
+    yScaleType: 'linear'
   },
   hundred: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'linear',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: true
+    yScaleType: 'linear'
   },
   doublinginit: {
     graphic: 'doubling',
@@ -73,39 +54,70 @@ export const PRESETS = {
     marker: 'doublingmonth'
   },
   logarithmic: {
-    graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    highlightedCountries: true,
-    trends: true
+    graphic: 'cases'
   },
   trends: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    trends: true,
     highlightedTrends: true
   },
   lowtrend: {
     graphic: 'cases',
-    xScaleType: 'days',
-    yScaleType: 'logarithmic',
-    countries: KEY_COUNTRIES,
-    trends: true,
     highlightedTrends: [7]
+  },
+  singapore: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'Singapore']
+  },
+  singtotaiwan: {
+    graphic: 'cases',
+    countries: KEY_COUNTRIES.concat(['Taiwan']),
+    highlightedCountries: ['Australia', 'Singapore', 'Taiwan']
+  },
+  taiwan: {
+    graphic: 'cases',
+    countries: KEY_COUNTRIES.concat(['Taiwan']),
+    highlightedCountries: ['Australia', 'Taiwan']
+  },
+  taiwantokorea: {
+    graphic: 'cases',
+    countries: KEY_COUNTRIES.concat(['Taiwan']),
+    highlightedCountries: ['Australia', 'Taiwan', 'South Korea']
+  },
+  korea: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'South Korea']
+  },
+  europe: {
+    graphic: 'cases',
+    countries: EUROPEAN_COUNTRIES.concat(['Australia']),
+    highlightedCountries: true
+  },
+  koreatoitaly: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'South Korea', 'Italy']
+  },
+  italy: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'Italy']
+  },
+  italytojapan: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'Italy', 'Japan']
+  },
+  unitedstates: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia', 'US']
   }
 };
 
 export const TRENDS = [
-  // { name: 'day', doublingTimePeriods: 1 },
+  { name: 'day', doublingTimePeriods: 1 },
   { name: '2 days', doublingTimePeriods: 2 },
   { name: '3 days', doublingTimePeriods: 3 },
-  // { name: '4 days', doublingTimePeriods: 4 },
-  // { name: '5 days', doublingTimePeriods: 5 },
-  // { name: '6 days', doublingTimePeriods: 6 },
-  { name: 'week', doublingTimePeriods: 7 }
-  // { name: '2 weeks', doublingTimePeriods: 14 },
-  // { name: 'month', doublingTimePeriods: 28 }
+  { name: '4 days', doublingTimePeriods: 4 },
+  { name: '5 days', doublingTimePeriods: 5 },
+  { name: '6 days', doublingTimePeriods: 6 },
+  { name: 'week', doublingTimePeriods: 7 },
+  { name: '2 weeks', doublingTimePeriods: 14 },
+  { name: 'month', doublingTimePeriods: 28 }
 ];
