@@ -3,14 +3,40 @@ import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
 import App from './components/App';
-import { COUNTRY_TOTALS_URL } from './constants';
+import CasesGraphic from './components/CasesGraphic';
+import InlineGraphic from './components/InlineGraphic';
+import { COUNTRY_TOTALS_URL, PRESETS } from './constants';
 
 const PROJECT_NAME = 'interactive-coronavirus-spread';
 const root = document.querySelector(`[data-${PROJECT_NAME}-root]`);
+const casesGraphicsRoots = [...document.querySelectorAll(`a[name^=casesgraphicPRESET]`)].map(anchorEl => {
+  const props = a2o(anchorEl.getAttribute('name'));
+  const mountEl = document.createElement('div');
+
+  mountEl.className = 'u-pull';
+
+  Object.keys(props).forEach(propName => (mountEl.dataset[propName] = props[propName]));
+  anchorEl.parentElement.insertBefore(mountEl, anchorEl);
+  anchorEl.parentElement.removeChild(anchorEl);
+
+  return mountEl;
+});
 
 function renderApps(scrollyDatas, countryTotals) {
   scrollyDatas.forEach(scrollyData =>
     render(<App scrollyData={scrollyData} countryTotals={countryTotals} />, scrollyData.mountNode)
+  );
+  casesGraphicsRoots.forEach(casesGraphicRoot =>
+    render(
+      <InlineGraphic>
+        <CasesGraphic
+          preset={casesGraphicRoot.dataset.preset}
+          countryTotals={countryTotals}
+          {...PRESETS[casesGraphicRoot.dataset.preset]}
+        />
+      </InlineGraphic>,
+      casesGraphicRoot
+    )
   );
 }
 
