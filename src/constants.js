@@ -66,12 +66,14 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
+    casesCap: 1e5,
     countries: true
   },
   china: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
+    casesCap: 1e5,
     countries: ['China'],
     highlightedCountries: true
   },
@@ -79,16 +81,19 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
+    casesCap: 1e5,
     countries: true
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
-    yScaleType: 'linear'
+    yScaleType: 'linear',
+    casesCap: 1e5
   },
   hundred: {
     graphic: 'cases',
-    yScaleType: 'linear'
+    yScaleType: 'linear',
+    casesCap: 1e5
   },
   doublinginit: {
     graphic: 'doubling',
@@ -107,16 +112,32 @@ export const PRESETS = {
     marker: 'doublingmonth'
   },
   logarithmic: {
-    graphic: 'cases'
+    graphic: 'cases',
+    casesCap: 1e5
   },
   trends: {
     graphic: 'cases',
     highlightedCountries: false,
-    highlightedTrends: true
+    highlightedTrends: true,
+    casesCap: 1e5
   },
-  lowtrend: {
+  zoomin: {
     graphic: 'cases',
-    highlightedCountries: false,
+    trends: false
+  },
+  trenditaly: {
+    graphic: 'cases',
+    highlightedCountries: ['Italy'],
+    highlightedTrends: [2]
+  },
+  trendaustralia: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia'],
+    highlightedTrends: [3]
+  },
+  trendsingapore: {
+    graphic: 'cases',
+    highlightedCountries: ['Singapore'],
     highlightedTrends: [7]
   },
   singapore: {
