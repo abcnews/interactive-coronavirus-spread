@@ -20,6 +20,7 @@ import { KEY_COUNTRIES, KEY_TRENDS, TRENDS, EUROPEAN_COUNTRIES } from '../../con
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
+const ONE_DAY = 864e5;
 const REM = 16;
 const MARGIN = {
   top: 3 * REM,
@@ -38,9 +39,11 @@ const TRANSITION_DURATIONS = {
 };
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
+const DEFAULT_CASES_CAP = 3e4;
 const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
+  casesCap: DEFAULT_CASES_CAP,
   countries: KEY_COUNTRIES,
   highlightedCountries: KEY_COUNTRIES,
   trends: KEY_TRENDS,
@@ -73,18 +76,18 @@ function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) 
   return data;
 }
 
-function generateTrendsData(trends, startDate, endDate) {
+function generateTrendsData(trends, startDate, numDays, casesCap) {
   const dates = [];
   let currentDate = new Date(startDate);
 
-  while (currentDate <= new Date(endDate)) {
+  for (let i = 0, len = numDays - 1; i < numDays; i++) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return trends.reduce((memo, trend) => {
     const increasePerPeriod = calculateIncreasePerPeriod(trend.doublingTimePeriods);
-    const casesData = createTrendCasesData(increasePerPeriod, dates.length, 100).filter(count => count <= 100000);
+    const casesData = createTrendCasesData(increasePerPeriod, numDays, 100).filter(count => count <= casesCap);
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
@@ -92,15 +95,25 @@ function generateTrendsData(trends, startDate, endDate) {
       daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
     };
 
-    const daysToHundredKCases = calculatePeriodsToIncrease(increasePerPeriod, 100, 100000);
+    const daysToCasesCap = calculatePeriodsToIncrease(increasePerPeriod, 100, casesCap);
+    const daysDiff = Math.min(1, daysToCasesCap - casesData.length + 1);
 
-    if (daysToHundredKCases < dates.length) {
-      let fractionalDate = new Date(last(item.dailyTotals).date);
+    if (daysDiff > 0) {
+      const lastItem = last(item.dailyTotals);
 
-      fractionalDate.setDate(fractionalDate.getDate() + daysToHundredKCases - item.dailyTotals.length + 2);
+      if (daysDiff < 1) {
+        // Meet extent of y-scale
+        let fractionalDate = new Date(lastItem.date.valueOf() + ONE_DAY * daysDiff);
 
-      item.dailyTotals.push({ date: fractionalDate, cases: 100000 });
-      item.daysSince100CasesTotals.push({ day: daysToHundredKCases, cases: 100000 });
+        item.dailyTotals.push({ date: fractionalDate, cases: casesCap });
+        item.daysSince100CasesTotals.push({ day: daysToCasesCap, cases: casesCap });
+      } else {
+        // Meet extent of x-scale
+        let fractionalCases = lastItem.cases + lastItem.cases * increasePerPeriod;
+
+        item.dailyTotals.push({ date: new Date(lastItem.date.valueOf() + ONE_DAY), cases: fractionalCases });
+        item.daysSince100CasesTotals.push({ day: casesData.length, cases: fractionalCases });
+      }
     }
 
     return memo.concat([item]);
@@ -164,13 +177,10 @@ export default class CasesGraphic extends Component {
 
       return memo;
     }, last(this.countriesData[0].dailyTotals).date);
-    this.mostDaysSince100Cases = this.countriesData.reduce((memo, d) => {
-      return Math.max(memo, d.dailyTotals.length - 1);
-    }, 0);
+    this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
     this.mostCases = this.countriesData.reduce((memo, d) => {
       return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.cases)));
     }, 0);
-    this.trendsData = generateTrendsData(TRENDS, this.earliestDate, this.latestDate);
 
     this.state = {
       width: 0,
@@ -197,7 +207,7 @@ export default class CasesGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    const { countries, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = {
+    const { countries, casesCap, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = {
       ...DEFAULT_PROPS,
       ...nextProps
     };
@@ -210,7 +220,9 @@ export default class CasesGraphic extends Component {
     }
 
     checkScaleTypes(xScaleType, yScaleType);
-
+    const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
+      return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= casesCap).length - 1);
+    }, 0);
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
@@ -218,12 +230,16 @@ export default class CasesGraphic extends Component {
     const xPropName = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
-      : scaleLinear().domain([0, this.mostDaysSince100Cases])
+      : scaleLinear().domain([0, cappedDaysSince100Cases])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic' ? scaleLog().nice() : scaleLinear())
-      .domain([100, Math.ceil(this.mostCases / 1e5) * 1e5])
+      .domain([100, Math.ceil(Math.min(casesCap, this.mostCases) / casesCap) * casesCap])
       .range([chartHeight, 0]);
-    const getDataCollection = d => d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'];
+    const getDataCollection = d =>
+      d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
+        (memo, item) => memo.concat(item.cases <= casesCap ? [item] : []),
+        []
+      );
     const generateLinePath = d =>
       line()
         .x(d => xScale(d[xPropName]))
@@ -258,14 +274,19 @@ export default class CasesGraphic extends Component {
     const isTrendVisible = inclusionCheckGenerator(trends, 'doublingTimePeriods');
     const isTrendHighlighted = inclusionCheckGenerator(highlightedTrends, 'doublingTimePeriods');
     const visibleCountriesData = this.countriesData.filter(isCountryVisible);
-    const visibleTrendsData = this.trendsData.filter(isTrendVisible);
+    const visibleTrendsData = generateTrendsData(
+      TRENDS.filter(isTrendVisible),
+      this.earliestDate,
+      xScaleType === 'dates' ? this.numDates : cappedDaysSince100Cases,
+      casesCap
+    );
     const xAxisGenerator =
       xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%-d/%-m')) : axisBottom(xScale);
     const yAxisGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType])
+      .tickValues(TICK_VALUES[yScaleType].concat(casesCap ? [casesCap] : []))
       .tickFormat(format(',.1s'));
     const yAxisGridlinesGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType])
+      .tickValues(TICK_VALUES[yScaleType].concat(casesCap ? [casesCap] : []))
       .tickSize(-chartWidth)
       .tickFormat('');
 
