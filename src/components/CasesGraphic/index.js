@@ -132,7 +132,12 @@ export default class CasesGraphic extends Component {
           .filter(({ cases }) => cases >= 100)
           .map(({ cases }, index) => ({ day: index, cases }));
 
-        return { key: country, cases: last(dailyTotals).cases, dailyTotals, daysSince100CasesTotals };
+        return {
+          key: country,
+          cases: dailyTotals.length ? last(dailyTotals).cases : 0,
+          dailyTotals,
+          daysSince100CasesTotals
+        };
       })
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => b.cases - a.cases);
