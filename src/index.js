@@ -79,32 +79,17 @@ const whenScrollytellersLoaded = new Promise((resolve, reject) =>
 const whenCountryTotalsFetched = fetch(COUNTRY_TOTALS_URL)
   .then(response => response.json())
   .then(data => {
-    // Convert old item-based WHO format to match key-based John Hopkins format (combining Province/State data)
-    data = Array.isArray(data)
-      ? data
-          .sort((a, b) =>
-            a['Country/Region'] > b['Country/Region'] ? 1 : b['Country/Region'] > a['Country/Region'] ? -1 : 0
-          )
-          .reduce((memo, item) => {
-            memo[item['Country/Region']] = item.Cases.reduce((memo, item) => {
-              memo[item.Date] = (memo[item.Date] || 0) + item.Confirmed;
-
-              return memo;
-            }, memo[item['Country/Region']] || {});
-
-            return memo;
-          }, {})
-      : data;
-
-    // Rename countries / remove unused
+    // A bit of renaming & clean up
     data['South Korea'] = data['Korea, South'] || data['South Korea'];
     data['Taiwan'] = data['Taiwan*'] || data['Taiwan'];
     data['UK'] = data['United Kingdom'] || data['UK'];
     data['US'] = data['United States'] || data['US'];
+
     delete data['Korea, South'];
     delete data['Taiwan*'];
     delete data['United Kingdom'];
     delete data['United States'];
+    delete data['International'];
     delete data['World'];
 
     return Promise.resolve(data);
