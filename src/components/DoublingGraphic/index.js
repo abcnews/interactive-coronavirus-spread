@@ -630,13 +630,15 @@ export default props => {
   );
 };
 
+// Helper functions -----------------------
+
+// Get a random integer between two numbers
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// http://stackoverflow.com/questions/962802#962890
 // Shuffles an array
 function shuffle(array) {
   var tmp,
