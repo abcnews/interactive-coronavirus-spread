@@ -12,6 +12,7 @@ import {
   scaleLog,
   scaleTime,
   select,
+  timeWeek,
   timeFormat
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
@@ -281,7 +282,11 @@ export default class CasesGraphic extends Component {
       casesCap
     );
     const xAxisGenerator =
-      xScaleType === 'dates' ? axisBottom(xScale).tickFormat(timeFormat('%-d/%-m')) : axisBottom(xScale);
+      xScaleType === 'dates'
+        ? axisBottom(xScale)
+            .ticks(timeWeek.every(2))
+            .tickFormat(timeFormat('%-d/%-m'))
+        : axisBottom(xScale).ticks(5);
     const yAxisGenerator = axisLeft(yScale)
       .tickValues(TICK_VALUES[yScaleType].concat(casesCap ? [casesCap] : []))
       .tickFormat(format(',.1s'));

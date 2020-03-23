@@ -1,0 +1,11 @@
+.root {
+  position: relative;
+  padding-bottom: 150%;
+  height: 0;
+}
+
+@media (min-width: 40rem) {
+  .root {
+    padding-bottom: 66.67%;
+  }
+}
