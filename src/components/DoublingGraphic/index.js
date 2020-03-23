@@ -240,7 +240,7 @@ export default props => {
     // On iPhone SE and very small screens dots go off screen
     // So bump down
     if (size.width > 400) {
-      setLabeloffsets(0);
+      setLabeloffsets(30);
     }
     else if (size.width > 320) {
       setLabeloffsets(50);

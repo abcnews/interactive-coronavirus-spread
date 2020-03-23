@@ -101,3 +101,15 @@ html {
     margin-top: 40vh;
   }
 }
+
+:global {
+  @media (min-width: 1400px) {
+    .Main > .u-full > div > div:nth-child(5),
+    .Main > .u-full > div > div:nth-child(6),
+    .Main > .u-full > div > div:nth-child(7),
+    .Main > .u-full > div > div:nth-child(8) {
+      margin-right: calc(30% - 24.75rem) !important;
+      width: 49.5rem !important;
+    }
+  }
+}

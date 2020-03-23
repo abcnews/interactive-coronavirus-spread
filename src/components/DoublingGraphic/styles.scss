@@ -34,7 +34,7 @@
   }
 
   @media (min-width: 401px) {
-    margin-top: 0px;
+    margin-top: 30px;
   }
 }
 
@@ -59,4 +59,10 @@
 .background {
   background-color: rgba(243, 252, 252, 0.75);
   padding: 10px;
+}
+
+@media (min-width: 1400px) {
+  .root {
+    transform: translateX(-25%);
+  }
 }
