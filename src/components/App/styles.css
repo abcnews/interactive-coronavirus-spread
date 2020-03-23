@@ -103,7 +103,7 @@ html {
 }
 
 :global {
-  @media (min-width: 1400px) {
+  @media (min-width: 1200px) {
     .Main > .u-full > div > div:nth-child(5),
     .Main > .u-full > div > div:nth-child(6),
     .Main > .u-full > div > div:nth-child(7),
