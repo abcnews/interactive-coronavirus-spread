@@ -149,7 +149,7 @@ export default class CasesGraphic extends Component {
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
 
-      if (new Date(candidate) < new Date(memo)) {
+      if (candidate < memo) {
         return candidate;
       }
 
@@ -158,7 +158,7 @@ export default class CasesGraphic extends Component {
     this.latestDate = this.countriesData.reduce((memo, d) => {
       const candidate = last(d.dailyTotals).date;
 
-      if (new Date(candidate) < new Date(memo)) {
+      if (candidate > memo) {
         return candidate;
       }
 
