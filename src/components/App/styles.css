@@ -106,6 +106,12 @@ html {
   }
 }
 
+[class*='u-richtext'][class*='u-richtext'] > h3 {
+  padding-top: 2rem;
+  font-family: 'ABCSans', sans-serif;
+  text-align: center;
+}
+
 :global {
   @media (min-width: 1200px) {
     .Main > .u-full > div > div:nth-child(5),
