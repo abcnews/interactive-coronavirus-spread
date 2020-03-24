@@ -67,7 +67,8 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: 1e5,
-    countries: true
+    countries: true,
+    trends: false
   },
   china: {
     graphic: 'cases',
@@ -82,18 +83,21 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: 1e5,
-    countries: true
+    countries: true,
+    trends: false
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5
+    casesCap: 1e5,
+    trends: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    casesCap: 1e5
+    casesCap: 1e5,
+    trends: false
   },
   doublinginit: {
     graphic: 'doubling',
