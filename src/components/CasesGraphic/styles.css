@@ -118,6 +118,7 @@
   stroke-opacity: 0.5;
   stroke-width: 1;
   stroke-linejoin: round;
+  stroke-dasharray: 95.5 0.5 1 0.5 1 0.5 1;
 }
 
 .plotLine.highlighted {
@@ -136,12 +137,18 @@
   stroke: currentColor;
   stroke-opacity: 0.67;
   stroke-width: 0;
+  transition: fill-opacity 0.25s, stroke-opacity 0.25s;
 }
 
 .plotDot.highlighted {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 2;
+}
+
+.plotDot.truncated {
+  fill-opacity: 0;
+  stroke-opacity: 0;
 }
 
 .trendLabels {
