@@ -316,7 +316,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : 'Number of days since the 100th case');
+      .text(xScaleType === 'dates' ? 'Date' : `${chartWidth > 640 ? 'Number of d' : 'D'}ays since the 100th case`);
 
     // Rendering > 4: Add/update y-axis
     svg
