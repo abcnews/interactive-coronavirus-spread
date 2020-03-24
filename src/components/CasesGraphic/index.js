@@ -330,12 +330,14 @@ export default class CasesGraphic extends Component {
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
         if (IS_TRIDENT) {
-          selection.text(yScaleType === 'linear' ? 'Total cases' : `Cumulative number of cases since the 100th case`);
+          selection.text(
+            yScaleType === 'linear' ? 'Known cases' : `Cumulative number of known cases since the 100th case`
+          );
         } else {
           selection.html(
             yScaleType === 'linear'
-              ? 'Total cases'
-              : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+              ? 'Known cases'
+              : `<tspan x="0" dy="-0.75em">Cumulative number of known</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
           );
         }
       });
