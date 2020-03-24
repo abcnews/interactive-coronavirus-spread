@@ -75,6 +75,10 @@ html {
   font-size: 1.75rem;
 }
 
+.scrollyPanel li {
+  margin-left: 1em;
+}
+
 .scrollyPanel a:link,
 .scrollyPanel a:hover,
 .scrollyPanel a:active,
