@@ -126,6 +126,10 @@
   stroke-width: 3;
 }
 
+[data-preset='europe'] .plotLine.highlighted {
+  stroke-width: 1;
+}
+
 .plotDots {
   fill: none;
 }

@@ -222,6 +222,8 @@ export default class CasesGraphic extends Component {
       return false;
     }
 
+    this.rootRef.current.setAttribute('data-preset', preset);
+
     checkScaleTypes(xScaleType, yScaleType);
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= casesCap).length - 1);
