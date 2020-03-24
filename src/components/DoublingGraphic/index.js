@@ -6,7 +6,6 @@ import scaleCanvas from './scaleCanvas';
 import styles from './styles.scss';
 
 import { useWindowSize } from './useWindowSize';
-import { set } from 'd3';
 
 const ANIMATION_TICK_LIMIT = 600;
 const RANDOM_INIT_DISTANCE = 80;
@@ -15,8 +14,6 @@ const MULTIPLY_DELAY = 100;
 let dot1ypos = 0.333333;
 let dot2ypos = 0.5;
 let dot3ypos = 0.666666;
-
-let dotsOffset = 1.0;
 
 let manyBodyForceStrength = -13;
 let dotSize = 4;
@@ -111,22 +108,6 @@ export default props => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
 
-        // Help position labels
-        // if (node.groupName === 'one' && node.y < oneTopY) {
-        //   oneTopY = node.y;
-        //   setLabel1Ypos(oneTopY - 33);
-        // }
-
-        // if (node.groupName === 'two' && node.y < twoTopY) {
-        //   twoTopY = node.y;
-        //   setLabel2Ypos(twoTopY - 33);
-        // }
-
-        // if (node.groupName === 'three' && node.y < threeTopY) {
-        //   threeTopY = node.y;
-        //   setLabel3Ypos(threeTopY + 30);
-        // }
-
         ctx.beginPath();
         ctx.arc(node.x, node.y, dotSize, 0, 2 * Math.PI);
         ctx.fillStyle = 'rgba(140, 193, 204, 0.9)';
@@ -154,7 +135,6 @@ export default props => {
         if (node.delay < progress) {
           // Here we are simulating new dots "dividing" from dots already there
           // So we randomly select nodes until we find one that matches
-          // TODO: Maybe optimise this ... OK that should be pretty optimised
 
           // Make an array of random numbers
           // and go through until we find one
@@ -502,7 +482,7 @@ export default props => {
         }, MULTIPLY_DELAY);
 
         break;
-      case 'doublingmonth':
+      case 'doublingweek3':
         setDot3Background(true);
 
         setLabel1Ypos(height * dot1ypos - 105);
