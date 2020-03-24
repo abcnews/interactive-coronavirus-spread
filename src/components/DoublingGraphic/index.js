@@ -57,7 +57,6 @@ export default props => {
   const [dot3Background, setDot3Background] = useState(false);
 
   useLayoutEffect(() => {
-    console.log('Mounting D3 vis...');
     // Add the canvas element to the page
     canvas = d3
       .select(canvasEl.current)
