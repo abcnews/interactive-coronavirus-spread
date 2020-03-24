@@ -150,6 +150,10 @@
   stroke-width: 2;
 }
 
+[data-preset='europe'] .plotDot.highlighted {
+  stroke-width: 0;
+}
+
 .plotDot.truncated {
   fill-opacity: 0;
   stroke-opacity: 0;
