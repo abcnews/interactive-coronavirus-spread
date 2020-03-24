@@ -540,20 +540,22 @@ export default class CasesGraphic extends Component {
         targetY: yScale(last(getDataCollection(d)).cases)
       };
     });
-    const plotLabelsForceSimulation = forceSimulation()
-      .nodes(plotLabelForceNodes)
-      .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
-      .force('y', forceY(d => d.targetY).strength(1))
-      .force('clamp', labelForceClamp(0, chartHeight))
-      .stop();
-    for (let i = 0; i < 300; i++) {
-      plotLabelsForceSimulation.tick();
+    if (chartWidth < 640 || xScaleType === 'dates') {
+      const plotLabelsForceSimulation = forceSimulation()
+        .nodes(plotLabelForceNodes)
+        .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
+        .force('y', forceY(d => d.targetY).strength(1))
+        .force('clamp', labelForceClamp(0, chartHeight))
+        .stop();
+      for (let i = 0; i < 300; i++) {
+        plotLabelsForceSimulation.tick();
+      }
     }
     const plotLabelsData = labelledCountriesData.map((d, i) => ({
       key: d.key,
       text: d.key,
       x: 6 + xScale(last(getDataCollection(d))[xPropName]),
-      y: plotLabelForceNodes[i].y
+      y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
     }));
     const plotLabels = svg // Bind
       .select(`.${styles.plotLabels}`)
