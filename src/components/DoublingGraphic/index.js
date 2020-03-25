@@ -589,15 +589,15 @@ export default props => {
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
         <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
-          <span className={`${styles.noBackground}`}>The number of cases doubles every week</span>
+          <span className={`${styles.noBackground}`}>Cases double every week</span>
         </div>
 
         <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
-          <span className={`${styles.noBackground}`}>...doubles every 3 days</span>
+          <span className={`${styles.noBackground}`}>...every 3 days</span>
         </div>
 
         <div className={`${styles.label}`} style={{ top: `${label3Ypos + labelOffsets}px` }}>
-          <span className={`${dot3Background && styles.background}`}>...doubles every 2 days</span>
+          <span className={`${dot3Background && styles.background}`}>...every 2 days</span>
         </div>
       </Fade>
     </div>
