@@ -107,9 +107,9 @@ export const PRESETS = {
     graphic: 'doubling',
     marker: 'doublingweek2'
   },
-  doublingmonth: {
+  doublingweek3: {
     graphic: 'doubling',
-    marker: 'doublingmonth'
+    marker: 'doublingweek3'
   },
   logarithmic: {
     graphic: 'cases',
