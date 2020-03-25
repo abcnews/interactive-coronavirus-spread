@@ -76,14 +76,16 @@ html {
 }
 
 .scrollyPanel ul {
-  list-style-type: disc;
+  list-style: none;
 }
 
 .scrollyPanel ul li {
-  margin-left: 1em;
-  padding: 0 0 0 0.5em;
-  background: none;
-  line-height: 1.667;
+  margin-bottom: 0.5rem;
+  padding-left: 1em;
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHZpZXdCb3g9IjAgMCA0IDQiPgogIDxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiM2NjY2NjYiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPgo8L3N2Zz4K);
+  background-position: 0 0.65em;
+  background-repeat: no-repeat;
+  line-height: 1.556;
 }
 
 .scrollyPanel a:link,
