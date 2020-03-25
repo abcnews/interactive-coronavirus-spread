@@ -70,13 +70,14 @@ export const PRESETS = {
     countries: true,
     trends: false
   },
-  china: {
+  single: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: 1e5,
     countries: ['China'],
-    highlightedCountries: true
+    highlightedCountries: true,
+    trends: false
   },
   all: {
     graphic: 'cases',
@@ -117,7 +118,8 @@ export const PRESETS = {
   },
   logarithmic: {
     graphic: 'cases',
-    casesCap: 1e5
+    casesCap: 1e5,
+    trends: false
   },
   trends: {
     graphic: 'cases',
@@ -125,8 +127,22 @@ export const PRESETS = {
     highlightedTrends: true,
     casesCap: 1e5
   },
+  logtrends: {
+    graphic: 'cases',
+    casesCap: 1e5
+  },
   zoomin: {
     graphic: 'cases',
+    trends: false
+  },
+  fortyk: {
+    graphic: 'cases',
+    casesCap: 4e4,
+    trends: false
+  },
+  fiftyk: {
+    graphic: 'cases',
+    casesCap: 5e4,
     trends: false
   },
   trenditaly: {
@@ -143,6 +159,14 @@ export const PRESETS = {
     graphic: 'cases',
     highlightedCountries: ['Singapore'],
     highlightedTrends: [7]
+  },
+  australia: {
+    graphic: 'cases',
+    highlightedCountries: ['Australia']
+  },
+  china: {
+    graphic: 'cases',
+    highlightedCountries: ['China']
   },
   singapore: {
     graphic: 'cases',
