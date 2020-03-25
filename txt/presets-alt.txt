@@ -1,0 +1,28 @@
+initial:        
+doublinginit:   Initial state of graphic illustrating exponential growth scenarios.
+doublingweek1:  Graphic illustrating exponential growth in each of the three scenarios after one week.
+doublingweek2:  Graphic illustrating exponential growth in each of the three scenarios after two weeks.
+doublingweek3:  Graphic illustrating exponential growth in each of the three scenarios after three weeks.
+single:         Charted growth over time in China.
+all:            Charted growth over time in every country of the world.
+key:            Charted growth in China, Italy, US, South Korea, UK, Australia, Singapore, Japan and Taiwan.
+hundred:        Charted growth in key countries, since each reported their one hundredth case.
+logarithmic:    Charted growth in key countries, on a logarithmic scale.
+trends:         Charted trend lines where cases double every two days, every three days and every week.
+logtrends:      Charted growth in key countries, including the doubling trend lines.
+zoomin:         Charted growth in key countries, up to 50,000 cases.
+trendsingapore: Charted growth in Singapore, well below the doubling every week trend line.
+trenditaly:     Charted growth in Italy, sitting between the doubling every two-to-three days trend lines.
+trendaustralia: Charted growth in Australia, following the doubling every three days trend line.
+singapore:      Charted growth in Singapore.
+singtotaiwan:   Charted growth in Singapore and Taiwan.
+taiwan:         Charted growth in Taiwan.
+taiwantokorea:  Charted growth in Taiwan and South Korea.
+korea:          Charted growth in South Korea.
+europe:         Charted growth in key European countries.
+koreatoitaly:   Charted growth in South Korea and Italy.
+italy:          Charted growth in Italy.
+italytojapan:   Charted growth in Italy and Japan.
+unitedstates:   Charted growth in United States.
+china:          Charted growth in China.
+australia:      Charted growth in Australia.
