@@ -589,7 +589,7 @@ export default props => {
         {pageTitle ? <h1>{pageTitle}</h1> : ''}
 
         <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
-          <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
+          <span className={`${styles.noBackground}`}>The number of cases doubles every week</span>
         </div>
 
         <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
