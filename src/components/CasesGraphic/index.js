@@ -300,10 +300,14 @@ export default class CasesGraphic extends Component {
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
     const yAxisGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType].concat(casesCap ? [casesCap] : []))
+      .tickValues(
+        TICK_VALUES[yScaleType].filter(value => (casesCap ? value < casesCap : true)).concat(casesCap ? [casesCap] : [])
+      )
       .tickFormat(format(',.1s'));
     const yAxisGridlinesGenerator = axisLeft(yScale)
-      .tickValues(TICK_VALUES[yScaleType].concat(casesCap ? [casesCap] : []))
+      .tickValues(
+        TICK_VALUES[yScaleType].filter(value => (casesCap ? value < casesCap : true)).concat(casesCap ? [casesCap] : [])
+      )
       .tickSize(-chartWidth)
       .tickFormat('');
 
@@ -484,12 +488,12 @@ export default class CasesGraphic extends Component {
       .remove();
 
     // Rendering > 10. Add/remove/update trend labels (near ends of lines)
-    const trendLabelForceNodes = visibleTrendsData.map(d => {
+    const trendLabelForceNodes = visibleTrendsData.map((d, i) => {
       const dataCollection = getDataCollection(d);
       return {
         fx: 0,
         // targetY: yScale(last(getDataCollection(d)).cases)
-        targetY: yScale(dataCollection[dataCollection.length - 2].cases)
+        targetY: yScale(dataCollection[dataCollection.length - (i === 1 ? 3 : 2)].cases)
       };
     });
     const trendLabelsForceSimulation = forceSimulation()
@@ -535,7 +539,7 @@ export default class CasesGraphic extends Component {
       })
       .attr(
         'transform',
-        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+        (d, i) => `translate(${d.x - (i < 2 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
       )
       .style('fill-opacity', 0)
       .transition()
@@ -548,7 +552,7 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .attr(
         'transform',
-        (d, i) => `translate(${d.x - (i === 0 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
+        (d, i) => `translate(${d.x - (i < 2 || IS_TRIDENT ? (chartWidth > 640 ? 40 : 20) : 0)}, ${d.y})`
       );
     trendLabels // Exit
       .exit()

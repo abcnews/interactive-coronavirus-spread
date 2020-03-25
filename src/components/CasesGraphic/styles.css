@@ -5,9 +5,15 @@
   left: 50%;
   width: calc(100% - 2rem);
   height: calc(100% - 2rem);
-  max-width: 64rem;
-  max-height: 48rem;
+  /* Max out at standard pulled embed width @ 4:3 aspect ratio */
+  max-width: 57.5rem;
+  max-height: 43.125rem;
   animation: enter 0.5s;
+}
+
+:global(.u-pull) .root {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes enter {
