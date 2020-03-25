@@ -182,8 +182,6 @@ export default props => {
 
     // Run on unmount
     return () => {
-      console.log('Unmounting doubling vis...');
-
       // canvas = null;
       // ctx = null;
       // simulation = null;
@@ -228,8 +226,6 @@ export default props => {
   }, [size.width, size.height]);
 
   useEffect(() => {
-    console.log(props);
-
     // Delay transitions to animate
     setPageTitle(null);
 
@@ -636,7 +632,7 @@ function shuffle(array) {
 function weightedRandom() {
   let min = 0.0;
   let max = 1.0;
-  let p = 0.6;
+  let p = 0.55;
   let result = min + (max - min) * Math.pow(Math.random(), p);
   return result;
 }
