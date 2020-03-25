@@ -136,15 +136,17 @@ export default class CasesGraphic extends Component {
 
     this.countriesData = Object.keys(countryTotals)
       .map(country => {
-        const dailyTotals = Object.keys(countryTotals[country])
+        let dailyTotals = Object.keys(countryTotals[country])
           .map(date => ({
             date: new Date(date),
             cases: countryTotals[country][date]
           }))
           .filter(({ cases }) => cases >= 1);
+        dailyTotals = dailyTotals.map((x, i) => ({ ...x, isMostRecent: i === dailyTotals.length - 1 }));
+
         const daysSince100CasesTotals = dailyTotals
           .filter(({ cases }) => cases >= 100)
-          .map(({ cases }, index) => ({ day: index, cases }));
+          .map(({ cases, isMostRecent }, index) => ({ day: index, cases, isMostRecent }));
 
         return {
           key: country,
@@ -220,6 +222,8 @@ export default class CasesGraphic extends Component {
       return false;
     }
 
+    this.rootRef.current.setAttribute('data-preset', preset);
+
     checkScaleTypes(xScaleType, yScaleType);
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= casesCap).length - 1);
@@ -245,6 +249,8 @@ export default class CasesGraphic extends Component {
       line()
         .x(d => xScale(d[xPropName]))
         .y(d => yScale(d.cases))(getDataCollection(d));
+    const isCountryTruncated = d => !last(getDataCollection(d)).isMostRecent;
+    const generateLinePathLength = d => (isCountryTruncated(d) ? 100 : 95.5);
     const plotPointTransformGenerator = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
@@ -310,7 +316,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : 'Number of days since the 100th case');
+      .text(xScaleType === 'dates' ? 'Date' : `${chartWidth > 640 ? 'Number of d' : 'D'}ays since the 100th case`);
 
     // Rendering > 4: Add/update y-axis
     svg
@@ -326,12 +332,14 @@ export default class CasesGraphic extends Component {
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
         if (IS_TRIDENT) {
-          selection.text(yScaleType === 'linear' ? 'Total cases' : `Cumulative number of cases since the 100th case`);
+          selection.text(
+            yScaleType === 'linear' ? 'Known cases' : `Cumulative number of known cases since the 100th case`
+          );
         } else {
           selection.html(
             yScaleType === 'linear'
-              ? 'Total cases'
-              : `<tspan x="0" dy="-0.75em">Cumulative number of</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+              ? 'Known cases'
+              : `<tspan x="0" dy="-0.75em">Cumulative number of known</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
           );
         }
       });
@@ -394,6 +402,7 @@ export default class CasesGraphic extends Component {
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isCountryHighlighted)
       .attr('d', generateLinePath)
+      .attr('pathLength', generateLinePathLength)
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
@@ -411,7 +420,8 @@ export default class CasesGraphic extends Component {
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
 
         return interpolatePath(previousPath, currentPath);
-      });
+      })
+      .attr('pathLength', generateLinePathLength);
     plotLines // Exit
       .exit()
       .transition()
@@ -431,6 +441,7 @@ export default class CasesGraphic extends Component {
       .attr('data-country', d => d.key)
       .classed(styles.plotDot, true)
       .classed(styles.highlighted, isCountryHighlighted)
+      .classed(styles.truncated, isCountryTruncated)
       .attr('r', 2)
       .attr('transform', lineEndTransformGenerator)
       .style('fill-opacity', 0)
@@ -442,6 +453,7 @@ export default class CasesGraphic extends Component {
     plotDots // Update
       .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
+      .classed(styles.truncated, isCountryTruncated)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()

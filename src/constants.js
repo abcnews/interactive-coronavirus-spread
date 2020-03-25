@@ -67,7 +67,8 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: 1e5,
-    countries: true
+    countries: true,
+    trends: false
   },
   china: {
     graphic: 'cases',
@@ -82,18 +83,21 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: 1e5,
-    countries: true
+    countries: true,
+    trends: false
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5
+    casesCap: 1e5,
+    trends: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    casesCap: 1e5
+    casesCap: 1e5,
+    trends: false
   },
   doublinginit: {
     graphic: 'doubling',
@@ -142,47 +146,47 @@ export const PRESETS = {
   },
   singapore: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'Singapore']
+    highlightedCountries: ['Singapore']
   },
   singtotaiwan: {
     graphic: 'cases',
     countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Australia', 'Singapore', 'Taiwan']
+    highlightedCountries: ['Singapore', 'Taiwan']
   },
   taiwan: {
     graphic: 'cases',
     countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Australia', 'Taiwan']
+    highlightedCountries: ['Taiwan']
   },
   taiwantokorea: {
     graphic: 'cases',
     countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Australia', 'Taiwan', 'South Korea']
+    highlightedCountries: ['Taiwan', 'South Korea']
   },
   korea: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'South Korea']
+    highlightedCountries: ['South Korea']
   },
   europe: {
     graphic: 'cases',
     countries: true,
-    highlightedCountries: EUROPEAN_COUNTRIES.concat(['Australia'])
+    highlightedCountries: EUROPEAN_COUNTRIES
   },
   koreatoitaly: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'South Korea', 'Italy']
+    highlightedCountries: ['South Korea', 'Italy']
   },
   italy: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'Italy']
+    highlightedCountries: ['Italy']
   },
   italytojapan: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'Italy', 'Japan']
+    highlightedCountries: ['Italy', 'Japan']
   },
   unitedstates: {
     graphic: 'cases',
-    highlightedCountries: ['Australia', 'US']
+    highlightedCountries: ['US']
   }
 };
 
