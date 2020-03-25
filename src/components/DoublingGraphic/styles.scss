@@ -37,14 +37,14 @@
   display: block;
   position: absolute;
   pointer-events: none;
-  margin-top: 60px; // Bump down on small screens
+  // margin-top: 60px; // Bump down on small screens
 
   @media (min-width: 321px) {
-    margin-top: 50px;
+    // margin-top: 50px;
   }
 
   @media (min-width: 401px) {
-    margin-top: 30px;
+    // margin-top: 30px;
   }
 }
 
@@ -59,7 +59,7 @@
   font-size: 14px;
   font-weight: bold;
   transition: top 0.5s;
-  margin-top: -40px;
+  margin-top: -1em;
 
   @media (min-width: 641px) {
     font-size: 16px;

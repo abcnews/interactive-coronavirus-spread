@@ -116,6 +116,10 @@ export const PRESETS = {
     graphic: 'doubling',
     marker: 'doublingweek3'
   },
+  doublingweek4: {
+    graphic: 'doubling',
+    marker: 'doublingweek4'
+  },
   logarithmic: {
     graphic: 'cases',
     casesCap: 1e5,

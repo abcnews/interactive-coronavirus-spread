@@ -243,15 +243,15 @@ export default props => {
         setDot3Background(false);
 
         // Add initial nodes to simulation
-        for (let i = 0; i < 1; i++) {
-          initialDotState.push({
-            groupName: 'one',
-            x: centerX + Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2,
-            y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-            targetX: centerX,
-            targetY: height * dot1ypos
-          });
-        }
+        // for (let i = 0; i < 1; i++) {
+        //   initialDotState.push({
+        //     groupName: 'one',
+        //     x: centerX + Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2,
+        //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+        //     targetX: centerX,
+        //     targetY: height * dot1ypos
+        //   });
+        // }
 
         for (let i = 0; i < 1; i++) {
           initialDotState.push({
@@ -263,15 +263,15 @@ export default props => {
           });
         }
 
-        for (let i = 0; i < 1; i++) {
-          initialDotState.push({
-            groupName: 'three',
-            x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-            y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-            targetX: centerX,
-            targetY: height * dot3ypos
-          });
-        }
+        // for (let i = 0; i < 1; i++) {
+        //   initialDotState.push({
+        //     groupName: 'three',
+        //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+        //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+        //     targetX: centerX,
+        //     targetY: height * dot3ypos
+        //   });
+        // }
         simulation.nodes(initialDotState).stop();
 
         startTime = false;
@@ -289,18 +289,20 @@ export default props => {
 
         setDot3Background(false);
 
-        if (simulation.nodes().length !== 3) {
+        console.log("week1", simulation.nodes().length)
+
+        if (simulation.nodes().length !== 1) {
           week1DotState = [];
           // After 1 week first state
-          for (let i = 0; i < 1; i++) {
-            week1DotState.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 1; i++) {
+          //   week1DotState.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 1; i++) {
             week1DotState.push({
@@ -312,15 +314,15 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 1; i++) {
-            week1DotState.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
+          // for (let i = 0; i < 1; i++) {
+          //   week1DotState.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
         } else {
           week1DotState = simulation.nodes();
         }
@@ -337,16 +339,16 @@ export default props => {
         setTimeout(() => {
           nodesToAdd = [];
 
-          for (let i = 0; i < 2 - 1; i++) {
-            nodesToAdd.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 2 - 1; i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 2 ** (7 / 3) - 1; i++) {
             nodesToAdd.push({
@@ -359,16 +361,16 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (7 / 2) - 1; i++) {
-            nodesToAdd.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (7 / 2) - 1; i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
 
           if (!isAnimating) {
             requestAnimationFrame(t => {
@@ -385,19 +387,21 @@ export default props => {
 
         setDot3Background(false);
 
-        if (simulation.nodes().length !== 20) {
+        console.log("week2", simulation.nodes().length)
+
+        if (simulation.nodes().length !== 6) {
           week2DotState = [];
 
           // After 2 weeks
-          for (let i = 0; i < 2; i++) {
-            week2DotState.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 2; i++) {
+          //   week2DotState.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 2 ** (7 / 3); i++) {
             week2DotState.push({
@@ -409,15 +413,15 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (7 / 2); i++) {
-            week2DotState.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (7 / 2); i++) {
+          //   week2DotState.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
         } else {
           week2DotState = simulation.nodes();
         }
@@ -435,16 +439,16 @@ export default props => {
           // Add nodes after the mark
           nodesToAdd = [];
 
-          for (let i = 0; i < 2; i++) {
-            nodesToAdd.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 2; i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 2 ** (14 / 3) - 2 ** (7 / 3); i++) {
             nodesToAdd.push({
@@ -457,16 +461,16 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (14 / 2) - 2 ** (7 / 2); i++) {
-            nodesToAdd.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (14 / 2) - 2 ** (7 / 2); i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
 
           if (!isAnimating) {
             requestAnimationFrame(t => {
@@ -479,23 +483,25 @@ export default props => {
       case 'doublingweek3':
         setDot3Background(true);
 
-        setLabel1Ypos(height * dot1ypos - 105);
-        setLabel2Ypos(height * dot2ypos - 140);
-        setLabel3Ypos(height * dot3ypos - 80);
+        console.log("week3", simulation.nodes().length)
 
-        if (simulation.nodes().length !== 160) {
+        // setLabel1Ypos(height * dot1ypos - 105);
+        // setLabel2Ypos(height * dot2ypos - 140);
+        // setLabel3Ypos(height * dot3ypos - 80);
+
+        if (simulation.nodes().length !== 27) {
           week3DotState = [];
 
           // After 2 weeks
-          for (let i = 0; i < 2 ** (14 / 7); i++) {
-            week3DotState.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (14 / 7); i++) {
+          //   week3DotState.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 2 ** (14 / 3); i++) {
             week3DotState.push({
@@ -507,15 +513,15 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (14 / 2); i++) {
-            week3DotState.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              targetX: centerX,
-              targetY: height * dot3ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (14 / 2); i++) {
+          //   week3DotState.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
         } else {
           week3DotState = simulation.nodes();
         }
@@ -533,16 +539,16 @@ export default props => {
           // Add nodes after the mark
           nodesToAdd = [];
 
-          for (let i = 0; i < 2 ** (21 / 7) - 2 ** (14 / 7); i++) {
-            nodesToAdd.push({
-              groupName: 'one',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot1ypos
-            });
-          }
+          // for (let i = 0; i < 2 ** (21 / 7) - 2 ** (14 / 7); i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
 
           for (let i = 0; i < 2 ** (21 / 3) - 2 ** (14 / 3); i++) {
             nodesToAdd.push({
@@ -555,16 +561,115 @@ export default props => {
             });
           }
 
-          for (let i = 0; i < 2 ** (21 / 2) - 2 ** (14 / 2); i++) {
-            nodesToAdd.push({
-              groupName: 'three',
-              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: weightedRandom() * duration,
-              targetX: centerX,
-              targetY: height * dot3ypos
+          // for (let i = 0; i < 2 ** (21 / 2) - 2 ** (14 / 2); i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
+
+          if (!isAnimating) {
+            requestAnimationFrame(t => {
+              animate(t, nodesToAdd);
             });
           }
+        }, MULTIPLY_DELAY);
+        break;
+      case 'doublingweek4':
+        setDot3Background(true);
+
+        console.log("week4", simulation.nodes().length)
+
+        // setLabel1Ypos(height * dot1ypos - 105);
+        // setLabel2Ypos(height * dot2ypos - 140);
+        // setLabel3Ypos(height * dot3ypos - 80);
+
+        if (simulation.nodes().length !== 130) {
+          week3DotState = [];
+
+          // After 2 weeks
+          // for (let i = 0; i < 2 ** (14 / 7); i++) {
+          //   week3DotState.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
+
+          for (let i = 0; i < 2 ** (21 / 3); i++) {
+            week3DotState.push({
+              groupName: 'two',
+              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              targetX: centerX,
+              targetY: height * dot2ypos
+            });
+          }
+
+          // for (let i = 0; i < 2 ** (14 / 2); i++) {
+          //   week3DotState.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
+        } else {
+          week3DotState = simulation.nodes();
+        }
+
+        simulation.nodes(week3DotState).stop();
+
+        startTime = false;
+        ticks = 0;
+
+        setTimeout(() => {
+          setPageTitle('Week 4');
+        }, 100);
+
+        setTimeout(() => {
+          // Add nodes after the mark
+          nodesToAdd = [];
+
+          // for (let i = 0; i < 2 ** (21 / 7) - 2 ** (14 / 7); i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'one',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot1ypos
+          //   });
+          // }
+
+          for (let i = 0; i < 2 ** (28 / 3) - 2 ** (21 / 3); i++) {
+            nodesToAdd.push({
+              groupName: 'two',
+              x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+              delay: weightedRandom() * duration,
+              targetX: centerX,
+              targetY: height * dot2ypos
+            });
+          }
+
+          // for (let i = 0; i < 2 ** (21 / 2) - 2 ** (14 / 2); i++) {
+          //   nodesToAdd.push({
+          //     groupName: 'three',
+          //     x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
+          //     delay: weightedRandom() * duration,
+          //     targetX: centerX,
+          //     targetY: height * dot3ypos
+          //   });
+          // }
 
           if (!isAnimating) {
             requestAnimationFrame(t => {
@@ -586,19 +691,19 @@ export default props => {
     <div className={styles.root}>
       <canvas className={styles.canvas} ref={canvasEl} />
       <Fade>
-        {pageTitle ? <h1>{pageTitle}</h1> : ''}
+        {pageTitle ? <h1><span className={`${styles.background}`}>{pageTitle}</span></h1> : ''}
 
-        <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
+        {/* <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
           <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
-        </div>
+        </div> */}
 
-        <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
-          <span className={`${styles.noBackground}`}>...doubles every 3 days</span>
-        </div>
+        {/* <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
+          <span className={`${styles.background}`}>...doubles every 3 days</span>
+        </div> */}
 
-        <div className={`${styles.label}`} style={{ top: `${label3Ypos + labelOffsets}px` }}>
+        {/* <div className={`${styles.label}`} style={{ top: `${label3Ypos + labelOffsets}px` }}>
           <span className={`${dot3Background && styles.background}`}>...doubles every 2 days</span>
-        </div>
+        </div> */}
       </Fade>
     </div>
   );

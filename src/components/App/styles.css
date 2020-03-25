@@ -26,6 +26,7 @@ html {
 }
 
 .scrollyPanel {
+  visibility: hidden;
 }
 
 .scrollyPanel::before {
