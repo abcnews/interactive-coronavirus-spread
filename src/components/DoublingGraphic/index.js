@@ -57,7 +57,6 @@ export default props => {
   const [dot3Background, setDot3Background] = useState(false);
 
   useLayoutEffect(() => {
-    console.log('Mounting D3 vis...');
     // Add the canvas element to the page
     canvas = d3
       .select(canvasEl.current)
@@ -183,8 +182,6 @@ export default props => {
 
     // Run on unmount
     return () => {
-      console.log('Unmounting doubling vis...');
-
       // canvas = null;
       // ctx = null;
       // simulation = null;
@@ -221,8 +218,7 @@ export default props => {
     // So bump down
     if (size.width > 400) {
       setLabeloffsets(30);
-    }
-    else if (size.width > 320) {
+    } else if (size.width > 320) {
       setLabeloffsets(50);
     } else {
       setLabeloffsets(60);
@@ -230,8 +226,6 @@ export default props => {
   }, [size.width, size.height]);
 
   useEffect(() => {
-    console.log(props);
-
     // Delay transitions to animate
     setPageTitle(null);
 
@@ -246,7 +240,7 @@ export default props => {
         setLabel2Ypos(height * dot2ypos);
         setLabel3Ypos(height * dot3ypos);
 
-        setDot3Background(false)
+        setDot3Background(false);
 
         // Add initial nodes to simulation
         for (let i = 0; i < 1; i++) {
@@ -293,7 +287,7 @@ export default props => {
         setLabel2Ypos(height * dot2ypos - 8);
         setLabel3Ypos(height * dot3ypos - 10);
 
-        setDot3Background(false)
+        setDot3Background(false);
 
         if (simulation.nodes().length !== 3) {
           week1DotState = [];
@@ -348,7 +342,7 @@ export default props => {
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot1ypos
             });
@@ -359,7 +353,7 @@ export default props => {
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot2ypos
             });
@@ -370,7 +364,7 @@ export default props => {
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot3ypos
             });
@@ -389,7 +383,7 @@ export default props => {
         setLabel2Ypos(height * dot2ypos - 30);
         setLabel3Ypos(height * dot3ypos - 42);
 
-        setDot3Background(false)
+        setDot3Background(false);
 
         if (simulation.nodes().length !== 20) {
           week2DotState = [];
@@ -446,7 +440,7 @@ export default props => {
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot1ypos
             });
@@ -457,7 +451,7 @@ export default props => {
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot2ypos
             });
@@ -468,7 +462,7 @@ export default props => {
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot3ypos
             });
@@ -544,7 +538,7 @@ export default props => {
               groupName: 'one',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot1ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot1ypos
             });
@@ -555,7 +549,7 @@ export default props => {
               groupName: 'two',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot2ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot2ypos
             });
@@ -566,7 +560,7 @@ export default props => {
               groupName: 'three',
               x: centerX + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
               y: height * dot3ypos + (Math.random() * RANDOM_INIT_DISTANCE - RANDOM_INIT_DISTANCE / 2),
-              delay: Math.random() * duration,
+              delay: weightedRandom() * duration,
               targetX: centerX,
               targetY: height * dot3ypos
             });
@@ -632,4 +626,13 @@ function shuffle(array) {
       array[top] = tmp;
     }
   return array;
+}
+
+// Make dots grow faster when approaching end of time
+function weightedRandom() {
+  let min = 0.0;
+  let max = 1.0;
+  let p = 0.55;
+  let result = min + (max - min) * Math.pow(Math.random(), p);
+  return result;
 }
