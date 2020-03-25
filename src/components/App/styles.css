@@ -83,6 +83,7 @@ html {
   margin-left: 1em;
   padding: 0 0 0 0.5em;
   background: none;
+  line-height: 1.667;
 }
 
 .scrollyPanel a:link,
