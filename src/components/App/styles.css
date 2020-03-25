@@ -75,8 +75,14 @@ html {
   font-size: 1.75rem;
 }
 
-.scrollyPanel li {
+.scrollyPanel ul {
+  list-style-type: disc;
+}
+
+.scrollyPanel ul li {
   margin-left: 1em;
+  padding: 0 0 0 0.5em;
+  background: none;
 }
 
 .scrollyPanel a:link,
