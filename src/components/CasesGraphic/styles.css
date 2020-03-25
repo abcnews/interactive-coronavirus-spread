@@ -228,8 +228,8 @@ circle.plotDot[data-country='Singapore'] {
   color: #01cfff;
 }
 
-path.plotLine[data-country='South Korea'],
-circle.plotDot[data-country='South Korea'] {
+path.plotLine[data-country='S. Korea'],
+circle.plotDot[data-country='S. Korea'] {
   color: #8272d6;
 }
 
@@ -269,7 +269,7 @@ text.plotLabel[data-country='Singapore'] {
   color: #047ca5;
 }
 
-text.plotLabel[data-country='South Korea'] {
+text.plotLabel[data-country='S. Korea'] {
   color: #7462cc;
 }
 

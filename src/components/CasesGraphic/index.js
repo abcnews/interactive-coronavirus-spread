@@ -25,7 +25,7 @@ const ONE_DAY = 864e5;
 const REM = 16;
 const MARGIN = {
   top: 3 * REM,
-  right: 5 * REM,
+  right: 4.5 * REM,
   bottom: 3 * REM,
   left: 2 * REM
 };

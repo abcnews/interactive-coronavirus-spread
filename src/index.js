@@ -80,12 +80,13 @@ const whenCountryTotalsFetched = fetch(COUNTRY_TOTALS_URL)
   .then(response => response.json())
   .then(data => {
     // A bit of renaming & clean up
-    data['South Korea'] = data['Korea, South'] || data['South Korea'];
+    data['S. Korea'] = data['Korea, South'] || data['South Korea'];
     data['Taiwan'] = data['Taiwan*'] || data['Taiwan'];
     data['UK'] = data['United Kingdom'] || data['UK'];
     data['US'] = data['United States'] || data['US'];
 
     delete data['Korea, South'];
+    delete data['South Korea'];
     delete data['Taiwan*'];
     delete data['United Kingdom'];
     delete data['United States'];
