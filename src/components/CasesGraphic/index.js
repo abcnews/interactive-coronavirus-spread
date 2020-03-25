@@ -562,9 +562,10 @@ export default class CasesGraphic extends Component {
       .remove();
 
     // Rendering > 11. Add/remove/update plot labels (near ends of lines)
-    // const labelledCountriesData = visibleCountriesData.filter(d => KEY_COUNTRIES.indexOf(d.key) > -1);
     const labelledCountriesData = visibleCountriesData.filter(
-      d => KEY_COUNTRIES.concat(preset === 'europe' ? KEY_EUROPEAN_COUNTRIES : []).indexOf(d.key) > -1
+      d =>
+        isCountryHighlighted(d) ||
+        KEY_COUNTRIES.concat(preset === 'europe' ? KEY_EUROPEAN_COUNTRIES : []).indexOf(d.key) > -1
     );
     const plotLabelForceNodes = labelledCountriesData.map(d => {
       return {

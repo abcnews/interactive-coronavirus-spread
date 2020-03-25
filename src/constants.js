@@ -69,6 +69,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     casesCap: 1e5,
     countries: true,
+    highlightedCountries: KEY_COUNTRIES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
   },
   single: {
