@@ -171,6 +171,7 @@ export const PRESETS = {
   },
   china: {
     graphic: 'cases',
+    casesCap: 1e5,
     highlightedCountries: ['China']
   },
   singapore: {
@@ -215,6 +216,7 @@ export const PRESETS = {
   },
   unitedstates: {
     graphic: 'cases',
+    casesCap: 1e5,
     highlightedCountries: ['US']
   }
 };
