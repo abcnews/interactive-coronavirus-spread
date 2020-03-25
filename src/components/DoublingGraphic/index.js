@@ -278,7 +278,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('What is exponential growth?');
+          setPageTitle('COVID-19 cases are doubling every 3 days');
         }, 100);
 
         break;
@@ -333,7 +333,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('Week 1');
+          setPageTitle('...after 1 week');
         }, 100);
 
         setTimeout(() => {
@@ -432,7 +432,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('Week 2');
+          setPageTitle('...after 2 weeks');
         }, 100);
 
         setTimeout(() => {
@@ -532,7 +532,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('Week 3');
+          setPageTitle('...after 3 weeks');
         }, 100);
 
         setTimeout(() => {
@@ -631,7 +631,7 @@ export default props => {
         ticks = 0;
 
         setTimeout(() => {
-          setPageTitle('Week 4');
+          setPageTitle('...after a month');
         }, 100);
 
         setTimeout(() => {
@@ -697,9 +697,11 @@ export default props => {
           <span className={`${styles.noBackground}`}>When the number of cases doubles every week</span>
         </div> */}
 
-        {/* <div className={styles.label} style={{ top: `${label2Ypos + labelOffsets}px` }}>
+        {/* <div className={styles.label}>
           <span className={`${styles.background}`}>...doubles every 3 days</span>
         </div> */}
+
+        {/* style={{ top: `${label2Ypos + labelOffsets}px` }} */}
 
         {/* <div className={`${styles.label}`} style={{ top: `${label3Ypos + labelOffsets}px` }}>
           <span className={`${dot3Background && styles.background}`}>...doubles every 2 days</span>

@@ -6,15 +6,15 @@
 
   h1 {
     font-family: 'ABCSerif', serif;
-    font-size: 21px;
+    font-size: 26px;
     font-weight: 600;
     text-align: center;
     position: relative;
-    top: 5vh;
+    top: 7vh;
 
-    @media (min-width: 641px) {
-      font-size: 26px;
-    }
+    // @media (min-width: 641px) {
+    //   font-size: 26px;
+    // }
   }
 
   @media all and (-ms-high-contrast: none) {
@@ -59,7 +59,6 @@
   font-size: 14px;
   font-weight: bold;
   transition: top 0.5s;
-  margin-top: -1em;
 
   @media (min-width: 641px) {
     font-size: 16px;
@@ -79,6 +78,7 @@
 .background {
   background-color: rgba(243, 252, 252, 0.75);
   padding: 10px;
+  display: inline-block;
 }
 
 @media (min-width: 1200px) {
