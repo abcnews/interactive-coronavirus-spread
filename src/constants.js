@@ -6,7 +6,7 @@ export const ECDC_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/ecdc-country-totals.jso
 export const COUNTRY_TOTALS_URL = ECDC_COUNTRY_TOTALS_URL;
 export const ECDC_AFTER_100_CASES_URL = `${DATA_ENDPOINT}ecdc-after-100-cases.json`;
 export const AFTER_100_CASES_URL = ECDC_AFTER_100_CASES_URL;
-export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'South Korea', 'Taiwan', 'UK', 'US'];
+export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
 export const EUROPEAN_COUNTRIES = [
   'Albania',
   'Andorra',
@@ -135,6 +135,11 @@ export const PRESETS = {
     graphic: 'cases',
     trends: false
   },
+  thirtyk: {
+    graphic: 'cases',
+    casesCap: 3e4,
+    trends: false
+  },
   fortyk: {
     graphic: 'cases',
     casesCap: 4e4,
@@ -185,11 +190,11 @@ export const PRESETS = {
   taiwantokorea: {
     graphic: 'cases',
     countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Taiwan', 'South Korea']
+    highlightedCountries: ['Taiwan', 'S. Korea']
   },
   korea: {
     graphic: 'cases',
-    highlightedCountries: ['South Korea']
+    highlightedCountries: ['S. Korea']
   },
   europe: {
     graphic: 'cases',
@@ -198,7 +203,7 @@ export const PRESETS = {
   },
   koreatoitaly: {
     graphic: 'cases',
-    highlightedCountries: ['South Korea', 'Italy']
+    highlightedCountries: ['S. Korea', 'Italy']
   },
   italy: {
     graphic: 'cases',

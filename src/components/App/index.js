@@ -26,7 +26,12 @@ export default ({ scrollyData, countryTotals }) => {
   }
 
   return (
-    <Scrollyteller panels={scrollyData.panels} panelClassName={styles.scrollyPanel} onMarker={onMarker}>
+    <Scrollyteller
+      panels={scrollyData.panels}
+      panelClassName={styles.scrollyPanel}
+      config={{ waypoint: 45 }}
+      onMarker={onMarker}
+    >
       <div>{Graphic ? <Graphic preset={preset} {...graphicProps} /> : null}</div>
     </Scrollyteller>
   );

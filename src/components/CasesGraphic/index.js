@@ -25,7 +25,7 @@ const ONE_DAY = 864e5;
 const REM = 16;
 const MARGIN = {
   top: 3 * REM,
-  right: 5 * REM,
+  right: 4.5 * REM,
   bottom: 3 * REM,
   left: 2 * REM
 };
@@ -40,7 +40,7 @@ const TRANSITION_DURATIONS = {
 };
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
-const DEFAULT_CASES_CAP = 3e4;
+const DEFAULT_CASES_CAP = 5e4; // 50k
 const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
@@ -119,6 +119,12 @@ function generateTrendsData(trends, startDate, numDays, casesCap) {
 
     return memo.concat([item]);
   }, []);
+}
+
+function setTruncatedLineDashArray(node) {
+  const pathLength = node.getTotalLength();
+
+  node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
 }
 
 export default class CasesGraphic extends Component {
@@ -402,7 +408,13 @@ export default class CasesGraphic extends Component {
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isCountryHighlighted)
       .attr('d', generateLinePath)
-      .attr('pathLength', generateLinePathLength)
+      .attr('stroke-dasharray', function(d) {
+        if (isCountryTruncated(d)) {
+          setTimeout(setTruncatedLineDashArray, 0, this);
+        }
+
+        return null;
+      })
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
@@ -411,6 +423,7 @@ export default class CasesGraphic extends Component {
       .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
       .style('stroke-opacity', null)
+      .attr('stroke-dasharray', null)
       .transition()
       .duration(transformTransitionDuration)
       .attrTween('d', function(d) {
@@ -419,9 +432,12 @@ export default class CasesGraphic extends Component {
         const previous = select(this);
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
 
+        if (isCountryTruncated(d)) {
+          setTimeout(setTruncatedLineDashArray, currentPath === previousPath ? 0 : 1000, this); // post transition
+        }
+
         return interpolatePath(previousPath, currentPath);
-      })
-      .attr('pathLength', generateLinePathLength);
+      });
     plotLines // Exit
       .exit()
       .transition()
