@@ -135,6 +135,11 @@ export const PRESETS = {
     graphic: 'cases',
     trends: false
   },
+  thirtyk: {
+    graphic: 'cases',
+    casesCap: 3e4,
+    trends: false
+  },
   fortyk: {
     graphic: 'cases',
     casesCap: 4e4,

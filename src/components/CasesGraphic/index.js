@@ -40,7 +40,7 @@ const TRANSITION_DURATIONS = {
 };
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
-const DEFAULT_CASES_CAP = 3e4;
+const DEFAULT_CASES_CAP = 5e4; // 50k
 const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
