@@ -4,7 +4,7 @@
   height: 100vh;
   color: #3e494c;
 
-  h1 {
+  .title {
     font-family: 'ABCSerif', serif;
     font-size: 21px;
     font-weight: 600;
@@ -18,11 +18,11 @@
   }
 
   @media all and (-ms-high-contrast: none) {
-    h1 {
+    .title {
       opacity: 1;
     } /* IE10 */
     *::-ms-backdrop,
-    h1 {
+    .title {
       opacity: 1;
     } /* IE11 */
   }

@@ -586,8 +586,7 @@ export default props => {
     <div className={styles.root}>
       <canvas className={styles.canvas} ref={canvasEl} />
       <Fade>
-        {pageTitle ? <h1>{pageTitle}</h1> : ''}
-
+        {pageTitle ? <div className={styles.title}>{pageTitle}</div> : ''}
         <div className={styles.label} style={{ top: `${label1Ypos + labelOffsets}px` }}>
           <span className={`${styles.noBackground}`}>Cases double every week</span>
         </div>
