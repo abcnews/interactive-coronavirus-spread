@@ -16,6 +16,16 @@
       font-size: 26px;
     }
   }
+
+  @media all and (-ms-high-contrast: none) {
+    h1 {
+      opacity: 1;
+    } /* IE10 */
+    *::-ms-backdrop,
+    h1 {
+      opacity: 1;
+    } /* IE11 */
+  }
 }
 
 .svg {
@@ -54,6 +64,16 @@
   @media (min-width: 641px) {
     font-size: 16px;
   }
+}
+
+@media all and (-ms-high-contrast: none) {
+  .label {
+    opacity: 1;
+  } /* IE10 */
+  *::-ms-backdrop,
+  .label {
+    opacity: 1;
+  } /* IE11 */
 }
 
 .background {
