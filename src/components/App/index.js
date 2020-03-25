@@ -28,7 +28,9 @@ export default ({ scrollyData, countryTotals }) => {
   return (
     <Scrollyteller
       panels={scrollyData.panels}
+      className={styles.scrolly}
       panelClassName={styles.scrollyPanel}
+      firstPanelClassName={styles.firstScrollyPanel}
       config={{ waypoint: 45 }}
       onMarker={onMarker}
     >

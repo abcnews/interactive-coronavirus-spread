@@ -25,7 +25,15 @@ html {
   height: 100%;
 }
 
+.scrolly {
+  background-color: inherit;
+}
+
 .scrollyPanel {
+}
+
+.scrolly .scrollyPanel.firstScrollyPanel {
+  margin-top: 40vh;
 }
 
 .scrollyPanel::before {

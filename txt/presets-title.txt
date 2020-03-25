@@ -1,0 +1,28 @@
+initial:        
+doublinginit:   Three exponential growth scenarios in their initial state
+doublingweek1:  Each of the three scenarios after one week
+doublingweek2:  Each of the three scenarios after two weeks
+doublingweek3:  Each of the three scenarios after three weeks
+single:         Growth in known cases in China, over time
+all:            Growth in known cases in every country of the world, over time
+key:            Growth in known cases in key countries, over time
+hundred:        Growth in known cases in key countries, since each reported their 100th case
+logarithmic:    Growth in known cases in key countries, on a logarithmic scale
+trends:         Trend lines of cases doubling every two days, every three days and every week
+logtrends:      Growth in known cases in key countries, compared to trend lines
+zoomin:         Growth in known cases in key countries, up to 50,000 cases
+trendsingapore: Growth in known cases in Singapore, doubling roughly weekly
+trenditaly:     Growth in known cases in Italy, doubling roughly every two-to-three days
+trendaustralia: Growth in known cases in Australia, doubling roughly every three days
+singapore:      Growth in Singapore
+singtotaiwan:   Growth in both Singapore and Taiwan
+taiwan:         Growth in Taiwan
+taiwantokorea:  Growth in both Taiwan and South Korea
+korea:          Growth in South Korea
+europe:         Growth in key European countries
+koreatoitaly:   Growth in both South Korea and Italy
+italy:          Growth in Italy
+italytojapan:   Growth in both Italy and Japan
+unitedstates:   Growth in the United States
+china:          Growth in China
+australia:      Growth in Australia
