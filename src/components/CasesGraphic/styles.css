@@ -118,7 +118,6 @@
   stroke-opacity: 0.5;
   stroke-width: 1;
   stroke-linejoin: round;
-  stroke-dasharray: 95.5 0.5 1 0.5 1 0.5 1;
 }
 
 .plotLine.highlighted {

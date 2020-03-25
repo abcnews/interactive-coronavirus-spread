@@ -121,6 +121,12 @@ function generateTrendsData(trends, startDate, numDays, casesCap) {
   }, []);
 }
 
+function setTruncatedLineDashArray(node) {
+  const pathLength = node.getTotalLength();
+
+  node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
+}
+
 export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
@@ -402,7 +408,13 @@ export default class CasesGraphic extends Component {
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isCountryHighlighted)
       .attr('d', generateLinePath)
-      .attr('pathLength', generateLinePathLength)
+      .attr('stroke-dasharray', function(d) {
+        if (isCountryTruncated(d)) {
+          setTimeout(setTruncatedLineDashArray, 0, this);
+        }
+
+        return null;
+      })
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
@@ -411,6 +423,7 @@ export default class CasesGraphic extends Component {
       .attr('data-country', d => d.key)
       .classed(styles.highlighted, isCountryHighlighted)
       .style('stroke-opacity', null)
+      .attr('stroke-dasharray', null)
       .transition()
       .duration(transformTransitionDuration)
       .attrTween('d', function(d) {
@@ -419,9 +432,12 @@ export default class CasesGraphic extends Component {
         const previous = select(this);
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
 
+        if (isCountryTruncated(d)) {
+          setTimeout(setTruncatedLineDashArray, currentPath === previousPath ? 0 : 1000, this); // post transition
+        }
+
         return interpolatePath(previousPath, currentPath);
-      })
-      .attr('pathLength', generateLinePathLength);
+      });
     plotLines // Exit
       .exit()
       .transition()
