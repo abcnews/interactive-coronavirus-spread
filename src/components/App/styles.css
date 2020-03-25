@@ -123,12 +123,11 @@ html {
 
 :global {
   @media (min-width: 1200px) {
+    .Main > .u-full > div > div:nth-child(2),
+    .Main > .u-full > div > div:nth-child(3),
+    .Main > .u-full > div > div:nth-child(4),
     .Main > .u-full > div > div:nth-child(5),
-    .Main > .u-full > div > div:nth-child(6),
-    .Main > .u-full > div > div:nth-child(7),
-    .Main > .u-full > div > div:nth-child(8),
-    .Main > .u-full > div > div:nth-child(9),
-    .Main > .u-full > div > div:nth-child(10) {
+    .Main > .u-full > div > div:nth-child(6) {
       margin-right: calc(30% - 24.75rem) !important;
       width: 49.5rem !important;
     }
