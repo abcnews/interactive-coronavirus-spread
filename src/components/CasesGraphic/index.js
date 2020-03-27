@@ -50,6 +50,7 @@ const DEFAULT_PROPS = {
   trends: KEY_TRENDS,
   highlightedTrends: false
 };
+const KEYING_FN = d => d.key;
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
@@ -163,10 +164,6 @@ export default class CasesGraphic extends Component {
       })
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => b.cases - a.cases);
-
-    this.countriesData = this.countriesData
-      .filter(x => KEY_COUNTRIES.indexOf(x.key) > -1)
-      .concat(this.countriesData.filter(x => KEY_COUNTRIES.indexOf(x.key) === -1));
 
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
@@ -404,7 +401,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotLine}`)
-      .data(visibleCountriesData);
+      .data(visibleCountriesData, KEYING_FN);
     const plotLinesEnter = plotLines // Enter
       .enter()
       .append('path')
@@ -454,7 +451,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotDot}`)
-      .data(visibleCountriesData);
+      .data(visibleCountriesData, KEYING_FN);
     const plotDotsEnter = plotDots // Enter
       .enter()
       .append('circle')
@@ -594,7 +591,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.plotLabels}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotLabel}`)
-      .data(plotLabelsData);
+      .data(plotLabelsData, KEYING_FN);
     const plotLabelsEnter = plotLabels // Enter
       .enter()
       .append('text')
