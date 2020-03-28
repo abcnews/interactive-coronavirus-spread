@@ -67,7 +67,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 120000,
+    casesCap: false,
     countries: true,
     highlightedCountries: KEY_COUNTRIES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
@@ -76,7 +76,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 120000,
+    casesCap: false,
     countries: ['China'],
     highlightedCountries: true,
     trends: false
@@ -85,7 +85,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 120000,
+    casesCap: false,
     countries: true,
     trends: false
   },
@@ -93,13 +93,13 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 120000,
+    casesCap: false,
     trends: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    casesCap: 120000,
+    casesCap: false,
     trends: false
   },
   doublinginit: {
@@ -120,36 +120,21 @@ export const PRESETS = {
   },
   logarithmic: {
     graphic: 'cases',
-    casesCap: 120000,
+    casesCap: false,
     trends: false
   },
   trends: {
     graphic: 'cases',
     highlightedCountries: false,
     highlightedTrends: true,
-    casesCap: 120000
+    casesCap: false
   },
   logtrends: {
     graphic: 'cases',
-    casesCap: 120000
+    casesCap: false
   },
   zoomin: {
     graphic: 'cases',
-    trends: false
-  },
-  thirtyk: {
-    graphic: 'cases',
-    casesCap: 3e4,
-    trends: false
-  },
-  fortyk: {
-    graphic: 'cases',
-    casesCap: 4e4,
-    trends: false
-  },
-  fiftyk: {
-    graphic: 'cases',
-    casesCap: 5e4,
     trends: false
   },
   trenditaly: {
@@ -173,7 +158,7 @@ export const PRESETS = {
   },
   china: {
     graphic: 'cases',
-    casesCap: 120000,
+    casesCap: false,
     highlightedCountries: ['China']
   },
   singapore: {
@@ -218,7 +203,7 @@ export const PRESETS = {
   },
   unitedstates: {
     graphic: 'cases',
-    casesCap: 120000,
+    casesCap: false,
     highlightedCountries: ['US']
   }
 };

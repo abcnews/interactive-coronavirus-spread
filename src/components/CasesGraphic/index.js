@@ -78,7 +78,7 @@ function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) 
   return data;
 }
 
-function generateTrendsData(trends, startDate, numDays, casesCap) {
+function generateTrendsData(trends, startDate, numDays, yScaleCap) {
   const dates = [];
   let currentDate = new Date(startDate);
 
@@ -89,7 +89,7 @@ function generateTrendsData(trends, startDate, numDays, casesCap) {
 
   return trends.reduce((memo, trend) => {
     const increasePerPeriod = calculateIncreasePerPeriod(trend.doublingTimePeriods);
-    const casesData = createTrendCasesData(increasePerPeriod, numDays, 100).filter(count => count <= casesCap);
+    const casesData = createTrendCasesData(increasePerPeriod, numDays, 100).filter(count => count <= yScaleCap);
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
@@ -97,8 +97,8 @@ function generateTrendsData(trends, startDate, numDays, casesCap) {
       daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
     };
 
-    const daysToCasesCap = calculatePeriodsToIncrease(increasePerPeriod, 100, casesCap);
-    const daysDiff = Math.min(1, daysToCasesCap - casesData.length + 1);
+    const daysToYScaleCap = calculatePeriodsToIncrease(increasePerPeriod, 100, yScaleCap);
+    const daysDiff = Math.min(1, daysToYScaleCap - casesData.length + 1);
 
     if (daysDiff > 0) {
       const lastItem = last(item.dailyTotals);
@@ -107,8 +107,8 @@ function generateTrendsData(trends, startDate, numDays, casesCap) {
         // Meet extent of y-scale
         let fractionalDate = new Date(lastItem.date.valueOf() + ONE_DAY * daysDiff);
 
-        item.dailyTotals.push({ date: fractionalDate, cases: casesCap });
-        item.daysSince100CasesTotals.push({ day: daysToCasesCap, cases: casesCap });
+        item.dailyTotals.push({ date: fractionalDate, cases: yScaleCap });
+        item.daysSince100CasesTotals.push({ day: daysToYScaleCap, cases: yScaleCap });
       } else {
         // Meet extent of x-scale
         let fractionalCases = lastItem.cases + lastItem.cases * increasePerPeriod;
@@ -228,8 +228,9 @@ export default class CasesGraphic extends Component {
     this.rootRef.current.setAttribute('data-preset', preset);
 
     checkScaleTypes(xScaleType, yScaleType);
+    const yScaleCap = casesCap === false ? this.mostCases : casesCap;
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
-      return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= casesCap).length - 1);
+      return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= yScaleCap).length - 1);
     }, 0);
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
@@ -241,11 +242,11 @@ export default class CasesGraphic extends Component {
       : scaleLinear().domain([0, cappedDaysSince100Cases])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic' ? scaleLog().nice() : scaleLinear())
-      .domain([100, Math.ceil(Math.min(casesCap, this.mostCases) / casesCap) * casesCap])
+      .domain([100, yScaleCap])
       .range([chartHeight, 0]);
     const getDataCollection = d =>
       d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
-        (memo, item) => memo.concat(item.cases <= casesCap ? [item] : []),
+        (memo, item) => memo.concat(item.cases <= yScaleCap ? [item] : []),
         []
       );
     const generateLinePath = d =>
@@ -288,7 +289,7 @@ export default class CasesGraphic extends Component {
       TRENDS.filter(isTrendVisible),
       this.earliestDate,
       xScaleType === 'dates' ? this.numDates : cappedDaysSince100Cases,
-      casesCap
+      yScaleCap
     );
     const xAxisGenerator =
       xScaleType === 'dates'
@@ -298,12 +299,18 @@ export default class CasesGraphic extends Component {
         : axisBottom(xScale).ticks(5);
     const yAxisGenerator = axisLeft(yScale)
       .tickValues(
-        TICK_VALUES[yScaleType].filter(value => (casesCap ? value < casesCap : true)).concat(casesCap ? [casesCap] : [])
+        TICK_VALUES[yScaleType]
+          .filter(value => value < yScaleCap)
+          .concat(casesCap ? [casesCap] : [])
+          .sort()
       )
       .tickFormat(format(',.1s'));
     const yAxisGridlinesGenerator = axisLeft(yScale)
       .tickValues(
-        TICK_VALUES[yScaleType].filter(value => (casesCap ? value < casesCap : true)).concat(casesCap ? [casesCap] : [])
+        TICK_VALUES[yScaleType]
+          .filter(value => value < yScaleCap)
+          .concat(casesCap ? [casesCap] : [])
+          .sort()
       )
       .tickSize(-chartWidth)
       .tickFormat('');
@@ -490,7 +497,7 @@ export default class CasesGraphic extends Component {
       return {
         fx: 0,
         // targetY: yScale(last(getDataCollection(d)).cases)
-        targetY: yScale(dataCollection[dataCollection.length - (i === 1 ? 3 : 2)].cases)
+        targetY: yScale(dataCollection[dataCollection.length - (i > 0 ? 4 : 2)].cases)
       };
     });
     const trendLabelsForceSimulation = forceSimulation()
@@ -570,7 +577,7 @@ export default class CasesGraphic extends Component {
         targetY: yScale(last(getDataCollection(d)).cases)
       };
     });
-    if (chartWidth < 640 || xScaleType === 'dates') {
+    if (chartWidth < 640 || xScaleType === 'dates' || yScaleType === 'logarithmic') {
       const plotLabelsForceSimulation = forceSimulation()
         .nodes(plotLabelForceNodes)
         .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
