@@ -67,7 +67,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5,
+    casesCap: 120000,
     countries: true,
     highlightedCountries: KEY_COUNTRIES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
@@ -76,7 +76,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5,
+    casesCap: 120000,
     countries: ['China'],
     highlightedCountries: true,
     trends: false
@@ -85,7 +85,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5,
+    casesCap: 120000,
     countries: true,
     trends: false
   },
@@ -93,13 +93,13 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: 1e5,
+    casesCap: 120000,
     trends: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    casesCap: 1e5,
+    casesCap: 120000,
     trends: false
   },
   doublinginit: {
@@ -120,18 +120,18 @@ export const PRESETS = {
   },
   logarithmic: {
     graphic: 'cases',
-    casesCap: 1e5,
+    casesCap: 120000,
     trends: false
   },
   trends: {
     graphic: 'cases',
     highlightedCountries: false,
     highlightedTrends: true,
-    casesCap: 1e5
+    casesCap: 120000
   },
   logtrends: {
     graphic: 'cases',
-    casesCap: 1e5
+    casesCap: 120000
   },
   zoomin: {
     graphic: 'cases',
@@ -173,7 +173,7 @@ export const PRESETS = {
   },
   china: {
     graphic: 'cases',
-    casesCap: 1e5,
+    casesCap: 120000,
     highlightedCountries: ['China']
   },
   singapore: {
@@ -218,7 +218,7 @@ export const PRESETS = {
   },
   unitedstates: {
     graphic: 'cases',
-    casesCap: 1e5,
+    casesCap: 120000,
     highlightedCountries: ['US']
   }
 };
