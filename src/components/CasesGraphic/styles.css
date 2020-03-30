@@ -224,6 +224,13 @@
   letter-spacing: 0.025em;
 }
 
+@media (prefers-color-scheme: dark) {
+  :global(.supports-user-dark-mode) .trendLabel {
+    color: #fff;
+    stroke: #000;
+  }
+}
+
 .trendLabel.highlighted {
   fill-opacity: 1;
   stroke-opacity: 1;
