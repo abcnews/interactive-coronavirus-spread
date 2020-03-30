@@ -40,9 +40,9 @@ export const renderCasesGraphics = countryTotals =>
     render(
       <InlineGraphic>
         <CasesGraphic
-          preset={casesGraphicRoot.dataset.preset}
+          preset={mountEl.dataset.preset}
           countryTotals={countryTotals}
-          {...PRESETS[casesGraphicRoot.dataset.preset]}
+          {...PRESETS[mountEl.dataset.preset]}
         />
       </InlineGraphic>,
       mountEl
