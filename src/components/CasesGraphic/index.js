@@ -43,6 +43,7 @@ const DEFAULT_CASES_CAP = 5e4; // 50k
 const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
+  daysCap: false,
   casesCap: DEFAULT_CASES_CAP,
   countries: KEY_COUNTRIES,
   highlightedCountries: KEY_COUNTRIES,
@@ -222,7 +223,17 @@ export default class CasesGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    const { countries, casesCap, highlightedCountries, highlightedTrends, preset, trends, xScaleType, yScaleType } = {
+    const {
+      countries,
+      casesCap,
+      daysCap,
+      highlightedCountries,
+      highlightedTrends,
+      preset,
+      trends,
+      xScaleType,
+      yScaleType
+    } = {
       ...DEFAULT_PROPS,
       ...nextProps
     };
@@ -239,7 +250,11 @@ export default class CasesGraphic extends Component {
     checkScaleTypes(xScaleType, yScaleType);
     const yScaleCap = casesCap === false ? this.mostCases : casesCap;
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
-      return Math.max(memo, d.daysSince100CasesTotals.filter(x => x.cases <= yScaleCap).length - 1);
+      return Math.max(
+        memo,
+        d.daysSince100CasesTotals.filter(item => item.cases <= yScaleCap && (daysCap === false || item.day <= daysCap))
+          .length - 1
+      );
     }, 0);
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
@@ -255,7 +270,12 @@ export default class CasesGraphic extends Component {
       .range([chartHeight, 0]);
     const getDataCollection = d =>
       d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
-        (memo, item) => memo.concat(item.cases <= yScaleCap ? [item] : []),
+        (memo, item) =>
+          memo.concat(
+            item.cases <= yScaleCap && (xScaleType === 'dates' || daysCap === false || item.day <= daysCap)
+              ? [item]
+              : []
+          ),
         []
       );
     const generateLinePath = d =>

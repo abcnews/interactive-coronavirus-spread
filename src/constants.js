@@ -137,6 +137,17 @@ export const PRESETS = {
     graphic: 'cases',
     trends: false
   },
+  firstthirty: {
+    graphic: 'cases',
+    casesCap: false,
+    daysCap: 30,
+    trends: false
+  },
+  firstthirtyunderfiftyk: {
+    graphic: 'cases',
+    daysCap: 30,
+    trends: false
+  },
   trenditaly: {
     graphic: 'cases',
     highlightedCountries: ['Italy'],
