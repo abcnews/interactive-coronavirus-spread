@@ -1,5 +1,6 @@
 .root {
   position: relative;
+  margin: 1.25rem 0;
   padding-bottom: 150%;
   height: 0;
 }

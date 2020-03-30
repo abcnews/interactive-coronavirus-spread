@@ -205,7 +205,12 @@ export default class CasesGraphic extends Component {
 
   componentDidMount() {
     this.measureAndSetDimensions();
-    window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+
+    if (window.__ODYSSEY__) {
+      window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+    } else {
+      window.addEventListener('resize', this.measureAndSetDimensions);
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -634,7 +639,11 @@ export default class CasesGraphic extends Component {
   }
 
   componentWillUnmount() {
-    window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
+    if (window.__ODYSSEY__) {
+      window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
+    } else {
+      window.removeEventListener('resize', this.measureAndSetDimensions);
+    }
   }
 
   render() {
