@@ -32,7 +32,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .svg {
+  :global(.supports-user-dark-mode) .svg {
     color: #e4e6e7;
   }
 }
@@ -42,7 +42,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .svg line {
+  :global(.supports-user-dark-mode) .svg line {
     color: #5c6c70;
   }
 }
@@ -52,7 +52,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .svg path {
+  :global(.supports-user-dark-mode) .svg path {
     color: #e4e6e7;
   }
 }
@@ -68,8 +68,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .xAxis :global(.domain),
-  .yAxis :global(.domain) {
+  :global(.supports-user-dark-mode) .xAxis :global(.domain),
+  :global(.supports-user-dark-mode) .yAxis :global(.domain) {
     fill: #000;
   }
 }
@@ -91,7 +91,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .xAxis path {
+  :global(.supports-user-dark-mode) .xAxis path {
     color: #5c6c70;
   }
 }
@@ -114,8 +114,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .xAxisLabel,
-  .yAxisLabel {
+  :global(.supports-user-dark-mode) .xAxisLabel,
+  :global(.supports-user-dark-mode) .yAxisLabel {
     fill: #e4e6e7;
   }
 }
@@ -188,7 +188,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .plotDot {
+  :global(.supports-user-dark-mode) .plotDot {
     color: #e4e6e7;
   }
 }
@@ -247,7 +247,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .plotLabel {
+  :global(.supports-user-dark-mode) .plotLabel {
     color: #e4e6e7;
     stroke: #000;
   }
@@ -266,10 +266,10 @@ circle.plotDot[data-country='Europe'] {
 }
 
 @media (prefers-color-scheme: dark) {
-  path.plotLine[data-country='Australia'],
-  path.plotLine[data-country='Europe'],
-  circle.plotDot[data-country='Australia'],
-  circle.plotDot[data-country='Europe'] {
+  :global(.supports-user-dark-mode) path.plotLine[data-country='Australia'],
+  :global(.supports-user-dark-mode) path.plotLine[data-country='Europe'],
+  :global(.supports-user-dark-mode) circle.plotDot[data-country='Australia'],
+  :global(.supports-user-dark-mode) circle.plotDot[data-country='Europe'] {
     color: #fff;
   }
 }
@@ -352,40 +352,40 @@ text.plotLabel[data-country='US'] {
 }
 
 @media (prefers-color-scheme: dark) {
-  text.plotLabel[data-country='Australia'],
-  text.plotLabel[data-country='Europe'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Australia'],
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Europe'] {
     color: #fff;
   }
 
-  text.plotLabel[data-country='China'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='China'] {
     color: #00b395;
   }
 
-  text.plotLabel[data-country='Italy'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Italy'] {
     color: #ff6100;
   }
 
-  text.plotLabel[data-country='Japan'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Japan'] {
     color: #5cad5d;
   }
 
-  text.plotLabel[data-country='Singapore'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Singapore'] {
     color: #01cfff;
   }
 
-  text.plotLabel[data-country='S. Korea'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='S. Korea'] {
     color: #8272d6;
   }
 
-  text.plotLabel[data-country='Taiwan'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='Taiwan'] {
     color: #bf6643;
   }
 
-  text.plotLabel[data-country='UK'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='UK'] {
     color: #ea526f;
   }
 
-  text.plotLabel[data-country='US'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-country='US'] {
     color: #248bc9;
   }
 }
