@@ -31,7 +31,10 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
+<<<<<<< HEAD
   linear: [0, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5, 110000, 120000],
+=======
+>>>>>>> master
   logarithmic: [1e2, 1e3, 1e4, 1e5]
 };
 const TRANSITION_DURATIONS = {
@@ -206,7 +209,12 @@ export default class CasesGraphic extends Component {
 
   componentDidMount() {
     this.measureAndSetDimensions();
-    window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+
+    if (window.__ODYSSEY__) {
+      window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+    } else {
+      window.addEventListener('resize', this.measureAndSetDimensions);
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -297,22 +305,24 @@ export default class CasesGraphic extends Component {
             .ticks(timeWeek.every(2))
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
-    const yAxisGenerator = axisLeft(yScale)
-      .tickValues(
-        TICK_VALUES[yScaleType]
-          .filter(value => value < yScaleCap)
-          .concat(casesCap ? [casesCap] : [])
-          .sort()
-      )
-      // .tickFormat(format(',.1s'));
-      .tickFormat(format('~s'));
-    const yAxisGridlinesGenerator = axisLeft(yScale)
-      .tickValues(
-        TICK_VALUES[yScaleType]
-          .filter(value => value < yScaleCap)
-          .concat(casesCap ? [casesCap] : [])
-          .sort()
-      )
+    const yAxisGenerator = (yScaleType === 'linear'
+      ? axisLeft(yScale.nice()).ticks(5)
+      : axisLeft(yScale).tickValues(
+          TICK_VALUES['logarithmic']
+            .filter(value => value < yScaleCap)
+            .concat(casesCap ? [casesCap] : [])
+            .sort()
+        )
+    ).tickFormat(format('~s'));
+    const yAxisGridlinesGenerator = (yScaleType === 'linear'
+      ? axisLeft(yScale.nice()).ticks(5)
+      : axisLeft(yScale).tickValues(
+          TICK_VALUES['logarithmic']
+            .filter(value => value < yScaleCap)
+            .concat(casesCap ? [casesCap] : [])
+            .sort()
+        )
+    )
       .tickSize(-chartWidth)
       .tickFormat('');
 
@@ -633,7 +643,11 @@ export default class CasesGraphic extends Component {
   }
 
   componentWillUnmount() {
-    window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
+    if (window.__ODYSSEY__) {
+      window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
+    } else {
+      window.removeEventListener('resize', this.measureAndSetDimensions);
+    }
   }
 
   render() {
