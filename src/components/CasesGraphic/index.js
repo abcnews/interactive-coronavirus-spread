@@ -31,10 +31,6 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
-<<<<<<< HEAD
-  linear: [0, 1e4, 2e4, 3e4, 4e4, 5e4, 6e4, 7e4, 8e4, 9e4, 1e5, 110000, 120000],
-=======
->>>>>>> master
   logarithmic: [1e2, 1e3, 1e4, 1e5]
 };
 const TRANSITION_DURATIONS = {
