@@ -67,6 +67,12 @@
   fill: var(--bg, #fff);
 }
 
+/* Phase 1 */
+:global(.story_page) .xAxis :global(.domain),
+:global(.story_page) .yAxis :global(.domain) {
+  fill: var(--bg, #f9f9f9);
+}
+
 @media (prefers-color-scheme: dark) {
   :global(.supports-user-dark-mode) .xAxis :global(.domain),
   :global(.supports-user-dark-mode) .yAxis :global(.domain) {
