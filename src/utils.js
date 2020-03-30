@@ -27,8 +27,8 @@ export const fetchCountryTotals = () =>
     });
 
 export const renderCasesGraphics = countryTotals =>
-  [...document.querySelectorAll(`a[name^=casesgraphicPRESET]`)].map(anchorEl => {
-    const props = a2o(anchorEl.getAttribute('name'));
+  [...document.querySelectorAll(`a[id^=casesgraphicPRESET],a[name^=casesgraphicPRESET]`)].map(anchorEl => {
+    const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
     const mountEl = document.createElement('div');
 
     mountEl.className = 'u-pull';
