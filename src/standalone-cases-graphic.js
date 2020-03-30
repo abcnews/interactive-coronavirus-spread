@@ -1,3 +1,7 @@
 import { fetchCountryTotals, renderCasesGraphics } from './utils';
 
-fetchCountryTotals().then(renderCasesGraphics);
+const domready = fn => {
+  /in/.test(document.readyState) ? setTimeout(() => domready(fn), 9) : fn();
+};
+
+fetchCountryTotals().then(() => domready(renderCasesGraphics));
