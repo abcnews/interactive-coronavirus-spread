@@ -64,7 +64,7 @@
 
 .xAxis :global(.domain),
 .yAxis :global(.domain) {
-  fill: var(--bg);
+  fill: var(--bg, #fff);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -216,7 +216,7 @@
   color: #000;
   fill: currentColor;
   fill-opacity: 0.5;
-  stroke: var(--bg);
+  stroke: var(--bg, #fff);
   stroke-opacity: 0.5;
   stroke-width: 2;
   paint-order: stroke;
@@ -244,7 +244,7 @@
   color: #5c6c70;
   fill: currentColor;
   fill-opacity: 0.5;
-  stroke: var(--bg);
+  stroke: var(--bg, #fff);
   stroke-opacity: 0.5;
   stroke-width: 2;
   paint-order: stroke;
