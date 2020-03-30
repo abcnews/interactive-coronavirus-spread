@@ -27,7 +27,7 @@ const MARGIN = {
   top: 3 * REM,
   right: 4.5 * REM,
   bottom: 3 * REM,
-  left: 2 * REM
+  left: 2.5 * REM
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
