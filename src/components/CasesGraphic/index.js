@@ -139,6 +139,7 @@ export default class CasesGraphic extends Component {
     this.svgRef = createRef();
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
+    this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
 
     this.countriesData = Object.keys(countryTotals)
       .map(country => {
@@ -203,13 +204,17 @@ export default class CasesGraphic extends Component {
     this.setState({ width, height });
   }
 
+  nonOdysseyMeasureAndSetDimensions() {
+    this.measureAndSetDimensions({ hasChanged: true });
+  }
+
   componentDidMount() {
     this.measureAndSetDimensions();
 
     if (window.__ODYSSEY__) {
       window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
     } else {
-      window.addEventListener('resize', this.measureAndSetDimensions);
+      window.addEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
     }
   }
 
@@ -642,7 +647,7 @@ export default class CasesGraphic extends Component {
     if (window.__ODYSSEY__) {
       window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
     } else {
-      window.removeEventListener('resize', this.measureAndSetDimensions);
+      window.removeEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
     }
   }
 
