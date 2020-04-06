@@ -1,6 +1,7 @@
 import Scrollyteller from '@abcnews/scrollyteller';
 import React, { memo, useCallback, useState } from 'react';
 import { PRESETS } from '../../constants';
+import { getInclusiveDateFromYYYYMMDD } from '../../utils';
 import CasesGraphic from '../CasesGraphic';
 import DoublingGraphic from '../DoublingGraphic';
 import Placeholder from '../TestComponent';
@@ -8,6 +9,7 @@ import styles from './styles.css';
 
 export default ({ scrollyData, countryTotals }) => {
   const [preset, setPreset] = useState('initial');
+  let maxDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
 
   const onMarker = useCallback(config => {
     const { preset } = config;
@@ -20,7 +22,11 @@ export default ({ scrollyData, countryTotals }) => {
 
   if (graphic === 'cases') {
     Graphic = CasesGraphic;
-    graphicProps.countryTotals = countryTotals;
+    graphicProps = {
+      ...graphicProps,
+      countryTotals,
+      maxDate
+    };
   } else if (graphic === 'doubling') {
     Graphic = DoublingGraphic;
   }
