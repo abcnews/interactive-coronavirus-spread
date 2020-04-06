@@ -39,10 +39,12 @@ const TRANSITION_DURATIONS = {
 };
 const X_SCALE_TYPES = ['dates', 'days'];
 const Y_SCALE_TYPES = ['linear', 'logarithmic'];
+const Y_SCALE_PROPS = ['cases', 'deaths'];
 const DEFAULT_CASES_CAP = 5e4; // 50k
 const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
+  yScaleProp: Y_SCALE_PROPS[0],
   daysCap: false,
   casesCap: DEFAULT_CASES_CAP,
   countries: KEY_COUNTRIES,
@@ -65,6 +67,12 @@ function checkScaleTypes(xScaleType, yScaleType) {
 
   if (Y_SCALE_TYPES.indexOf(yScaleType) === -1) {
     throw new Error(`Unrecognised yScaleType: ${yScaleType}`);
+  }
+}
+
+function checkScaleProps(yScaleProp) {
+  if (Y_SCALE_PROPS.indexOf(yScaleProp) === -1) {
+    throw new Error(`Unrecognised yScaleProp: ${yScaleProp}`);
   }
 }
 
@@ -142,23 +150,26 @@ export default class CasesGraphic extends Component {
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
 
+    console.log(countryTotals);
+
     this.countriesData = Object.keys(countryTotals)
       .map(country => {
         let dailyTotals = Object.keys(countryTotals[country])
           .map(date => ({
             date: new Date(date),
-            cases: countryTotals[country][date]
+            ...countryTotals[country][date]
           }))
           .filter(({ cases }) => cases >= 1);
         dailyTotals = dailyTotals.map((x, i) => ({ ...x, isMostRecent: i === dailyTotals.length - 1 }));
 
         const daysSince100CasesTotals = dailyTotals
           .filter(({ cases }) => cases >= 100)
-          .map(({ cases, isMostRecent }, index) => ({ day: index, cases, isMostRecent }));
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
         return {
           key: country,
           cases: dailyTotals.length ? last(dailyTotals).cases : 0,
+          deaths: dailyTotals.length ? last(dailyTotals).deaths : 0,
           dailyTotals,
           daysSince100CasesTotals
         };
@@ -232,7 +243,8 @@ export default class CasesGraphic extends Component {
       preset,
       trends,
       xScaleType,
-      yScaleType
+      yScaleType,
+      yScaleProp
     } = {
       ...DEFAULT_PROPS,
       ...nextProps
@@ -248,6 +260,8 @@ export default class CasesGraphic extends Component {
     this.rootRef.current.setAttribute('data-preset', preset);
 
     checkScaleTypes(xScaleType, yScaleType);
+    checkScaleProps(yScaleProp);
+
     const yScaleCap = casesCap === false ? this.mostCases : casesCap;
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(

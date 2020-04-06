@@ -23,6 +23,19 @@ export const fetchCountryTotals = () =>
       delete data['International'];
       delete data['World'];
 
+      console.log(data);
+      // Temporary transform to simulate multiple properties
+      Object.keys(data).forEach(country => {
+        Object.keys(data[country]).forEach(date => {
+          data[country][date] = {
+            cases: data[country][date],
+            deaths: Math.round(data[country][date] * 0.02)
+          };
+        });
+      });
+
+      console.log(data);
+
       return Promise.resolve(data);
     });
 
