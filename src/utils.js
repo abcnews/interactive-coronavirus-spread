@@ -39,6 +39,14 @@ export const fetchCountryTotals = () =>
       return Promise.resolve(data);
     });
 
+export const getInclusiveDateFromYYYYMMDD = yyymmdd => {
+  let [, yyyy, mm, dd] = String(yyymmdd).match(/(\d{4})(\d{2})(\d{2})/) || [];
+
+  if (yyyy && mm && dd) {
+    return new Date(`${yyyy}-${mm}-${dd}T23:59`);
+  }
+};
+
 export const renderCasesGraphics = countryTotals =>
   [...document.querySelectorAll(`a[id^=casesgraphicPRESET],a[name^=casesgraphicPRESET]`)].map(anchorEl => {
     const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
@@ -55,6 +63,7 @@ export const renderCasesGraphics = countryTotals =>
         <CasesGraphic
           preset={mountEl.dataset.preset}
           countryTotals={countryTotals}
+          maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
           {...PRESETS[mountEl.dataset.preset]}
         />
       </InlineGraphic>,

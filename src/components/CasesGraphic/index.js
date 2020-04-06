@@ -140,7 +140,7 @@ export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
 
-    const { countryTotals, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
+    const { countryTotals, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
 
     checkScaleTypes(xScaleType, yScaleType);
 
@@ -159,7 +159,7 @@ export default class CasesGraphic extends Component {
             date: new Date(date),
             ...countryTotals[country][date]
           }))
-          .filter(({ cases }) => cases >= 1);
+          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate));
         dailyTotals = dailyTotals.map((x, i) => ({ ...x, isMostRecent: i === dailyTotals.length - 1 }));
 
         const daysSince100CasesTotals = dailyTotals
