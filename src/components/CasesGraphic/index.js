@@ -40,7 +40,7 @@ const TRANSITION_DURATIONS = {
 export const X_SCALE_TYPES = ['dates', 'days'];
 export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 export const Y_SCALE_PROPS = ['cases', 'deaths'];
-const DEFAULT_CASES_CAP = 5e4; // 50k
+export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],

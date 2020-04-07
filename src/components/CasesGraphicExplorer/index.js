@@ -1,9 +1,10 @@
+// import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { TRENDS } from '../../constants';
-import CasesGraphic, { DEFAULT_PROPS, X_SCALE_TYPES, Y_SCALE_TYPES } from '../CasesGraphic';
+import CasesGraphic, { DEFAULT_CASES_CAP, DEFAULT_PROPS, X_SCALE_TYPES, Y_SCALE_TYPES } from '../CasesGraphic';
 import InlineGraphic from '../InlineGraphic';
 import styles from './styles.css';
 
@@ -19,6 +20,20 @@ const RADIO_LABELS = {
   linear: 'Linear (0-?)',
   logarithmic: 'Logarithmic (100-?)'
 };
+const CASES_CAP_OPTIONS = {
+  '1000': '1k',
+  '10000': '10k',
+  '50000': '50k',
+  '100000': '100k',
+  '': 'None'
+};
+const DAYS_CAP_OPTIONS = {
+  '10': '10 days',
+  '20': '20 days',
+  '30': '30 days',
+  '40': '40 days',
+  '': 'None'
+};
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
 
@@ -29,19 +44,23 @@ export default ({ countryTotals }) => {
   const [highlightedCountries, setHighlightedCountries] = useState(DEFAULT_PROPS.highlightedCountries);
   const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
+  const [casesCap, setCasesCap] = useState(DEFAULT_PROPS.casesCap);
+  const [daysCap, setDaysCap] = useState(DEFAULT_PROPS.daysCap);
 
   const casesGraphicProps = {
     ...DEFAULT_PROPS,
     xScaleType,
     yScaleType,
+    casesCap,
+    daysCap,
     countries: visibleCountries,
     highlightedCountries,
     trends: visibleTrends,
     highlightedTrends
   };
 
-  const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ name: 'xscale', label: RADIO_LABELS[type], value: type }));
-  const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ name: 'yscale', label: RADIO_LABELS[type], value: type }));
+  const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
+  const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const countriesSelectOptions = Object.keys(countryTotals).map(country => ({ label: country, value: country }));
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
@@ -56,7 +75,6 @@ export default ({ countryTotals }) => {
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
-        <h2>Controls</h2>
         <label>
           Highlighted Countries{' '}
           <button
@@ -136,6 +154,7 @@ export default ({ countryTotals }) => {
         />
         <label>X-axis Scale</label>
         <RadioGroup
+          name="xscaletype"
           defaultValue={DEFAULT_PROPS.xScaleType}
           value={xScaleType}
           options={xScaleTypeOptions}
@@ -149,8 +168,24 @@ export default ({ countryTotals }) => {
             }
           }}
         />
+        <label>X-axis (days) Cap</label>
+        <RadioGroup
+          name="dayscap"
+          defaultValue={DEFAULT_PROPS.daysCap ? String(DEFAULT_PROPS.daysCap) : ''}
+          value={daysCap ? String(daysCap) : ''}
+          options={Object.keys(DAYS_CAP_OPTIONS).map(value => ({
+            label: DAYS_CAP_OPTIONS[value],
+            value
+          }))}
+          onChange={event => {
+            const daysCap = event.currentTarget.value;
+
+            setDaysCap(daysCap ? +daysCap : false);
+          }}
+        />
         <label>Y-axis Scale</label>
         <RadioGroup
+          name="yscaletype"
           defaultValue={DEFAULT_PROPS.yScaleType}
           value={yScaleType}
           options={yScaleTypeOptions}
@@ -162,6 +197,21 @@ export default ({ countryTotals }) => {
             if (yScaleType === 'logarithmic') {
               setXScaleType('days');
             }
+          }}
+        />
+        <label>Y-axis Cap</label>
+        <RadioGroup
+          name="casescap"
+          defaultValue={DEFAULT_PROPS.casesCap ? String(DEFAULT_PROPS.casesCap) : ''}
+          value={casesCap ? String(casesCap) : ''}
+          options={Object.keys(CASES_CAP_OPTIONS).map(value => ({
+            label: CASES_CAP_OPTIONS[value],
+            value
+          }))}
+          onChange={event => {
+            const casesCap = event.currentTarget.value;
+
+            setCasesCap(casesCap ? +casesCap : false);
           }}
         />
         <hr />
