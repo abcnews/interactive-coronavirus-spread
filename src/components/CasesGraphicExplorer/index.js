@@ -2,6 +2,7 @@ import { RadioGroup } from '@atlaskit/radio';
 import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
+import { TRENDS } from '../../constants';
 import CasesGraphic, { DEFAULT_PROPS, X_SCALE_TYPES, Y_SCALE_TYPES } from '../CasesGraphic';
 import InlineGraphic from '../InlineGraphic';
 import styles from './styles.css';
@@ -26,19 +27,26 @@ export default ({ countryTotals }) => {
   const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
   const [visibleCountries, setVisibleCountries] = useState(DEFAULT_PROPS.countries);
   const [highlightedCountries, setHighlightedCountries] = useState(DEFAULT_PROPS.highlightedCountries);
+  const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
+  const [highlightedTrends, setHighlightedTrends] = useState([]);
 
   const casesGraphicProps = {
     ...DEFAULT_PROPS,
     xScaleType,
     yScaleType,
     countries: visibleCountries,
-    highlightedCountries
+    highlightedCountries,
+    trends: visibleTrends,
+    highlightedTrends
   };
 
-  const countries = Object.keys(countryTotals);
-  const countriesSelectOptions = countries.map(country => ({ label: country, value: country }));
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ name: 'xscale', label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ name: 'yscale', label: RADIO_LABELS[type], value: type }));
+  const countriesSelectOptions = Object.keys(countryTotals).map(country => ({ label: country, value: country }));
+  const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
+    label: `Every ${name}`,
+    value: doublingTimePeriods
+  }));
 
   return (
     <div className={styles.root}>
@@ -87,6 +95,43 @@ export default ({ countryTotals }) => {
 
             setVisibleCountries(nextVisibleCountries);
             setHighlightedCountries(highlightedCountries.filter(country => nextVisibleCountries.indexOf(country) > -1));
+          }}
+        />
+        <label>
+          Highlighted Trends{' '}
+          <button
+            onClick={() => setHighlightedTrends(Array.from(new Set(visibleTrends.concat(highlightedTrends))))}
+            disabled={visibleTrends.sort().join() === highlightedTrends.sort().join()}
+          >
+            Highlight all visible trends
+          </button>
+        </label>
+        <Select
+          components={animatedComponents}
+          styles={SELECT_STYLES}
+          isMulti
+          options={trendsSelectOptions}
+          value={trendsSelectOptions.filter(option => highlightedTrends.indexOf(option.value) > -1)}
+          onChange={selectedOptions => {
+            const nextHighlightedTrends = optionsValues(selectedOptions || []);
+
+            setVisibleTrends(Array.from(new Set(visibleTrends.concat(nextHighlightedTrends))));
+            setHighlightedTrends(nextHighlightedTrends);
+          }}
+        />
+        <label>Visible Trends</label>
+        <Select
+          components={animatedComponents}
+          styles={SELECT_STYLES}
+          defaultValue={trendsSelectOptions.filter(option => DEFAULT_PROPS.trends.indexOf(option.value) > -1)}
+          value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
+          isMulti
+          options={trendsSelectOptions}
+          onChange={selectedOptions => {
+            const nextVisibleTrends = optionsValues(selectedOptions || []);
+
+            setVisibleTrends(nextVisibleTrends);
+            setHighlightedTrends(highlightedTrends.filter(trend => nextVisibleTrends.indexOf(trend) > -1));
           }}
         />
         <label>X-axis Scale</label>
