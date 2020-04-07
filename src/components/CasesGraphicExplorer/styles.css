@@ -1,9 +1,14 @@
+body {
+  margin: 0;
+}
+
 .root {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  padding: 0.5rem;
+  min-height: calc(100vh - 1rem);
 }
 
 @media (min-width: 80rem) {

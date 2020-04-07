@@ -31,7 +31,7 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
-  logarithmic: [1e2, 1e3, 1e4, 1e5]
+  logarithmic: [1, 10, 1e2, 1e3, 1e4, 1e5]
 };
 const TRANSITION_DURATIONS = {
   opacity: 250,
@@ -39,7 +39,9 @@ const TRANSITION_DURATIONS = {
 };
 export const X_SCALE_TYPES = ['dates', 'days'];
 export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
-export const Y_SCALE_PROPS = ['cases', 'newcases', 'deaths', 'newdeaths' /*, 'recoveries', 'newrecoveries'*/];
+const Y_SCALE_TOTAL_PROPS = ['cases', 'deaths', 'recoveries'];
+const Y_SCALE_NEW_PROPS = ['newcases', 'newdeaths', 'newrecoveries'];
+export const Y_SCALE_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_NEW_PROPS);
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
@@ -167,8 +169,10 @@ export default class CasesGraphic extends Component {
                 if (countryDatesIndex === 0) {
                   memo[newProp] = countryDateTotals[prop];
                 } else {
-                  memo[newProp] =
-                    countryDateTotals[prop] - countryTotals[country][countryDates[countryDatesIndex - 1]][prop];
+                  memo[newProp] = Math.max(
+                    0,
+                    countryDateTotals[prop] - countryTotals[country][countryDates[countryDatesIndex - 1]][prop]
+                  );
                 }
 
                 return memo;
@@ -194,8 +198,6 @@ export default class CasesGraphic extends Component {
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => b.cases - a.cases);
 
-    console.log(this.countriesData);
-
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
 
@@ -215,9 +217,14 @@ export default class CasesGraphic extends Component {
       return memo;
     }, last(this.countriesData[0].dailyTotals).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
-    this.mostCases = this.countriesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t.cases)));
-    }, 0);
+
+    this.most = Y_SCALE_PROPS.reduce((memo, propName) => {
+      memo[propName] = this.countriesData.reduce((memo, d) => {
+        return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t[propName])));
+      }, 0);
+
+      return memo;
+    }, {});
 
     this.state = {
       width: 0,
@@ -253,7 +260,7 @@ export default class CasesGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    const {
+    let {
       countries,
       casesCap,
       daysCap,
@@ -281,31 +288,48 @@ export default class CasesGraphic extends Component {
     checkScaleTypes(xScaleType, yScaleType);
     checkScaleProps(yScaleProp);
 
-    const yScaleCap = casesCap === false ? this.mostCases : casesCap;
+    const isDailyFigures = yScaleProp.indexOf('new') === 0;
+
+    if (isDailyFigures) {
+      casesCap = false;
+    }
+
+    // Only allow trend lines when we are showing cases since 100th case
+    if (yScaleProp !== 'cases' || xScaleType !== 'days') {
+      trends = false;
+      highlightedTrends = false;
+    }
+
+    const yScaleCap = casesCap === false ? this.most[yScaleProp] : Math.min(casesCap, this.most[yScaleProp]);
     const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
       return Math.max(
         memo,
-        d.daysSince100CasesTotals.filter(item => item.cases <= yScaleCap && (daysCap === false || item.day <= daysCap))
-          .length - 1
+        d.daysSince100CasesTotals.filter(
+          item => item[yScaleProp] <= yScaleCap && (daysCap === false || item.day <= daysCap)
+        ).length - 1
       );
     }, 0);
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const xPropName = xScaleType === 'dates' ? 'date' : 'day';
+    const xScaleProp = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
       : scaleLinear().domain([0, cappedDaysSince100Cases])
     ).range([0, chartWidth]);
-    const yScale = (yScaleType === 'logarithmic' ? scaleLog().nice() : scaleLinear())
-      .domain([100, yScaleCap])
-      .range([chartHeight, 0]);
+    const yScale = (yScaleType === 'logarithmic'
+      ? scaleLog()
+          .nice()
+          .domain([yScaleProp === 'cases' ? 100 : 0.1, yScaleCap], true)
+      : scaleLinear().domain([0, yScaleCap], true)
+    ).range([chartHeight, 0]);
+    const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
     const getDataCollection = d =>
       d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
         (memo, item) =>
           memo.concat(
-            item.cases <= yScaleCap && (xScaleType === 'dates' || daysCap === false || item.day <= daysCap)
+            item[yScaleProp] <= yScaleCap && (xScaleType === 'dates' || daysCap === false || item.day <= daysCap)
               ? [item]
               : []
           ),
@@ -313,11 +337,11 @@ export default class CasesGraphic extends Component {
       );
     const generateLinePath = d =>
       line()
-        .x(d => xScale(d[xPropName]))
-        .y(d => yScale(d.cases))(getDataCollection(d));
+        .x(d => xScale(d[xScaleProp]))
+        .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
     const isCountryTruncated = d => !last(getDataCollection(d)).isMostRecent;
     const generateLinePathLength = d => (isCountryTruncated(d) ? 100 : 95.5);
-    const plotPointTransformGenerator = d => `translate(${xScale(d[xPropName])}, ${yScale(d.cases)})`;
+    const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
       let forceNodes;
@@ -412,13 +436,20 @@ export default class CasesGraphic extends Component {
       .call(selection => {
         if (IS_TRIDENT) {
           selection.text(
-            yScaleType === 'linear' ? 'Known cases' : `Cumulative number of known cases since the 100th case`
+            yScaleType === 'linear'
+              ? `Known ${yScaleProp.replace('new', 'daily new ')}`
+              : `${isDailyFigures ? 'Daily' : 'Cumulative'} number of known ${yScaleProp.replace(
+                  'new',
+                  'new '
+                )} since the 100th case`
           );
         } else {
           selection.html(
             yScaleType === 'linear'
-              ? 'Known cases'
-              : `<tspan x="0" dy="-0.75em">Cumulative number of known</tspan><tspan x="0" dy="1.25em">cases since the 100th case</tspan>`
+              ? `Known ${yScaleProp.replace('new', 'daily new ')}`
+              : `<tspan x="0" dy="-0.75em">${isDailyFigures ? 'Daily' : 'Cumulative'} number of known${
+                  isDailyFigures ? ' new' : ''
+                }</tspan><tspan x="0" dy="1.25em">${yScaleProp.replace('new', '')} since the 100th case</tspan>`
           );
         }
       });
@@ -561,8 +592,8 @@ export default class CasesGraphic extends Component {
       const dataCollection = getDataCollection(d);
       return {
         fx: 0,
-        // targetY: yScale(last(getDataCollection(d)).cases)
-        targetY: yScale(dataCollection[dataCollection.length - (i > 0 ? 4 : 2)].cases)
+        // targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
+        targetY: safe_yScale(dataCollection[dataCollection.length - (i > 0 ? 4 : 2)][yScaleProp])
       };
     });
     const trendLabelsForceSimulation = forceSimulation()
@@ -583,7 +614,7 @@ export default class CasesGraphic extends Component {
           : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
       }every ${d.key}</tspan>`,
       doublingTimePeriods: d.doublingTimePeriods,
-      x: 6 + xScale(last(getDataCollection(d))[xPropName]),
+      x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
       y: trendLabelForceNodes[i].y
     }));
     const trendLabels = svg // Bind
@@ -643,12 +674,10 @@ export default class CasesGraphic extends Component {
         isCountryHighlighted(d) ||
         KEY_COUNTRIES.concat(preset === 'europe' ? KEY_EUROPEAN_COUNTRIES : []).indexOf(d.key) > -1
     );
-    const plotLabelForceNodes = labelledCountriesData.map(d => {
-      return {
-        fx: 0,
-        targetY: yScale(last(getDataCollection(d)).cases)
-      };
-    });
+    const plotLabelForceNodes = labelledCountriesData.map(d => ({
+      fx: 0,
+      targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
+    }));
     if (chartWidth < 640 || xScaleType === 'dates' || yScaleType === 'logarithmic') {
       const plotLabelsForceSimulation = forceSimulation()
         .nodes(plotLabelForceNodes)
@@ -663,7 +692,7 @@ export default class CasesGraphic extends Component {
     const plotLabelsData = labelledCountriesData.map((d, i) => ({
       key: d.key,
       text: d.key,
-      x: 6 + xScale(last(getDataCollection(d))[xPropName]),
+      x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
       y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
     }));
     const plotLabels = svg // Bind

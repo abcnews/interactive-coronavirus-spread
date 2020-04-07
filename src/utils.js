@@ -23,6 +23,16 @@ export const fetchCountryTotals = () =>
       delete data['International'];
       delete data['World'];
 
+      Object.keys(data).forEach(country => {
+        Object.keys(data[country]).forEach(date => {
+          data[country][date] = {
+            cases: data[country][date].cases || 0,
+            deaths: data[country][date].deaths || 0,
+            recoveries: data[country][date].recoveries || data[country][date].recovered || 0
+          };
+        });
+      });
+
       return Promise.resolve(data);
     });
 

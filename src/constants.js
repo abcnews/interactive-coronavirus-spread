@@ -1,5 +1,5 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
-export const COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/country-totals-extra.json`;
+export const COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
 export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
 export const KEY_EUROPEAN_COUNTRIES = [
   // 'Albania',
