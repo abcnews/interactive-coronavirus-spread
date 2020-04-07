@@ -39,7 +39,7 @@ const TRANSITION_DURATIONS = {
 };
 export const X_SCALE_TYPES = ['dates', 'days'];
 export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
-export const Y_SCALE_PROPS = ['cases', 'deaths'];
+export const Y_SCALE_PROPS = ['cases', 'newcases', 'deaths', 'newdeaths' /*, 'recoveries', 'newrecoveries'*/];
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
@@ -152,11 +152,29 @@ export default class CasesGraphic extends Component {
 
     this.countriesData = Object.keys(countryTotals)
       .map(country => {
-        let dailyTotals = Object.keys(countryTotals[country])
-          .map(date => ({
-            date: new Date(date),
-            ...countryTotals[country][date]
-          }))
+        const countryDates = Object.keys(countryTotals[country]);
+        let dailyTotals = countryDates
+          .map((countryDate, countryDatesIndex) => {
+            const countryDateTotals = countryTotals[country][countryDate];
+            const countryDateTotalsProps = Object.keys(countryDateTotals);
+
+            return {
+              date: new Date(countryDate),
+              ...countryDateTotals,
+              ...countryDateTotalsProps.reduce((memo, prop) => {
+                const newProp = `new${prop}`;
+
+                if (countryDatesIndex === 0) {
+                  memo[newProp] = countryDateTotals[prop];
+                } else {
+                  memo[newProp] =
+                    countryDateTotals[prop] - countryTotals[country][countryDates[countryDatesIndex - 1]][prop];
+                }
+
+                return memo;
+              }, {})
+            };
+          })
           .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate));
         dailyTotals = dailyTotals.map((x, i) => ({ ...x, isMostRecent: i === dailyTotals.length - 1 }));
 
@@ -168,12 +186,15 @@ export default class CasesGraphic extends Component {
           key: country,
           cases: dailyTotals.length ? last(dailyTotals).cases : 0,
           deaths: dailyTotals.length ? last(dailyTotals).deaths : 0,
+          recoveries: dailyTotals.length ? last(dailyTotals).recoveries : 0,
           dailyTotals,
           daysSince100CasesTotals
         };
       })
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => b.cases - a.cases);
+
+    console.log(this.countriesData);
 
     this.earliestDate = this.countriesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;

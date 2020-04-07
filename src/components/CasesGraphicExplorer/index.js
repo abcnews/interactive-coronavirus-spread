@@ -4,7 +4,13 @@ import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { TRENDS } from '../../constants';
-import CasesGraphic, { DEFAULT_CASES_CAP, DEFAULT_PROPS, X_SCALE_TYPES, Y_SCALE_TYPES } from '../CasesGraphic';
+import CasesGraphic, {
+  DEFAULT_CASES_CAP,
+  DEFAULT_PROPS,
+  X_SCALE_TYPES,
+  Y_SCALE_TYPES,
+  Y_SCALE_PROPS
+} from '../CasesGraphic';
 import InlineGraphic from '../InlineGraphic';
 import styles from './styles.css';
 
@@ -15,13 +21,20 @@ const SELECT_STYLES = {
   })
 };
 const RADIO_LABELS = {
+  cases: 'Cumulative cases',
   dates: 'Date',
   days: 'Days since 100th case',
+  deaths: 'Cumulative deaths',
   linear: 'Linear (0-?)',
-  logarithmic: 'Logarithmic (100-?)'
+  logarithmic: 'Logarithmic (100-?)',
+  newcases: 'Daily new cases',
+  newdeaths: 'Daily new deaths',
+  newrecoveries: 'Daily new recoveries',
+  recoveries: 'Cumulative recoveries'
 };
 const CASES_CAP_OPTIONS = {
   '1000': '1k',
+  '5000': '5k',
   '10000': '10k',
   '50000': '50k',
   '100000': '100k',
@@ -40,6 +53,7 @@ const optionsValues = options => options.map(option => option.value);
 export default ({ countryTotals }) => {
   const [xScaleType, setXScaleType] = useState(DEFAULT_PROPS.xScaleType);
   const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
+  const [yScaleProp, setYScaleProp] = useState(DEFAULT_PROPS.yScaleProp);
   const [visibleCountries, setVisibleCountries] = useState(DEFAULT_PROPS.countries);
   const [highlightedCountries, setHighlightedCountries] = useState(DEFAULT_PROPS.highlightedCountries);
   const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
@@ -51,6 +65,7 @@ export default ({ countryTotals }) => {
     ...DEFAULT_PROPS,
     xScaleType,
     yScaleType,
+    yScaleProp,
     casesCap,
     daysCap,
     countries: visibleCountries,
@@ -61,6 +76,7 @@ export default ({ countryTotals }) => {
 
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
+  const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const countriesSelectOptions = Object.keys(countryTotals).map(country => ({ label: country, value: country }));
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
@@ -182,6 +198,14 @@ export default ({ countryTotals }) => {
 
             setDaysCap(daysCap ? +daysCap : false);
           }}
+        />
+        <label>Y-axis</label>
+        <RadioGroup
+          name="yscaleprop"
+          defaultValue={DEFAULT_PROPS.yScaleProp}
+          value={yScaleProp}
+          options={yScalePropOptions}
+          onChange={event => setYScaleProp(event.currentTarget.value)}
         />
         <label>Y-axis Scale</label>
         <RadioGroup

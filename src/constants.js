@@ -1,12 +1,5 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
-export const JOHN_HOPKINS_DATA_URL = `${DATA_ENDPOINT}data.json`;
-export const JOHN_HOPKINS_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}country-totals.json`;
-export const WHO_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/who-country-totals.json`;
-export const ECDC_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/ecdc-country-totals.json`;
-export const HYBRID_COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/hybrid-country-totals.json`;
-export const COUNTRY_TOTALS_URL = HYBRID_COUNTRY_TOTALS_URL;
-export const ECDC_AFTER_100_CASES_URL = `${DATA_ENDPOINT}ecdc-after-100-cases.json`;
-export const AFTER_100_CASES_URL = ECDC_AFTER_100_CASES_URL;
+export const COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}/country-totals-extra.json`;
 export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
 export const KEY_EUROPEAN_COUNTRIES = [
   // 'Albania',
