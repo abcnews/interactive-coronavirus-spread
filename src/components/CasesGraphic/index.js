@@ -415,7 +415,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.trendLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.trendLine}`)
-      .data(visibleTrendsData);
+      .data(visibleTrendsData, KEYING_FN);
     const trendLinesEnter = trendLines // Enter
       .enter()
       .append('path')
@@ -569,7 +569,7 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.trendLabels}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.trendLabel}`)
-      .data(trendLabelsData);
+      .data(trendLabelsData, KEYING_FN);
     const trendLabelsEnter = trendLabels // Enter
       .enter()
       .append('text')
@@ -596,6 +596,13 @@ export default class CasesGraphic extends Component {
     trendLabels // Update
       .classed(styles.highlighted, isTrendHighlighted)
       .style('fill-opacity', null)
+      .call(selection => {
+        if (IS_TRIDENT) {
+          selection.text(d => d.text);
+        } else {
+          selection.html(d => d.html);
+        }
+      })
       .transition()
       .duration(transformTransitionDuration)
       .attr(
