@@ -1,12 +1,16 @@
+const ADDITIONAL_ENTRY_POINTS = ['standalone-cases-graphic', 'cases-graphic-explorer'];
+
 module.exports = {
   serve: {
     hot: false
   },
   webpack: config => {
-    config.entry['standalone-cases-graphic'] = [
-      config.entry.index[0].replace('index.js', 'standalone-cases-graphic.js')
-    ];
     config.devtool = 'source-map';
+
+    ADDITIONAL_ENTRY_POINTS.forEach(name => {
+      config.entry[name] = [config.entry.index[0].replace('index.js', `${name}.js`)];
+    });
+
     return config;
   }
 };

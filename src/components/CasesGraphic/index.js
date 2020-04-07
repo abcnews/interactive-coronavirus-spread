@@ -37,11 +37,11 @@ const TRANSITION_DURATIONS = {
   opacity: 250,
   transform: 1000
 };
-const X_SCALE_TYPES = ['dates', 'days'];
-const Y_SCALE_TYPES = ['linear', 'logarithmic'];
-const Y_SCALE_PROPS = ['cases', 'deaths'];
+export const X_SCALE_TYPES = ['dates', 'days'];
+export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
+export const Y_SCALE_PROPS = ['cases', 'deaths'];
 const DEFAULT_CASES_CAP = 5e4; // 50k
-const DEFAULT_PROPS = {
+export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
   yScaleProp: Y_SCALE_PROPS[0],
@@ -149,8 +149,6 @@ export default class CasesGraphic extends Component {
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
-
-    console.log(countryTotals);
 
     this.countriesData = Object.keys(countryTotals)
       .map(country => {

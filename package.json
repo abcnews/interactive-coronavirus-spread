@@ -22,12 +22,15 @@
 	"dependencies": {
 		"@abcnews/alternating-case-to-object": "^2.0.0",
 		"@abcnews/scrollyteller": "^2.2.1",
+		"@atlaskit/radio": "^3.2.0",
 		"d3": "^5.15.0",
 		"d3-force-reuse": "^1.0.1",
 		"d3-interpolate-path": "^2.1.2",
 		"d3-selection": "^1.4.1",
 		"react": "^16.13.0",
 		"react-dom": "^16.13.0",
-		"react-reveal": "^1.2.2"
+		"react-reveal": "^1.2.2",
+		"react-select": "^3.1.0",
+		"styled-components": "^5.0.1"
 	}
 }
