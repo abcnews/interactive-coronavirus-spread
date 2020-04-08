@@ -1,7 +1,8 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
-export const COUNTRY_TOTALS_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
-export const KEY_COUNTRIES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
-export const KEY_EUROPEAN_COUNTRIES = [
+// export const PLACES_TOTALS_URL = `${DATA_ENDPOINT}places-totals.json`;
+export const PLACES_TOTALS_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
+export const KEY_PLACES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
+export const KEY_EUROPEAN_PLACES = [
   // 'Albania',
   // 'Andorra',
   // 'Armenia',
@@ -61,8 +62,8 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: false,
-    countries: true,
-    highlightedCountries: KEY_COUNTRIES.concat(['Spain', 'Germany', 'Iran', 'France']),
+    places: true,
+    highlightedPlaces: KEY_PLACES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
   },
   single: {
@@ -70,8 +71,8 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: false,
-    countries: ['China'],
-    highlightedCountries: true,
+    places: ['China'],
+    highlightedPlaces: true,
     trends: false
   },
   all: {
@@ -79,7 +80,7 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     casesCap: false,
-    countries: true,
+    places: true,
     trends: false
   },
   key: {
@@ -118,7 +119,7 @@ export const PRESETS = {
   },
   trends: {
     graphic: 'cases',
-    highlightedCountries: false,
+    highlightedPlaces: false,
     highlightedTrends: true,
     casesCap: false
   },
@@ -143,72 +144,72 @@ export const PRESETS = {
   },
   trenditaly: {
     graphic: 'cases',
-    highlightedCountries: ['Italy'],
+    highlightedPlaces: ['Italy'],
     highlightedTrends: [2]
   },
   trendaustralia: {
     graphic: 'cases',
-    highlightedCountries: ['Australia'],
+    highlightedPlaces: ['Australia'],
     highlightedTrends: [3]
   },
   trendsingapore: {
     graphic: 'cases',
-    highlightedCountries: ['Singapore'],
+    highlightedPlaces: ['Singapore'],
     highlightedTrends: [7]
   },
   australia: {
     graphic: 'cases',
-    highlightedCountries: ['Australia']
+    highlightedPlaces: ['Australia']
   },
   china: {
     graphic: 'cases',
     casesCap: false,
-    highlightedCountries: ['China']
+    highlightedPlaces: ['China']
   },
   singapore: {
     graphic: 'cases',
-    highlightedCountries: ['Singapore']
+    highlightedPlaces: ['Singapore']
   },
   singtotaiwan: {
     graphic: 'cases',
-    countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Singapore', 'Taiwan']
+    places: KEY_PLACES.concat(['Taiwan']),
+    highlightedPlaces: ['Singapore', 'Taiwan']
   },
   taiwan: {
     graphic: 'cases',
-    countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Taiwan']
+    places: KEY_PLACES.concat(['Taiwan']),
+    highlightedPlaces: ['Taiwan']
   },
   taiwantokorea: {
     graphic: 'cases',
-    countries: KEY_COUNTRIES.concat(['Taiwan']),
-    highlightedCountries: ['Taiwan', 'S. Korea']
+    places: KEY_PLACES.concat(['Taiwan']),
+    highlightedPlaces: ['Taiwan', 'S. Korea']
   },
   korea: {
     graphic: 'cases',
-    highlightedCountries: ['S. Korea']
+    highlightedPlaces: ['S. Korea']
   },
   europe: {
     graphic: 'cases',
-    countries: KEY_COUNTRIES.concat(KEY_EUROPEAN_COUNTRIES),
-    highlightedCountries: KEY_EUROPEAN_COUNTRIES
+    places: KEY_PLACES.concat(KEY_EUROPEAN_PLACES),
+    highlightedPlaces: KEY_EUROPEAN_PLACES
   },
   koreatoitaly: {
     graphic: 'cases',
-    highlightedCountries: ['S. Korea', 'Italy']
+    highlightedPlaces: ['S. Korea', 'Italy']
   },
   italy: {
     graphic: 'cases',
-    highlightedCountries: ['Italy']
+    highlightedPlaces: ['Italy']
   },
   italytojapan: {
     graphic: 'cases',
-    highlightedCountries: ['Italy', 'Japan']
+    highlightedPlaces: ['Italy', 'Japan']
   },
   unitedstates: {
     graphic: 'cases',
     casesCap: false,
-    highlightedCountries: ['US']
+    highlightedPlaces: ['US']
   }
 };
 

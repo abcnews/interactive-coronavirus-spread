@@ -50,12 +50,12 @@ const DAYS_CAP_OPTIONS = {
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
 
-export default ({ countryTotals }) => {
+export default ({ placesTotals }) => {
   const [xScaleType, setXScaleType] = useState(DEFAULT_PROPS.xScaleType);
   const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(DEFAULT_PROPS.yScaleProp);
-  const [visibleCountries, setVisibleCountries] = useState(DEFAULT_PROPS.countries);
-  const [highlightedCountries, setHighlightedCountries] = useState(DEFAULT_PROPS.highlightedCountries);
+  const [visiblePlaces, setVisiblePlaces] = useState(DEFAULT_PROPS.places);
+  const [highlightedPlaces, setHighlightedPlaces] = useState(DEFAULT_PROPS.highlightedPlaces);
   const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
   const [casesCap, setCasesCap] = useState(DEFAULT_PROPS.casesCap);
@@ -68,8 +68,8 @@ export default ({ countryTotals }) => {
     yScaleProp,
     casesCap,
     daysCap,
-    countries: visibleCountries,
-    highlightedCountries,
+    places: visiblePlaces,
+    highlightedPlaces,
     trends: visibleTrends,
     highlightedTrends
   };
@@ -80,7 +80,7 @@ export default ({ countryTotals }) => {
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
-  const countriesSelectOptions = Object.keys(countryTotals).map(country => ({ label: country, value: country }));
+  const placesSelectOptions = Object.keys(placesTotals).map(place => ({ label: place, value: place }));
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
@@ -90,55 +90,51 @@ export default ({ countryTotals }) => {
     <div className={styles.root}>
       <div className={styles.graphic}>
         <InlineGraphic>
-          <CasesGraphic preset={Math.random()} countryTotals={countryTotals} {...casesGraphicProps} />
+          <CasesGraphic preset={Math.random()} placesTotals={placesTotals} {...casesGraphicProps} />
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
-        <div key="highlightedcountries">
+        <div key="highlightedplaces">
           <label>
-            Highlighted Countries{' '}
+            Highlighted Places{' '}
             <button
-              onClick={() =>
-                setHighlightedCountries(Array.from(new Set(visibleCountries.concat(highlightedCountries))))
-              }
-              disabled={visibleCountries.sort().join() === highlightedCountries.sort().join()}
+              onClick={() => setHighlightedPlaces(Array.from(new Set(visiblePlaces.concat(highlightedPlaces))))}
+              disabled={visiblePlaces.sort().join() === highlightedPlaces.sort().join()}
             >
-              Highlight all visible countries
+              Highlight all visible places
             </button>
           </label>
           <Select
             components={animatedComponents}
             styles={SELECT_STYLES}
-            defaultValue={countriesSelectOptions.filter(
-              option => DEFAULT_PROPS.highlightedCountries.indexOf(option.value) > -1
+            defaultValue={placesSelectOptions.filter(
+              option => DEFAULT_PROPS.highlightedPlaces.indexOf(option.value) > -1
             )}
             isMulti
-            options={countriesSelectOptions}
-            value={countriesSelectOptions.filter(option => highlightedCountries.indexOf(option.value) > -1)}
+            options={placesSelectOptions}
+            value={placesSelectOptions.filter(option => highlightedPlaces.indexOf(option.value) > -1)}
             onChange={selectedOptions => {
-              const nextHighlightedCountries = optionsValues(selectedOptions || []);
+              const nextHighlightedPlaces = optionsValues(selectedOptions || []);
 
-              setVisibleCountries(Array.from(new Set(visibleCountries.concat(nextHighlightedCountries))));
-              setHighlightedCountries(nextHighlightedCountries);
+              setVisiblePlaces(Array.from(new Set(visiblePlaces.concat(nextHighlightedPlaces))));
+              setHighlightedPlaces(nextHighlightedPlaces);
             }}
           />
         </div>
-        <div key="visiblecountries">
-          <label>Visible Countries</label>
+        <div key="visibleplaces">
+          <label>Visible Places</label>
           <Select
             components={animatedComponents}
             styles={SELECT_STYLES}
-            defaultValue={countriesSelectOptions.filter(option => DEFAULT_PROPS.countries.indexOf(option.value) > -1)}
-            value={countriesSelectOptions.filter(option => visibleCountries.indexOf(option.value) > -1)}
+            defaultValue={placesSelectOptions.filter(option => DEFAULT_PROPS.places.indexOf(option.value) > -1)}
+            value={placesSelectOptions.filter(option => visiblePlaces.indexOf(option.value) > -1)}
             isMulti
-            options={countriesSelectOptions}
+            options={placesSelectOptions}
             onChange={selectedOptions => {
-              const nextVisibleCountries = optionsValues(selectedOptions || []);
+              const nextVisiblePlaces = optionsValues(selectedOptions || []);
 
-              setVisibleCountries(nextVisibleCountries);
-              setHighlightedCountries(
-                highlightedCountries.filter(country => nextVisibleCountries.indexOf(country) > -1)
-              );
+              setVisiblePlaces(nextVisiblePlaces);
+              setHighlightedPlaces(highlightedPlaces.filter(place => nextVisiblePlaces.indexOf(place) > -1));
             }}
           />
         </div>

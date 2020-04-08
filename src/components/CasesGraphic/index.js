@@ -17,7 +17,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { Component, createRef } from 'react';
-import { KEY_COUNTRIES, KEY_EUROPEAN_COUNTRIES, KEY_TRENDS, TRENDS } from '../../constants';
+import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -49,8 +49,8 @@ export const DEFAULT_PROPS = {
   yScaleProp: Y_SCALE_PROPS[0],
   daysCap: false,
   casesCap: DEFAULT_CASES_CAP,
-  countries: KEY_COUNTRIES,
-  highlightedCountries: KEY_COUNTRIES,
+  places: KEY_PLACES,
+  highlightedPlaces: KEY_PLACES,
   trends: KEY_TRENDS,
   highlightedTrends: false
 };
@@ -142,7 +142,7 @@ export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
 
-    const { countryTotals, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
+    const { placesTotals, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
 
     checkScaleTypes(xScaleType, yScaleType);
 
@@ -152,26 +152,26 @@ export default class CasesGraphic extends Component {
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
 
-    this.countriesData = Object.keys(countryTotals)
-      .map(country => {
-        const countryDates = Object.keys(countryTotals[country]);
-        let dailyTotals = countryDates
-          .map((countryDate, countryDatesIndex) => {
-            const countryDateTotals = countryTotals[country][countryDate];
-            const countryDateTotalsProps = Object.keys(countryDateTotals);
+    this.placesData = Object.keys(placesTotals)
+      .map(place => {
+        const placeDates = Object.keys(placesTotals[place]);
+        let dailyTotals = placeDates
+          .map((placeDate, placeDatesIndex) => {
+            const placeDateTotals = placesTotals[place][placeDate];
+            const placeDateTotalsProps = Object.keys(placeDateTotals);
 
             return {
-              date: new Date(countryDate),
-              ...countryDateTotals,
-              ...countryDateTotalsProps.reduce((memo, prop) => {
+              date: new Date(placeDate),
+              ...placeDateTotals,
+              ...placeDateTotalsProps.reduce((memo, prop) => {
                 const newProp = `new${prop}`;
 
-                if (countryDatesIndex === 0) {
-                  memo[newProp] = countryDateTotals[prop];
+                if (placeDatesIndex === 0) {
+                  memo[newProp] = placeDateTotals[prop];
                 } else {
                   memo[newProp] = Math.max(
                     0,
-                    countryDateTotals[prop] - countryTotals[country][countryDates[countryDatesIndex - 1]][prop]
+                    placeDateTotals[prop] - placesTotals[place][placeDates[placeDatesIndex - 1]][prop]
                   );
                 }
 
@@ -187,7 +187,7 @@ export default class CasesGraphic extends Component {
           .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
         return {
-          key: country,
+          key: place,
           cases: dailyTotals.length ? last(dailyTotals).cases : 0,
           deaths: dailyTotals.length ? last(dailyTotals).deaths : 0,
           recoveries: dailyTotals.length ? last(dailyTotals).recoveries : 0,
@@ -198,7 +198,7 @@ export default class CasesGraphic extends Component {
       .filter(d => d.daysSince100CasesTotals.length > 0)
       .sort((a, b) => b.cases - a.cases);
 
-    this.earliestDate = this.countriesData.reduce((memo, d) => {
+    this.earliestDate = this.placesData.reduce((memo, d) => {
       const candidate = d.dailyTotals[0].date;
 
       if (candidate < memo) {
@@ -206,8 +206,8 @@ export default class CasesGraphic extends Component {
       }
 
       return memo;
-    }, this.countriesData[0].dailyTotals[0].date);
-    this.latestDate = this.countriesData.reduce((memo, d) => {
+    }, this.placesData[0].dailyTotals[0].date);
+    this.latestDate = this.placesData.reduce((memo, d) => {
       const candidate = last(d.dailyTotals).date;
 
       if (candidate > memo) {
@@ -215,11 +215,11 @@ export default class CasesGraphic extends Component {
       }
 
       return memo;
-    }, last(this.countriesData[0].dailyTotals).date);
+    }, last(this.placesData[0].dailyTotals).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
     this.most = Y_SCALE_PROPS.reduce((memo, propName) => {
-      memo[propName] = this.countriesData.reduce((memo, d) => {
+      memo[propName] = this.placesData.reduce((memo, d) => {
         return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t[propName])));
       }, 0);
 
@@ -261,10 +261,10 @@ export default class CasesGraphic extends Component {
     const prevState = this.state;
 
     let {
-      countries,
+      places,
       casesCap,
       daysCap,
-      highlightedCountries,
+      highlightedPlaces,
       highlightedTrends,
       preset,
       trends,
@@ -301,7 +301,7 @@ export default class CasesGraphic extends Component {
     }
 
     const yScaleCap = casesCap === false ? this.most[yScaleProp] : Math.min(casesCap, this.most[yScaleProp]);
-    const cappedDaysSince100Cases = this.countriesData.reduce((memo, d) => {
+    const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
       return Math.max(
         memo,
         d.daysSince100CasesTotals.filter(
@@ -339,8 +339,8 @@ export default class CasesGraphic extends Component {
       line()
         .x(d => xScale(d[xScaleProp]))
         .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
-    const isCountryTruncated = d => !last(getDataCollection(d)).isMostRecent;
-    const generateLinePathLength = d => (isCountryTruncated(d) ? 100 : 95.5);
+    const isPlaceTruncated = d => !last(getDataCollection(d)).isMostRecent;
+    const generateLinePathLength = d => (isPlaceTruncated(d) ? 100 : 95.5);
     const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
@@ -366,11 +366,11 @@ export default class CasesGraphic extends Component {
       typeof collection === 'boolean'
         ? collection
         : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
-    const isCountryVisible = inclusionCheckGenerator(countries, 'key');
-    const isCountryHighlighted = inclusionCheckGenerator(highlightedCountries, 'key');
+    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
+    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
     const isTrendVisible = inclusionCheckGenerator(trends, 'doublingTimePeriods');
     const isTrendHighlighted = inclusionCheckGenerator(highlightedTrends, 'doublingTimePeriods');
-    const visibleCountriesData = this.countriesData.filter(isCountryVisible);
+    const visiblePlacesData = this.placesData.filter(isPlaceVisible);
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
       this.earliestDate,
@@ -504,16 +504,16 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotLine}`)
-      .data(visibleCountriesData, KEYING_FN);
+      .data(visiblePlacesData, KEYING_FN);
     const plotLinesEnter = plotLines // Enter
       .enter()
       .append('path')
-      .attr('data-country', d => d.key)
+      .attr('data-place', d => d.key)
       .classed(styles.plotLine, true)
-      .classed(styles.highlighted, isCountryHighlighted)
+      .classed(styles.highlighted, isPlaceHighlighted)
       .attr('d', generateLinePath)
       .attr('stroke-dasharray', function(d) {
-        if (isCountryTruncated(d)) {
+        if (isPlaceTruncated(d)) {
           setTimeout(setTruncatedLineDashArray, 0, this);
         }
 
@@ -524,8 +524,8 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
     plotLines // Update
-      .attr('data-country', d => d.key)
-      .classed(styles.highlighted, isCountryHighlighted)
+      .attr('data-place', d => d.key)
+      .classed(styles.highlighted, isPlaceHighlighted)
       .style('stroke-opacity', null)
       .attr('stroke-dasharray', null)
       .transition()
@@ -536,7 +536,7 @@ export default class CasesGraphic extends Component {
         const previous = select(this);
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
 
-        if (isCountryTruncated(d)) {
+        if (isPlaceTruncated(d)) {
           setTimeout(setTruncatedLineDashArray, currentPath === previousPath ? 0 : 1000, this); // post transition
         }
 
@@ -554,14 +554,14 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
       .selectAll(`.${styles.plotDot}`)
-      .data(visibleCountriesData, KEYING_FN);
+      .data(visiblePlacesData, KEYING_FN);
     const plotDotsEnter = plotDots // Enter
       .enter()
       .append('circle')
-      .attr('data-country', d => d.key)
+      .attr('data-place', d => d.key)
       .classed(styles.plotDot, true)
-      .classed(styles.highlighted, isCountryHighlighted)
-      .classed(styles.truncated, isCountryTruncated)
+      .classed(styles.highlighted, isPlaceHighlighted)
+      .classed(styles.truncated, isPlaceTruncated)
       .attr('r', 2)
       .attr('transform', lineEndTransformGenerator)
       .style('fill-opacity', 0)
@@ -571,9 +571,9 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .style('stroke-opacity', null);
     plotDots // Update
-      .attr('data-country', d => d.key)
-      .classed(styles.highlighted, isCountryHighlighted)
-      .classed(styles.truncated, isCountryTruncated)
+      .attr('data-place', d => d.key)
+      .classed(styles.highlighted, isPlaceHighlighted)
+      .classed(styles.truncated, isPlaceTruncated)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()
@@ -669,12 +669,11 @@ export default class CasesGraphic extends Component {
       .remove();
 
     // Rendering > 11. Add/remove/update plot labels (near ends of lines)
-    const labelledCountriesData = visibleCountriesData.filter(
+    const labelledPlacesData = visiblePlacesData.filter(
       d =>
-        isCountryHighlighted(d) ||
-        KEY_COUNTRIES.concat(preset === 'europe' ? KEY_EUROPEAN_COUNTRIES : []).indexOf(d.key) > -1
+        isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
     );
-    const plotLabelForceNodes = labelledCountriesData.map(d => ({
+    const plotLabelForceNodes = labelledPlacesData.map(d => ({
       fx: 0,
       targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
     }));
@@ -689,7 +688,7 @@ export default class CasesGraphic extends Component {
         plotLabelsForceSimulation.tick();
       }
     }
-    const plotLabelsData = labelledCountriesData.map((d, i) => ({
+    const plotLabelsData = labelledPlacesData.map((d, i) => ({
       key: d.key,
       text: d.key,
       x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
@@ -703,9 +702,9 @@ export default class CasesGraphic extends Component {
     const plotLabelsEnter = plotLabels // Enter
       .enter()
       .append('text')
-      .attr('data-country', d => d.key)
+      .attr('data-place', d => d.key)
       .classed(styles.plotLabel, true)
-      .classed(styles.highlighted, isCountryHighlighted)
+      .classed(styles.highlighted, isPlaceHighlighted)
       .attr('alignment-baseline', 'middle')
       .text(d => d.text)
       .attr('transform', d => `translate(${d.x}, ${d.y})`)
@@ -714,8 +713,8 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
     plotLabels // Update
-      .attr('data-country', d => d.key)
-      .classed(styles.highlighted, isCountryHighlighted)
+      .attr('data-place', d => d.key)
+      .classed(styles.highlighted, isPlaceHighlighted)
       .style('fill-opacity', null)
       .text(d => d.text)
       .transition()

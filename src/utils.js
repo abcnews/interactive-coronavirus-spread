@@ -3,10 +3,10 @@ import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
-import { COUNTRY_TOTALS_URL, PRESETS } from './constants';
+import { PLACES_TOTALS_URL, PRESETS } from './constants';
 
-export const fetchCountryTotals = () =>
-  fetch(COUNTRY_TOTALS_URL)
+export const fetchPlacesTotals = () =>
+  fetch(PLACES_TOTALS_URL)
     .then(response => response.json())
     .then(data => {
       // A bit of renaming & clean up
@@ -23,14 +23,18 @@ export const fetchCountryTotals = () =>
       delete data['International'];
       delete data['World'];
 
-      Object.keys(data).forEach(country => {
-        Object.keys(data[country]).forEach(date => {
-          data[country][date] = {
-            cases: data[country][date].cases || 0,
-            deaths: data[country][date].deaths || 0,
-            recoveries: data[country][date].recoveries || data[country][date].recovered || 0
+      Object.keys(data).forEach(place => {
+        Object.keys(data[place]).forEach(date => {
+          data[place][date] = {
+            cases: data[place][date].cases || 0,
+            deaths: data[place][date].deaths || 0,
+            recoveries: data[place][date].recoveries || data[place][date].recovered || 0
           };
         });
+        // data[place] = {
+        //   type: 'place',
+        //   dates: data[place]
+        // };
       });
 
       return Promise.resolve(data);
@@ -44,7 +48,7 @@ export const getInclusiveDateFromYYYYMMDD = yyymmdd => {
   }
 };
 
-export const renderCasesGraphics = countryTotals =>
+export const renderCasesGraphics = placesTotals =>
   [...document.querySelectorAll(`a[id^=casesgraphicPRESET],a[name^=casesgraphicPRESET]`)].map(anchorEl => {
     const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
     const mountEl = document.createElement('div');
@@ -59,7 +63,7 @@ export const renderCasesGraphics = countryTotals =>
       <InlineGraphic>
         <CasesGraphic
           preset={mountEl.dataset.preset}
-          countryTotals={countryTotals}
+          placesTotals={placesTotals}
           maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
           {...PRESETS[mountEl.dataset.preset]}
         />

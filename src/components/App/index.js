@@ -7,7 +7,7 @@ import DoublingGraphic from '../DoublingGraphic';
 import Placeholder from '../TestComponent';
 import styles from './styles.css';
 
-export default ({ scrollyData, countryTotals }) => {
+export default ({ scrollyData, placesTotals }) => {
   const [preset, setPreset] = useState('initial');
   let maxDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
 
@@ -24,7 +24,7 @@ export default ({ scrollyData, countryTotals }) => {
     Graphic = CasesGraphic;
     graphicProps = {
       ...graphicProps,
-      countryTotals,
+      placesTotals,
       maxDate
     };
   } else if (graphic === 'doubling') {
