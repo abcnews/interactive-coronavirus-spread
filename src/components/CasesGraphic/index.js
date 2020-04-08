@@ -47,8 +47,8 @@ export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
   yScaleType: Y_SCALE_TYPES[1],
   yScaleProp: Y_SCALE_PROPS[0],
-  daysCap: false,
-  casesCap: DEFAULT_CASES_CAP,
+  xScaleDaysCap: false,
+  yScaleCap: DEFAULT_CASES_CAP,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES,
   trends: KEY_TRENDS,
@@ -262,8 +262,8 @@ export default class CasesGraphic extends Component {
 
     let {
       places,
-      casesCap,
-      daysCap,
+      yScaleCap,
+      xScaleDaysCap,
       highlightedPlaces,
       highlightedTrends,
       preset,
@@ -291,7 +291,7 @@ export default class CasesGraphic extends Component {
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
 
     if (isDailyFigures) {
-      casesCap = false;
+      yScaleCap = false;
     }
 
     // Only allow trend lines when we are showing cases since 100th case
@@ -300,12 +300,14 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
-    const yScaleCap = casesCap === false ? this.most[yScaleProp] : Math.min(casesCap, this.most[yScaleProp]);
+    // Y-scale cap should always be a number.
+    yScaleCap = yScaleCap === false ? this.most[yScaleProp] : Math.min(yScaleCap, this.most[yScaleProp]);
+
     const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
       return Math.max(
         memo,
         d.daysSince100CasesTotals.filter(
-          item => item[yScaleProp] <= yScaleCap && (daysCap === false || item.day <= daysCap)
+          item => item[yScaleProp] <= yScaleCap && (xScaleDaysCap === false || item.day <= xScaleDaysCap)
         ).length - 1
       );
     }, 0);
@@ -329,7 +331,8 @@ export default class CasesGraphic extends Component {
       d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
         (memo, item) =>
           memo.concat(
-            item[yScaleProp] <= yScaleCap && (xScaleType === 'dates' || daysCap === false || item.day <= daysCap)
+            item[yScaleProp] <= yScaleCap &&
+              (xScaleType === 'dates' || xScaleDaysCap === false || item.day <= xScaleDaysCap)
               ? [item]
               : []
           ),
@@ -388,7 +391,7 @@ export default class CasesGraphic extends Component {
       : axisLeft(yScale).tickValues(
           TICK_VALUES['logarithmic']
             .filter(value => value < yScaleCap)
-            .concat(casesCap ? [casesCap] : [])
+            .concat(yScaleCap ? [yScaleCap] : [])
             .sort()
         )
     ).tickFormat(format('~s'));
@@ -397,7 +400,7 @@ export default class CasesGraphic extends Component {
       : axisLeft(yScale).tickValues(
           TICK_VALUES['logarithmic']
             .filter(value => value < yScaleCap)
-            .concat(casesCap ? [casesCap] : [])
+            .concat(yScaleCap ? [yScaleCap] : [])
             .sort()
         )
     )

@@ -54,20 +54,20 @@ export default ({ placesTotals }) => {
   const [xScaleType, setXScaleType] = useState(DEFAULT_PROPS.xScaleType);
   const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(DEFAULT_PROPS.yScaleProp);
+  const [xScaleDaysCap, setXScaleDaysCap] = useState(DEFAULT_PROPS.xScaleDaysCap);
+  const [yScaleCap, setYScaleCap] = useState(DEFAULT_PROPS.yScaleCap);
   const [visiblePlaces, setVisiblePlaces] = useState(DEFAULT_PROPS.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(DEFAULT_PROPS.highlightedPlaces);
   const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
-  const [casesCap, setCasesCap] = useState(DEFAULT_PROPS.casesCap);
-  const [daysCap, setDaysCap] = useState(DEFAULT_PROPS.daysCap);
 
   const casesGraphicProps = {
     ...DEFAULT_PROPS,
     xScaleType,
     yScaleType,
     yScaleProp,
-    casesCap,
-    daysCap,
+    yScaleCap,
+    xScaleDaysCap,
     places: visiblePlaces,
     highlightedPlaces,
     trends: visibleTrends,
@@ -207,16 +207,16 @@ export default ({ placesTotals }) => {
             <label>X-axis (days) Cap</label>
             <RadioGroup
               name="dayscap"
-              defaultValue={DEFAULT_PROPS.daysCap ? String(DEFAULT_PROPS.daysCap) : ''}
-              value={daysCap ? String(daysCap) : ''}
+              defaultValue={DEFAULT_PROPS.xScaleDaysCap ? String(DEFAULT_PROPS.xScaleDaysCap) : ''}
+              value={xScaleDaysCap ? String(xScaleDaysCap) : ''}
               options={Object.keys(DAYS_CAP_OPTIONS).map(value => ({
                 label: DAYS_CAP_OPTIONS[value],
                 value
               }))}
               onChange={event => {
-                const daysCap = event.currentTarget.value;
+                const xScaleDaysCap = event.currentTarget.value;
 
-                setDaysCap(daysCap ? +daysCap : false);
+                setXScaleDaysCap(xScaleDaysCap ? +xScaleDaysCap : false);
               }}
             />
           </div>
@@ -254,16 +254,16 @@ export default ({ placesTotals }) => {
             <label>Y-axis Cap</label>
             <RadioGroup
               name="casescap"
-              defaultValue={DEFAULT_PROPS.casesCap ? String(DEFAULT_PROPS.casesCap) : ''}
-              value={casesCap ? String(casesCap) : ''}
+              defaultValue={DEFAULT_PROPS.yScaleCap ? String(DEFAULT_PROPS.yScaleCap) : ''}
+              value={yScaleCap ? String(yScaleCap) : ''}
               options={Object.keys(CASES_CAP_OPTIONS).map(value => ({
                 label: CASES_CAP_OPTIONS[value],
                 value
               }))}
               onChange={event => {
-                const casesCap = event.currentTarget.value;
+                const yScaleCap = event.currentTarget.value;
 
-                setCasesCap(casesCap ? +casesCap : false);
+                setYScaleCap(yScaleCap ? +yScaleCap : false);
               }}
             />
           </div>

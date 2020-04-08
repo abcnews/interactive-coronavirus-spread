@@ -61,7 +61,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: false,
+    yScaleCap: false,
     places: true,
     highlightedPlaces: KEY_PLACES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
@@ -70,7 +70,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: false,
+    yScaleCap: false,
     places: ['China'],
     highlightedPlaces: true,
     trends: false
@@ -79,7 +79,7 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: false,
+    yScaleCap: false,
     places: true,
     trends: false
   },
@@ -87,13 +87,13 @@ export const PRESETS = {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    casesCap: false,
+    yScaleCap: false,
     trends: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    casesCap: false,
+    yScaleCap: false,
     trends: false
   },
   doublinginit: {
@@ -114,18 +114,18 @@ export const PRESETS = {
   },
   logarithmic: {
     graphic: 'cases',
-    casesCap: false,
+    yScaleCap: false,
     trends: false
   },
   trends: {
     graphic: 'cases',
     highlightedPlaces: false,
     highlightedTrends: true,
-    casesCap: false
+    yScaleCap: false
   },
   logtrends: {
     graphic: 'cases',
-    casesCap: false
+    yScaleCap: false
   },
   zoomin: {
     graphic: 'cases',
@@ -133,13 +133,13 @@ export const PRESETS = {
   },
   firstthirty: {
     graphic: 'cases',
-    casesCap: false,
-    daysCap: 30,
+    yScaleCap: false,
+    xScaleDaysCap: 30,
     trends: false
   },
   firstthirtyunderfiftyk: {
     graphic: 'cases',
-    daysCap: 30,
+    xScaleDaysCap: 30,
     trends: false
   },
   trenditaly: {
@@ -163,7 +163,7 @@ export const PRESETS = {
   },
   china: {
     graphic: 'cases',
-    casesCap: false,
+    yScaleCap: false,
     highlightedPlaces: ['China']
   },
   singapore: {
@@ -208,7 +208,7 @@ export const PRESETS = {
   },
   unitedstates: {
     graphic: 'cases',
-    casesCap: false,
+    yScaleCap: false,
     highlightedPlaces: ['US']
   }
 };
