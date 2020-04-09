@@ -36,8 +36,6 @@ export const fetchPlacesData = () =>
         };
       });
 
-      console.log(data);
-
       return Promise.resolve(data);
     });
 
