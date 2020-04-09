@@ -1,4 +1,5 @@
 import 'core-js/features/symbol';
+import 'core-js/features/symbol/iterator';
 import { fetchCountryTotals, renderCasesGraphics } from './utils';
 
 const domready = fn => {
