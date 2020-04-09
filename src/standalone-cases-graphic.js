@@ -1,3 +1,5 @@
+import 'core-js/features/symbol';
+import 'core-js/features/symbol/iterator';
 import { fetchPlacesData, renderCasesGraphics } from './utils';
 
 const domready = fn => {
