@@ -1,20 +1,20 @@
 import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphicExplorer from './components/CasesGraphicExplorer';
-import { fetchPlacesTotals } from './utils';
+import { fetchPlacesData } from './utils';
 
-export const renderExplorer = placesTotals => {
+export const renderExplorer = placesData => {
   const anchorEl = document.querySelector(`a[name^=casesgraphicexplorer]`);
   const mountEl = document.createElement('div');
 
   anchorEl.parentElement.insertBefore(mountEl, anchorEl);
   anchorEl.parentElement.removeChild(anchorEl);
 
-  render(<CasesGraphicExplorer placesTotals={placesTotals} />, mountEl);
+  render(<CasesGraphicExplorer placesData={placesData} />, mountEl);
 };
 
 const domready = fn => {
   /in/.test(document.readyState) ? setTimeout(() => domready(fn), 9) : fn();
 };
 
-fetchPlacesTotals().then(placesTotals => domready(() => renderExplorer(placesTotals)));
+fetchPlacesData().then(placesData => domready(() => renderExplorer(placesData)));

@@ -1,6 +1,6 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
-// export const PLACES_TOTALS_URL = `${DATA_ENDPOINT}places-totals.json`;
-export const PLACES_TOTALS_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
+// export const PLACES_DATA_URL = `${DATA_ENDPOINT}places-totals.json`;
+export const PLACES_DATA_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
 export const KEY_PLACES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
 export const KEY_EUROPEAN_PLACES = [
   // 'Albania',
@@ -62,7 +62,7 @@ export const PRESETS = {
     xScaleType: 'dates',
     yScaleType: 'linear',
     yScaleCap: false,
-    places: true,
+    places: place => place.type === 'country',
     highlightedPlaces: KEY_PLACES.concat(['Spain', 'Germany', 'Iran', 'France']),
     trends: false
   },

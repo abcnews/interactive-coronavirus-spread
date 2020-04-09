@@ -50,7 +50,7 @@ const DAYS_CAP_OPTIONS = {
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
 
-export default ({ placesTotals }) => {
+export default ({ placesData }) => {
   const [xScaleType, setXScaleType] = useState(DEFAULT_PROPS.xScaleType);
   const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(DEFAULT_PROPS.yScaleProp);
@@ -80,7 +80,7 @@ export default ({ placesTotals }) => {
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
-  const placesSelectOptions = Object.keys(placesTotals).map(place => ({ label: place, value: place }));
+  const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
@@ -90,7 +90,7 @@ export default ({ placesTotals }) => {
     <div className={styles.root}>
       <div className={styles.graphic}>
         <InlineGraphic>
-          <CasesGraphic preset={Math.random()} placesTotals={placesTotals} {...casesGraphicProps} />
+          <CasesGraphic preset={Math.random()} placesData={placesData} {...casesGraphicProps} />
         </InlineGraphic>
       </div>
       <div className={styles.controls}>

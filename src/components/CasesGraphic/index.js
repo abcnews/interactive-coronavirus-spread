@@ -103,28 +103,28 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
-      dailyTotals: casesData.map((cases, i) => ({ date: dates[i], cases })),
-      daysSince100CasesTotals: casesData.map((cases, i) => ({ day: i, cases }))
+      dataAsDates: casesData.map((cases, i) => ({ date: dates[i], cases })),
+      dataAsDaysSince100Cases: casesData.map((cases, i) => ({ day: i, cases }))
     };
 
     const daysToYScaleCap = calculatePeriodsToIncrease(increasePerPeriod, 100, yScaleCap);
     const daysDiff = Math.min(1, daysToYScaleCap - casesData.length + 1);
 
     if (daysDiff > 0) {
-      const lastItem = last(item.dailyTotals);
+      const lastItem = last(item.dataAsDates);
 
       if (daysDiff < 1) {
         // Meet extent of y-scale
         let fractionalDate = new Date(lastItem.date.valueOf() + ONE_DAY * daysDiff);
 
-        item.dailyTotals.push({ date: fractionalDate, cases: yScaleCap });
-        item.daysSince100CasesTotals.push({ day: daysToYScaleCap, cases: yScaleCap });
+        item.dataAsDates.push({ date: fractionalDate, cases: yScaleCap });
+        item.dataAsDaysSince100Cases.push({ day: daysToYScaleCap, cases: yScaleCap });
       } else {
         // Meet extent of x-scale
         let fractionalCases = lastItem.cases + lastItem.cases * increasePerPeriod;
 
-        item.dailyTotals.push({ date: new Date(lastItem.date.valueOf() + ONE_DAY), cases: fractionalCases });
-        item.daysSince100CasesTotals.push({ day: casesData.length, cases: fractionalCases });
+        item.dataAsDates.push({ date: new Date(lastItem.date.valueOf() + ONE_DAY), cases: fractionalCases });
+        item.dataAsDaysSince100Cases.push({ day: casesData.length, cases: fractionalCases });
       }
     }
 
@@ -142,7 +142,7 @@ export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
 
-    const { placesTotals, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
+    const { placesData, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
 
     checkScaleTypes(xScaleType, yScaleType);
 
@@ -152,16 +152,17 @@ export default class CasesGraphic extends Component {
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
 
-    this.placesData = Object.keys(placesTotals)
+    this.placesData = Object.keys(placesData)
       .map(place => {
-        const placeDates = Object.keys(placesTotals[place]);
-        let dailyTotals = placeDates
+        const placeDates = Object.keys(placesData[place].dates);
+        let dataAsDates = placeDates
           .map((placeDate, placeDatesIndex) => {
-            const placeDateTotals = placesTotals[place][placeDate];
+            const placeDateTotals = placesData[place].dates[placeDate];
             const placeDateTotalsProps = Object.keys(placeDateTotals);
 
             return {
               date: new Date(placeDate),
+              isMostRecent: placeDatesIndex === placeDates.length - 1,
               ...placeDateTotals,
               ...placeDateTotalsProps.reduce((memo, prop) => {
                 const newProp = `new${prop}`;
@@ -169,58 +170,59 @@ export default class CasesGraphic extends Component {
                 if (placeDatesIndex === 0) {
                   memo[newProp] = placeDateTotals[prop];
                 } else {
-                  memo[newProp] = Math.max(
-                    0,
-                    placeDateTotals[prop] - placesTotals[place][placeDates[placeDatesIndex - 1]][prop]
-                  );
+                  const previousDateTotals = placesData[place].dates[placeDates[placeDatesIndex - 1]];
+
+                  memo[newProp] = Math.max(0, placeDateTotals[prop] - previousDateTotals[prop]);
                 }
 
                 return memo;
               }, {})
             };
           })
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate));
-        dailyTotals = dailyTotals.map((x, i) => ({ ...x, isMostRecent: i === dailyTotals.length - 1 }));
+          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be a filtered at render time?
 
-        const daysSince100CasesTotals = dailyTotals
+        const dataAsDaysSince100Cases = dataAsDates
           .filter(({ cases }) => cases >= 100)
           .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
         return {
           key: place,
-          cases: dailyTotals.length ? last(dailyTotals).cases : 0,
-          deaths: dailyTotals.length ? last(dailyTotals).deaths : 0,
-          recoveries: dailyTotals.length ? last(dailyTotals).recoveries : 0,
-          dailyTotals,
-          daysSince100CasesTotals
+          type: place.type,
+          dataAsDates,
+          dataAsDaysSince100Cases,
+          ...Y_SCALE_PROPS.reduce((memo, propName) => {
+            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAsDates.map(t => t[propName])));
+
+            return memo;
+          }, {})
         };
       })
-      .filter(d => d.daysSince100CasesTotals.length > 0)
+      .filter(d => d.dataAsDaysSince100Cases.length > 0)
       .sort((a, b) => b.cases - a.cases);
 
     this.earliestDate = this.placesData.reduce((memo, d) => {
-      const candidate = d.dailyTotals[0].date;
+      const candidate = d.dataAsDates[0].date;
 
       if (candidate < memo) {
         return candidate;
       }
 
       return memo;
-    }, this.placesData[0].dailyTotals[0].date);
+    }, this.placesData[0].dataAsDates[0].date);
     this.latestDate = this.placesData.reduce((memo, d) => {
-      const candidate = last(d.dailyTotals).date;
+      const candidate = last(d.dataAsDates).date;
 
       if (candidate > memo) {
         return candidate;
       }
 
       return memo;
-    }, last(this.placesData[0].dailyTotals).date);
+    }, last(this.placesData[0].dataAsDates).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
     this.most = Y_SCALE_PROPS.reduce((memo, propName) => {
       memo[propName] = this.placesData.reduce((memo, d) => {
-        return Math.max.apply(null, [memo].concat(d.dailyTotals.map(t => t[propName])));
+        return Math.max.apply(null, [memo].concat(d.dataAsDates.map(t => t[propName])));
       }, 0);
 
       return memo;
@@ -288,6 +290,11 @@ export default class CasesGraphic extends Component {
     checkScaleTypes(xScaleType, yScaleType);
     checkScaleProps(yScaleProp);
 
+    if (typeof places === 'function') {
+      // Apply a filter
+      places = places(this.placesData);
+    }
+
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
 
     if (isDailyFigures) {
@@ -306,7 +313,7 @@ export default class CasesGraphic extends Component {
     const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
       return Math.max(
         memo,
-        d.daysSince100CasesTotals.filter(
+        d.dataAsDaysSince100Cases.filter(
           item => item[yScaleProp] <= yScaleCap && (xScaleDaysCap === false || item.day <= xScaleDaysCap)
         ).length - 1
       );
@@ -328,7 +335,7 @@ export default class CasesGraphic extends Component {
     ).range([chartHeight, 0]);
     const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
     const getDataCollection = d =>
-      d[xScaleType === 'dates' ? 'dailyTotals' : 'daysSince100CasesTotals'].reduce(
+      d[xScaleType === 'dates' ? 'dataAsDates' : 'dataAsDaysSince100Cases'].reduce(
         (memo, item) =>
           memo.concat(
             item[yScaleProp] <= yScaleCap &&
