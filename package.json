@@ -22,6 +22,7 @@
 	"dependencies": {
 		"@abcnews/alternating-case-to-object": "^2.0.0",
 		"@abcnews/scrollyteller": "^2.2.1",
+		"core-js": "^3.6.4",
 		"d3": "^5.15.0",
 		"d3-force-reuse": "^1.0.1",
 		"d3-interpolate-path": "^2.1.2",

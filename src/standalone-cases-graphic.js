@@ -1,3 +1,4 @@
+import 'core-js/features/symbol';
 import { fetchCountryTotals, renderCasesGraphics } from './utils';
 
 const domready = fn => {
