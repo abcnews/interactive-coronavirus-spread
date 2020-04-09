@@ -391,15 +391,12 @@ export default class CasesGraphic extends Component {
             .ticks(timeWeek.every(2))
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
-    const yAxisGenerator = (yScaleType === 'linear'
-      ? axisLeft(yScale).ticks(5)
-      : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap))
-    ).tickFormat(format('~s'));
-    console.log(yScaleCap);
-    const yAxisGridlinesGenerator = (yScaleType === 'linear'
-      ? axisLeft(yScale).ticks(5)
-      : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap))
-    )
+    const yAxisGeneratorBase = () =>
+      yScaleType === 'linear'
+        ? axisLeft(yScale).ticks(5)
+        : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap));
+    const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
+    const yAxisGridlinesGenerator = yAxisGeneratorBase()
       .tickSize(-chartWidth)
       .tickFormat('');
 
