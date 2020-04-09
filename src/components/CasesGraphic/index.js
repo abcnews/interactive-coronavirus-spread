@@ -31,7 +31,7 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
-  logarithmic: [1, 10, 1e2, 1e3, 1e4, 1e5]
+  logarithmic: [1, 10, 1e2, 1e3, 1e4, 1e5, 1e6]
 };
 const TRANSITION_DURATIONS = {
   opacity: 250,
@@ -187,7 +187,7 @@ export default class CasesGraphic extends Component {
 
         return {
           key: place,
-          type: place.type,
+          type: placesData[place].type,
           dataAsDates,
           dataAsDaysSince100Cases,
           ...Y_SCALE_PROPS.reduce((memo, propName) => {
@@ -292,7 +292,7 @@ export default class CasesGraphic extends Component {
 
     if (typeof places === 'function') {
       // Apply a filter
-      places = places(this.placesData);
+      places = this.placesData.filter(places).map(x => x.key);
     }
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
@@ -307,7 +307,7 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
-    // Y-scale cap should always be a number.
+    // Y-scale cap should be the lower of the passed in proop and the largest value of the current Y-scale prop
     yScaleCap = yScaleCap === false ? this.most[yScaleProp] : Math.min(yScaleCap, this.most[yScaleProp]);
 
     const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
@@ -328,9 +328,7 @@ export default class CasesGraphic extends Component {
       : scaleLinear().domain([0, cappedDaysSince100Cases])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
-      ? scaleLog()
-          .nice()
-          .domain([yScaleProp === 'cases' ? 100 : 0.1, yScaleCap], true)
+      ? scaleLog().domain([yScaleProp === 'cases' ? 100 : 0.1, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
@@ -394,22 +392,13 @@ export default class CasesGraphic extends Component {
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
     const yAxisGenerator = (yScaleType === 'linear'
-      ? axisLeft(yScale.nice()).ticks(5)
-      : axisLeft(yScale).tickValues(
-          TICK_VALUES['logarithmic']
-            .filter(value => value < yScaleCap)
-            .concat(yScaleCap ? [yScaleCap] : [])
-            .sort()
-        )
+      ? axisLeft(yScale).ticks(5)
+      : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap))
     ).tickFormat(format('~s'));
+    console.log(yScaleCap);
     const yAxisGridlinesGenerator = (yScaleType === 'linear'
-      ? axisLeft(yScale.nice()).ticks(5)
-      : axisLeft(yScale).tickValues(
-          TICK_VALUES['logarithmic']
-            .filter(value => value < yScaleCap)
-            .concat(yScaleCap ? [yScaleCap] : [])
-            .sort()
-        )
+      ? axisLeft(yScale).ticks(5)
+      : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap))
     )
       .tickSize(-chartWidth)
       .tickFormat('');
