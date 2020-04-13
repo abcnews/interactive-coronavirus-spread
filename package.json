@@ -24,6 +24,8 @@
 		"@abcnews/scrollyteller": "^2.2.1",
 		"@atlaskit/checkbox": "^10.1.10",
 		"@atlaskit/radio": "^3.2.0",
+		"base-x": "^3.0.8",
+		"buffer": "^5.5.0",
 		"core-js": "^3.6.4",
 		"d3": "^5.15.0",
 		"d3-force-reuse": "^1.0.1",

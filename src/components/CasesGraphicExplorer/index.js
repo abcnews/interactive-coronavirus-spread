@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { TRENDS } from '../../constants';
+import { decodeVersionedProps, encodeVersionedProps } from '../../utils';
 import CasesGraphic, {
   DEFAULT_CASES_CAP,
   DEFAULT_PROPS,
@@ -47,22 +48,31 @@ const DAYS_CAP_OPTIONS = {
   '40': '40 days',
   '': 'None'
 };
+
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
 
+const decodeEncodedUrlParam = () => {
+  const result = /[?&]encoded=([^&#]*)/i.exec(String(window.location));
+
+  return result ? decodeVersionedProps(result[1]) : null;
+};
+
 export default ({ placesData }) => {
-  const [xScaleType, setXScaleType] = useState(DEFAULT_PROPS.xScaleType);
-  const [yScaleType, setYScaleType] = useState(DEFAULT_PROPS.yScaleType);
-  const [yScaleProp, setYScaleProp] = useState(DEFAULT_PROPS.yScaleProp);
-  const [xScaleDaysCap, setXScaleDaysCap] = useState(DEFAULT_PROPS.xScaleDaysCap);
-  const [yScaleCap, setYScaleCap] = useState(DEFAULT_PROPS.yScaleCap);
-  const [visiblePlaces, setVisiblePlaces] = useState(DEFAULT_PROPS.places);
-  const [highlightedPlaces, setHighlightedPlaces] = useState(DEFAULT_PROPS.highlightedPlaces);
-  const [visibleTrends, setVisibleTrends] = useState(DEFAULT_PROPS.trends);
+  const initialProps = decodeEncodedUrlParam() || DEFAULT_PROPS;
+
+  const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
+  const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
+  const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
+  const [xScaleDaysCap, setXScaleDaysCap] = useState(initialProps.xScaleDaysCap);
+  const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
+  const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
+  const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
+  const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
 
   const casesGraphicProps = {
-    ...DEFAULT_PROPS,
+    ...initialProps,
     xScaleType,
     yScaleType,
     yScaleProp,
@@ -73,6 +83,8 @@ export default ({ placesData }) => {
     trends: visibleTrends,
     highlightedTrends
   };
+
+  history.replaceState(casesGraphicProps, document.title, `?encoded=${encodeVersionedProps(casesGraphicProps)}`);
 
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
   const areTrendsAllowed = yScaleProp === 'cases' && xScaleType === 'days';
@@ -85,6 +97,10 @@ export default ({ placesData }) => {
     label: `Every ${name}`,
     value: doublingTimePeriods
   }));
+
+  const casesGraphicPropsJSON = JSON.stringify(casesGraphicProps, 2, 2);
+  const encodedCasesGraphicProps = encodeVersionedProps(casesGraphicProps);
+  const encodedMarkerText = `#casesgraphicENCODED${encodedCasesGraphicProps}`;
 
   return (
     <div className={styles.root}>
@@ -108,7 +124,7 @@ export default ({ placesData }) => {
             components={animatedComponents}
             styles={SELECT_STYLES}
             defaultValue={placesSelectOptions.filter(
-              option => DEFAULT_PROPS.highlightedPlaces.indexOf(option.value) > -1
+              option => initialProps.highlightedPlaces.indexOf(option.value) > -1
             )}
             isMulti
             options={placesSelectOptions}
@@ -126,7 +142,7 @@ export default ({ placesData }) => {
           <Select
             components={animatedComponents}
             styles={SELECT_STYLES}
-            defaultValue={placesSelectOptions.filter(option => DEFAULT_PROPS.places.indexOf(option.value) > -1)}
+            defaultValue={placesSelectOptions.filter(option => initialProps.places.indexOf(option.value) > -1)}
             value={placesSelectOptions.filter(option => visiblePlaces.indexOf(option.value) > -1)}
             isMulti
             options={placesSelectOptions}
@@ -170,7 +186,7 @@ export default ({ placesData }) => {
             <Select
               components={animatedComponents}
               styles={SELECT_STYLES}
-              defaultValue={trendsSelectOptions.filter(option => DEFAULT_PROPS.trends.indexOf(option.value) > -1)}
+              defaultValue={trendsSelectOptions.filter(option => initialProps.trends.indexOf(option.value) > -1)}
               value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
               isMulti
               options={trendsSelectOptions}
@@ -186,46 +202,50 @@ export default ({ placesData }) => {
 
         <div key="xscaletype">
           <label>X-axis Scale</label>
-          <RadioGroup
-            name="xscaletype"
-            defaultValue={DEFAULT_PROPS.xScaleType}
-            value={xScaleType}
-            options={xScaleTypeOptions}
-            onChange={event => {
-              const xScaleType = event.currentTarget.value;
+          <div className={styles.flexRow}>
+            <RadioGroup
+              name="xscaletype"
+              defaultValue={initialProps.xScaleType}
+              value={xScaleType}
+              options={xScaleTypeOptions}
+              onChange={event => {
+                const xScaleType = event.currentTarget.value;
 
-              setXScaleType(xScaleType);
+                setXScaleType(xScaleType);
 
-              if (xScaleType === 'dates') {
-                setYScaleType('linear');
-              }
-            }}
-          />
+                if (xScaleType === 'dates') {
+                  setYScaleType('linear');
+                }
+              }}
+            />
+          </div>
         </div>
         {xScaleType === 'days' && (
           <div key="dayscap">
             <label>X-axis (days) Cap</label>
-            <RadioGroup
-              name="dayscap"
-              defaultValue={DEFAULT_PROPS.xScaleDaysCap ? String(DEFAULT_PROPS.xScaleDaysCap) : ''}
-              value={xScaleDaysCap ? String(xScaleDaysCap) : ''}
-              options={Object.keys(DAYS_CAP_OPTIONS).map(value => ({
-                label: DAYS_CAP_OPTIONS[value],
-                value
-              }))}
-              onChange={event => {
-                const xScaleDaysCap = event.currentTarget.value;
+            <div className={styles.flexRow}>
+              <RadioGroup
+                name="dayscap"
+                defaultValue={initialProps.xScaleDaysCap ? String(initialProps.xScaleDaysCap) : ''}
+                value={xScaleDaysCap ? String(xScaleDaysCap) : ''}
+                options={Object.keys(DAYS_CAP_OPTIONS).map(value => ({
+                  label: DAYS_CAP_OPTIONS[value],
+                  value
+                }))}
+                onChange={event => {
+                  const xScaleDaysCap = event.currentTarget.value;
 
-                setXScaleDaysCap(xScaleDaysCap ? +xScaleDaysCap : false);
-              }}
-            />
+                  setXScaleDaysCap(xScaleDaysCap ? +xScaleDaysCap : false);
+                }}
+              />
+            </div>
           </div>
         )}
         <div key="yscaleprop">
           <label>Y-axis</label>
           <RadioGroup
             name="yscaleprop"
-            defaultValue={DEFAULT_PROPS.yScaleProp}
+            defaultValue={initialProps.yScaleProp}
             value={yScaleProp}
             options={yScalePropOptions}
             onChange={event => setYScaleProp(event.currentTarget.value)}
@@ -233,51 +253,68 @@ export default ({ placesData }) => {
         </div>
         <div key="yscaletype">
           <label>Y-axis Scale</label>
-          <RadioGroup
-            name="yscaletype"
-            defaultValue={DEFAULT_PROPS.yScaleType}
-            value={yScaleType}
-            options={yScaleTypeOptions}
-            onChange={event => {
-              const yScaleType = event.currentTarget.value;
+          <div className={styles.flexRow}>
+            <RadioGroup
+              name="yscaletype"
+              defaultValue={initialProps.yScaleType}
+              value={yScaleType}
+              options={yScaleTypeOptions}
+              onChange={event => {
+                const yScaleType = event.currentTarget.value;
 
-              setYScaleType(yScaleType);
+                setYScaleType(yScaleType);
 
-              if (yScaleType === 'logarithmic') {
-                setXScaleType('days');
-              }
-            }}
-          />
+                if (yScaleType === 'logarithmic') {
+                  setXScaleType('days');
+                }
+              }}
+            />
+          </div>
         </div>
         {!isDailyFigures && (
           <div>
             <label>Y-axis Cap</label>
-            <RadioGroup
-              name="casescap"
-              defaultValue={DEFAULT_PROPS.yScaleCap ? String(DEFAULT_PROPS.yScaleCap) : ''}
-              value={yScaleCap ? String(yScaleCap) : ''}
-              options={Object.keys(CASES_CAP_OPTIONS).map(value => ({
-                label: CASES_CAP_OPTIONS[value],
-                value
-              }))}
-              onChange={event => {
-                const yScaleCap = event.currentTarget.value;
+            <div className={styles.flexRow}>
+              <RadioGroup
+                name="casescap"
+                defaultValue={initialProps.yScaleCap ? String(initialProps.yScaleCap) : ''}
+                value={yScaleCap ? String(yScaleCap) : ''}
+                options={Object.keys(CASES_CAP_OPTIONS).map(value => ({
+                  label: CASES_CAP_OPTIONS[value],
+                  value
+                }))}
+                onChange={event => {
+                  const yScaleCap = event.currentTarget.value;
 
-                setYScaleCap(yScaleCap ? +yScaleCap : false);
-              }}
-            />
+                  setYScaleCap(yScaleCap ? +yScaleCap : false);
+                }}
+              />
+            </div>
           </div>
         )}
         <hr />
         <details>
           <summary>
-            Preset Code
-            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(casesGraphicProps, 2, 2))}>
-              Copy to clipboard
-            </button>
+            Encoded Marker
+            <button onClick={() => navigator.clipboard.writeText(encodedMarkerText)}>Copy to clipboard</button>
           </summary>
-          <pre>{JSON.stringify(casesGraphicProps, 2, 2)}</pre>
+          <pre>{encodedMarkerText}</pre>
         </details>
+        <details>
+          <summary>
+            New Preset Code
+            <button onClick={() => navigator.clipboard.writeText(casesGraphicPropsJSON)}>Copy to clipboard</button>
+          </summary>
+          <pre>{casesGraphicPropsJSON}</pre>
+        </details>
+        <hr />
+        <div>
+          <label>
+            <button disabled={initialProps === DEFAULT_PROPS} onClick={() => (window.location = '?')}>
+              Reset chart to default view
+            </button>
+          </label>
+        </div>
       </div>
     </div>
   );

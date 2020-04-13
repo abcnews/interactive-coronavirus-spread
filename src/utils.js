@@ -1,9 +1,30 @@
 import * as a2o from '@abcnews/alternating-case-to-object';
+import baseX from 'base-x';
+import { Buffer } from 'buffer/';
 import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
 import { PLACES_DATA_URL, PRESETS } from './constants';
+
+const BASE_36_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyz'; // Allowed characters in a2o marker string prop values
+
+const base36 = baseX(BASE_36_CHARSET);
+
+export const encodeVersionedProps = props =>
+  base36.encode(
+    Buffer.from(new TextEncoder().encode(JSON.stringify({ version: process.env.npm_package_version, ...props })))
+  );
+
+export const decodeVersionedProps = encoded => {
+  let decoded = null;
+  try {
+    decoded = JSON.parse(String(base36.decode(encoded)));
+  } catch (err) {
+    console.error(err);
+  }
+  return decoded;
+};
 
 export const fetchPlacesData = () =>
   fetch(PLACES_DATA_URL)
@@ -48,7 +69,7 @@ export const getInclusiveDateFromYYYYMMDD = yyymmdd => {
 };
 
 export const renderCasesGraphics = placesData =>
-  [...document.querySelectorAll(`a[id^=casesgraphicPRESET],a[name^=casesgraphicPRESET]`)].map(anchorEl => {
+  [...document.querySelectorAll(`a[id^=casesgraphic],a[name^=casesgraphic]`)].map(anchorEl => {
     const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
     const mountEl = document.createElement('div');
 
@@ -58,14 +79,23 @@ export const renderCasesGraphics = placesData =>
     anchorEl.parentElement.insertBefore(mountEl, anchorEl);
     anchorEl.parentElement.removeChild(anchorEl);
 
+    const casesGraphicPresetProp = props.encoded || props.preset;
+    const casesGraphicOtherProps = props.encoded
+      ? decodeVersionedProps(props.encoded)
+      : props.preset
+      ? PRESETS[props.preset]
+      : null;
+
     render(
       <InlineGraphic>
-        <CasesGraphic
-          preset={mountEl.dataset.preset}
-          placesData={placesData}
-          maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
-          {...PRESETS[mountEl.dataset.preset]}
-        />
+        {casesGraphicOtherProps && (
+          <CasesGraphic
+            preset={casesGraphicPresetProp}
+            placesData={placesData}
+            maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
+            {...casesGraphicOtherProps}
+          />
+        )}
       </InlineGraphic>,
       mountEl
     );

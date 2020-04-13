@@ -77,3 +77,13 @@ body {
 .controls summary::after {
   clear: both;
 }
+
+.controls pre {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+}
