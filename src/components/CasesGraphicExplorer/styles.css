@@ -1,3 +1,13 @@
+html {
+  box-sizing: border-box;
+}
+
+html *,
+html *::before,
+html *::after {
+  box-sizing: inherit;
+}
+
 body {
   margin: 0;
 }
@@ -7,8 +17,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0.5rem;
-  min-height: calc(100vh - 1rem);
+  min-height: 100vh;
 }
 
 @media (min-width: 80rem) {
@@ -20,13 +29,21 @@ body {
 .graphic {
   flex: 0 0 auto;
   margin: 0 auto;
+  padding: 0.5rem;
   width: 100%;
   max-width: 57.5rem;
+}
+
+@media (min-width: 90rem) {
+  .graphic {
+    padding-right: 0;
+  }
 }
 
 .controls {
   flex: 1 1 100%;
   margin: 0 auto;
+  padding: 0 0.5rem;
   width: 100%;
   max-width: 57.5rem;
   font-family: ABCSans;
@@ -36,8 +53,8 @@ body {
   .controls {
     margin: 0 auto 0 0;
     max-width: 28.75rem;
-    /* max-height: 100vh; */
-    /* overflow-y: auto; */
+    max-height: 100vh;
+    overflow-y: auto;
   }
 }
 
