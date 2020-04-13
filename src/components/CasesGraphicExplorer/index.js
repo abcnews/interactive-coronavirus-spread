@@ -264,9 +264,9 @@ export default ({ placesData }) => {
 
                 setYScaleType(yScaleType);
 
-                if (yScaleType === 'logarithmic') {
-                  setXScaleType('days');
-                }
+                // if (yScaleType === 'logarithmic') {
+                //   setXScaleType('days');
+                // }
               }}
             />
           </div>
