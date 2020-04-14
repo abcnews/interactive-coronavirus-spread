@@ -1,25 +1,17 @@
 import * as a2o from '@abcnews/alternating-case-to-object';
-import baseX from 'base-x';
-import { Buffer } from 'buffer/';
+import { decode, encode } from '@abcnews/base-36-props';
 import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
 import { PLACES_DATA_URL, PRESETS } from './constants';
 
-const BASE_36_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyz'; // Allowed characters in a2o marker string prop values
-
-const base36 = baseX(BASE_36_CHARSET);
-
-export const encodeVersionedProps = props =>
-  base36.encode(
-    Buffer.from(new TextEncoder().encode(JSON.stringify({ version: process.env.npm_package_version, ...props })))
-  );
+export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
 
 export const decodeVersionedProps = encoded => {
   let decoded = null;
   try {
-    decoded = JSON.parse(String(base36.decode(encoded)));
+    decoded = decode(encoded);
   } catch (err) {
     console.error(err);
   }
