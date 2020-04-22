@@ -18,21 +18,39 @@ export const decodeVersionedProps = encoded => {
   return decoded;
 };
 
+const PLACE_NAME_REPLACEMENTS = [
+  [/^([A-Z])\w+\s([A-Z])\w+\s([A-Z])\w+$/, '$1$2$3'],
+  [/\sand(\sthe)?\s/, ' & '],
+  [/^East\s/, 'E. '],
+  [/ew\sZealand$/, 'Z'],
+  [/^North\s/, 'N. '],
+  [/^Saint\s/, 'St. '],
+  [/^South\s/, 'S. '],
+  [/^(\w+),\sSouth/, 'S. $1'],
+  [/\*$/, ''],
+  [/nited\s([A-Z])\w+$/, '$1'],
+  [/^West\s/, 'W. ']
+];
+
 export const fetchPlacesData = () =>
   fetch(PLACES_DATA_URL)
     .then(response => response.json())
     .then(data => {
-      // A bit of renaming & clean up
-      data['S. Korea'] = data['Korea, South'] || data['South Korea'];
-      data['Taiwan'] = data['Taiwan*'] || data['Taiwan'];
-      data['UK'] = data['United Kingdom'] || data['UK'];
-      data['US'] = data['United States'] || data['US'];
+      Object.keys(data).forEach(key => {
+        let currentPlaceName = key;
+        let wasReplaced = false;
 
-      delete data['Korea, South'];
-      delete data['South Korea'];
-      delete data['Taiwan*'];
-      delete data['United Kingdom'];
-      delete data['United States'];
+        PLACE_NAME_REPLACEMENTS.forEach(pnr => {
+          const [pattern, replacement] = pnr;
+
+          if (pattern.test(currentPlaceName)) {
+            const nextPlaceName = currentPlaceName.replace(pattern, replacement);
+            data[nextPlaceName] = data[currentPlaceName];
+            delete data[currentPlaceName];
+            currentPlaceName = nextPlaceName;
+          }
+        });
+      });
 
       // Modify existing data format until we have the new format
       Object.keys(data).forEach(place => {
