@@ -172,17 +172,14 @@ export const PRESETS = {
   },
   singtotaiwan: {
     graphic: 'cases',
-    places: KEY_PLACES.concat(['Taiwan']),
     highlightedPlaces: ['Singapore', 'Taiwan']
   },
   taiwan: {
     graphic: 'cases',
-    places: KEY_PLACES.concat(['Taiwan']),
     highlightedPlaces: ['Taiwan']
   },
   taiwantokorea: {
     graphic: 'cases',
-    places: KEY_PLACES.concat(['Taiwan']),
     highlightedPlaces: ['Taiwan', 'S. Korea']
   },
   korea: {

@@ -37,6 +37,28 @@ const TRANSITION_DURATIONS = {
   opacity: 250,
   transform: 1000
 };
+const COLORS = [
+  'teal',
+  'orange',
+  'cyan',
+  'purple',
+  'red',
+  'blue',
+  'brown',
+  'green',
+  'copy' /* copy = black/white, depending on preferred color scheme */
+];
+const COLOR_DIBS = {
+  China: 'teal',
+  Italy: 'orange',
+  Singapore: 'cyan',
+  'S. Korea': 'purple',
+  UK: 'red',
+  US: 'blue',
+  Taiwan: 'brown',
+  Japan: 'green',
+  Australia: 'copy'
+};
 export const X_SCALE_TYPES = ['dates', 'days'];
 export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 const Y_SCALE_TOTAL_PROPS = ['cases', 'deaths', 'recoveries'];
@@ -130,6 +152,37 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
 
     return memo.concat([item]);
   }, []);
+}
+
+function generateColorAllocator(placesData) {
+  const colorAllocation = {};
+  let colorsUnallocated = [].concat(COLORS);
+
+  // Pre-allocate places with dibs, then allocate remaining.
+  placesData
+    .filter(({ key }) => {
+      const preferredColor = COLOR_DIBS[key];
+
+      if (preferredColor && colorsUnallocated.indexOf(preferredColor) > -1) {
+        colorAllocation[key] = preferredColor;
+        colorsUnallocated = colorsUnallocated.filter(color => color !== preferredColor);
+
+        return false;
+      }
+
+      return true;
+    })
+    .forEach(({ key }) => {
+      if (!colorsUnallocated.length) {
+        return;
+      }
+
+      colorAllocation[key] = colorsUnallocated.shift();
+    });
+
+  return key => {
+    return colorAllocation[key] || 'none';
+  };
 }
 
 function setTruncatedLineDashArray(node) {
@@ -385,6 +438,7 @@ export default class CasesGraphic extends Component {
       xScaleType === 'dates' ? this.numDates : cappedDaysSince100Cases,
       yScaleCap
     );
+    const getAllocatedColor = generateColorAllocator(visiblePlacesData);
     const xAxisGenerator =
       xScaleType === 'dates'
         ? axisBottom(xScale)
@@ -504,7 +558,7 @@ export default class CasesGraphic extends Component {
     const plotLinesEnter = plotLines // Enter
       .enter()
       .append('path')
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isPlaceHighlighted)
       .attr('d', generateLinePath)
@@ -520,7 +574,7 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('stroke-opacity', null);
     plotLines // Update
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
       .style('stroke-opacity', null)
       .attr('stroke-dasharray', null)
@@ -554,7 +608,7 @@ export default class CasesGraphic extends Component {
     const plotDotsEnter = plotDots // Enter
       .enter()
       .append('circle')
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.plotDot, true)
       .classed(styles.highlighted, isPlaceHighlighted)
       .classed(styles.truncated, isPlaceTruncated)
@@ -567,7 +621,7 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', null)
       .style('stroke-opacity', null);
     plotDots // Update
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
       .classed(styles.truncated, isPlaceTruncated)
       .style('fill-opacity', null)
@@ -698,7 +752,7 @@ export default class CasesGraphic extends Component {
     const plotLabelsEnter = plotLabels // Enter
       .enter()
       .append('text')
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.plotLabel, true)
       .classed(styles.highlighted, isPlaceHighlighted)
       .attr('alignment-baseline', 'middle')
@@ -709,7 +763,7 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', null);
     plotLabels // Update
-      .attr('data-place', d => d.key)
+      .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
       .style('fill-opacity', null)
       .text(d => d.text)

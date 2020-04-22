@@ -271,134 +271,129 @@
   stroke-opacity: 1;
 }
 
-path.plotLine[data-place='Australia'],
-path.plotLine[data-place='Europe'],
-circle.plotDot[data-place='Australia'],
-circle.plotDot[data-place='Europe'] {
+path.plotLine[data-color='teal'],
+circle.plotDot[data-color='teal'] {
+  color: #00b395;
+}
+
+path.plotLine[data-color='orange'],
+circle.plotDot[data-color='orange'] {
+  color: #ff6100;
+}
+
+path.plotLine[data-color='cyan'],
+circle.plotDot[data-color='cyan'] {
+  color: #01cfff;
+}
+
+path.plotLine[data-color='purple'],
+circle.plotDot[data-color='purple'] {
+  color: #8272d6;
+}
+
+path.plotLine[data-color='red'],
+circle.plotDot[data-color='red'] {
+  color: #ea526f;
+}
+
+path.plotLine[data-color='blue'],
+circle.plotDot[data-color='blue'] {
+  color: #248bc9;
+}
+
+path.plotLine[data-color='brown'],
+circle.plotDot[data-color='brown'] {
+  color: #bf6643;
+}
+
+path.plotLine[data-color='green'],
+circle.plotDot[data-color='green'] {
+  color: #5cad5d;
+}
+
+path.plotLine[data-color='copy'],
+circle.plotDot[data-color='copy'] {
   color: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
-  :global(.supports-user-dark-mode) path.plotLine[data-place='Australia'],
-  :global(.supports-user-dark-mode) path.plotLine[data-place='Europe'],
-  :global(.supports-user-dark-mode) circle.plotDot[data-place='Australia'],
-  :global(.supports-user-dark-mode) circle.plotDot[data-place='Europe'] {
+  :global(.supports-user-dark-mode) path.plotLine[data-color='copy'],
+  :global(.supports-user-dark-mode) circle.plotDot[data-color='copy'] {
     color: #fff;
   }
 }
 
-path.plotLine[data-place='China'],
-circle.plotDot[data-place='China'] {
-  color: #00b395;
+text.plotLabel[data-color='teal'] {
+  color: #00826a;
 }
 
-path.plotLine[data-place='Italy'],
-circle.plotDot[data-place='Italy'] {
-  color: #ff6100;
+text.plotLabel[data-color='orange'] {
+  color: #cf4200;
 }
 
-path.plotLine[data-place='Japan'],
-circle.plotDot[data-place='Japan'] {
-  color: #5cad5d;
+text.plotLabel[data-color='cyan'] {
+  color: #047ca5;
 }
 
-path.plotLine[data-place='Singapore'],
-circle.plotDot[data-place='Singapore'] {
-  color: #01cfff;
+text.plotLabel[data-color='purple'] {
+  color: #7462cc;
 }
 
-path.plotLine[data-place='S. Korea'],
-circle.plotDot[data-place='S. Korea'] {
-  color: #8272d6;
+text.plotLabel[data-color='red'] {
+  color: #e01b3f;
 }
 
-path.plotLine[data-place='Taiwan'],
-circle.plotDot[data-place='Taiwan'] {
-  color: #bf6643;
+text.plotLabel[data-color='blue'] {
+  color: #2079b0;
 }
 
-path.plotLine[data-place='UK'],
-circle.plotDot[data-place='UK'] {
-  color: #ea526f;
+text.plotLabel[data-color='brown'] {
+  color: #b25b45;
 }
 
-path.plotLine[data-place='US'],
-circle.plotDot[data-place='US'] {
-  color: #248bc9;
+text.plotLabel[data-color='green'] {
+  color: #49804c;
 }
 
-text.plotLabel[data-place='Australia'],
+text.plotLabel[data-color='copy'],
 text.plotLabel[data-place='Europe'] {
   color: #000000;
 }
 
-text.plotLabel[data-place='China'] {
-  color: #00826a;
-}
-
-text.plotLabel[data-place='Italy'] {
-  color: #cf4200;
-}
-
-text.plotLabel[data-place='Japan'] {
-  color: #49804c;
-}
-
-text.plotLabel[data-place='Singapore'] {
-  color: #047ca5;
-}
-
-text.plotLabel[data-place='S. Korea'] {
-  color: #7462cc;
-}
-
-text.plotLabel[data-place='Taiwan'] {
-  color: #b25b45;
-}
-
-text.plotLabel[data-place='UK'] {
-  color: #e01b3f;
-}
-
-text.plotLabel[data-place='US'] {
-  color: #2079b0;
-}
-
 @media (prefers-color-scheme: dark) {
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Australia'],
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Europe'] {
-    color: #fff;
-  }
-
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='China'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='teal'] {
     color: #00b395;
   }
 
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Italy'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='orange'] {
     color: #ff6100;
   }
 
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Japan'] {
-    color: #5cad5d;
-  }
-
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Singapore'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='cyan'] {
     color: #01cfff;
   }
 
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='S. Korea'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='purple'] {
     color: #8272d6;
   }
 
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='Taiwan'] {
-    color: #bf6643;
-  }
-
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='UK'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='red'] {
     color: #ea526f;
   }
 
-  :global(.supports-user-dark-mode) text.plotLabel[data-place='US'] {
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='blue'] {
     color: #248bc9;
+  }
+
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='brown'] {
+    color: #bf6643;
+  }
+
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='green'] {
+    color: #5cad5d;
+  }
+
+  :global(.supports-user-dark-mode) text.plotLabel[data-color='copy'] {
+    color: #fff;
   }
 }
