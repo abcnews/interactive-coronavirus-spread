@@ -217,7 +217,6 @@ export default class CasesGraphic extends Component {
 
             return {
               date: new Date(placeDate),
-              isMostRecent: placeDatesIndex === placeDates.length - 1,
               ...placeDateTotals,
               ...placeDateTotalsProps.reduce((memo, prop) => {
                 const newProp = `new${prop}`;
@@ -234,7 +233,7 @@ export default class CasesGraphic extends Component {
               }, {})
             };
           })
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be a filtered at render time?
+          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
         const dataAsDaysSince100Cases = dataAsDates
           .filter(({ cases }) => cases >= 100)
@@ -366,7 +365,7 @@ export default class CasesGraphic extends Component {
     // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
     yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
 
-    const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
+    const cappedDaysSince100Cases = visiblePlacesData.reduce((memo, d) => {
       return Math.max(
         memo,
         d.dataAsDaysSince100Cases.filter(item => xScaleDaysCap === false || item.day <= xScaleDaysCap).length - 1
@@ -386,8 +385,9 @@ export default class CasesGraphic extends Component {
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
+    const getUncappedDataCollection = d => d[xScaleType === 'dates' ? 'dataAsDates' : 'dataAsDaysSince100Cases'];
     const getDataCollection = d =>
-      d[xScaleType === 'dates' ? 'dataAsDates' : 'dataAsDaysSince100Cases'].reduce(
+      getUncappedDataCollection(d).reduce(
         (memo, item) =>
           memo.concat(
             item[yScaleProp] <= yScaleCap &&
@@ -401,8 +401,8 @@ export default class CasesGraphic extends Component {
       line()
         .x(d => xScale(d[xScaleProp]))
         .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
-    const isPlaceTruncated = d => !last(getDataCollection(d)).isMostRecent;
-    const generateLinePathLength = d => (isPlaceTruncated(d) ? 100 : 95.5);
+    const isPlaceYCapped = d => last(getUncappedDataCollection(d))[yScaleProp] > yScaleCap;
+    const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
     const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
@@ -557,7 +557,7 @@ export default class CasesGraphic extends Component {
       .classed(styles.highlighted, isPlaceHighlighted)
       .attr('d', generateLinePath)
       .attr('stroke-dasharray', function(d) {
-        if (isPlaceTruncated(d)) {
+        if (isPlaceYCapped(d)) {
           setTimeout(setTruncatedLineDashArray, 0, this);
         }
 
@@ -580,7 +580,7 @@ export default class CasesGraphic extends Component {
         const previous = select(this);
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
 
-        if (isPlaceTruncated(d)) {
+        if (isPlaceYCapped(d)) {
           setTimeout(setTruncatedLineDashArray, currentPath === previousPath ? 0 : 1000, this); // post transition
         }
 
@@ -605,7 +605,7 @@ export default class CasesGraphic extends Component {
       .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.plotDot, true)
       .classed(styles.highlighted, isPlaceHighlighted)
-      .classed(styles.truncated, isPlaceTruncated)
+      .classed(styles.yCapped, isPlaceYCapped)
       .attr('r', 2)
       .attr('transform', lineEndTransformGenerator)
       .style('fill-opacity', 0)
@@ -617,7 +617,7 @@ export default class CasesGraphic extends Component {
     plotDots // Update
       .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
-      .classed(styles.truncated, isPlaceTruncated)
+      .classed(styles.yCapped, isPlaceYCapped)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()
