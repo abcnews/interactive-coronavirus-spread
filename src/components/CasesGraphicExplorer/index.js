@@ -33,7 +33,7 @@ const RADIO_LABELS = {
   newrecoveries: 'Daily new recoveries',
   recoveries: 'Cumulative recoveries'
 };
-const CASES_CAP_OPTIONS = {
+const Y_SCALE_CAP_OPTIONS = {
   '1000': '1k',
   '5000': '5k',
   '10000': '10k',
@@ -279,8 +279,8 @@ export default ({ placesData }) => {
                 name="casescap"
                 defaultValue={initialProps.yScaleCap ? String(initialProps.yScaleCap) : ''}
                 value={yScaleCap ? String(yScaleCap) : ''}
-                options={Object.keys(CASES_CAP_OPTIONS).map(value => ({
-                  label: CASES_CAP_OPTIONS[value],
+                options={Object.keys(Y_SCALE_CAP_OPTIONS).map(value => ({
+                  label: Y_SCALE_CAP_OPTIONS[value],
                   value
                 }))}
                 onChange={event => {

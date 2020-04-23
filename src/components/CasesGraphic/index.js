@@ -83,6 +83,8 @@ const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) /
 const calculatePeriodsToIncrease = (increasePerPeriod, startingValue, endingValue) =>
   Math.log(endingValue / startingValue) / Math.log(increasePerPeriod + 1);
 const last = x => x[x.length - 1];
+const inclusionCheckGenerator = (collection, itemPropName) => d =>
+  typeof collection === 'boolean' ? collection : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
 
 function checkScaleTypes(xScaleType, yScaleType) {
   if (X_SCALE_TYPES.indexOf(xScaleType) === -1) {
@@ -273,14 +275,6 @@ export default class CasesGraphic extends Component {
     }, last(this.placesData[0].dataAsDates).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
-    this.most = Y_SCALE_PROPS.reduce((memo, propName) => {
-      memo[propName] = this.placesData.reduce((memo, d) => {
-        return Math.max.apply(null, [memo].concat(d.dataAsDates.map(t => t[propName])));
-      }, 0);
-
-      return memo;
-    }, {});
-
     this.state = {
       width: 0,
       height: 0
@@ -348,11 +342,10 @@ export default class CasesGraphic extends Component {
       places = this.placesData.filter(places).map(x => x.key);
     }
 
-    const isDailyFigures = yScaleProp.indexOf('new') === 0;
-
-    if (isDailyFigures) {
-      yScaleCap = false;
-    }
+    // Filter placesData to just visible places, and create visible/highlighted comparison utils
+    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
+    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
+    const visiblePlacesData = this.placesData.filter(isPlaceVisible);
 
     // Only allow trend lines when we are showing cases since 100th case
     if (yScaleProp !== 'cases' || xScaleType !== 'days') {
@@ -360,15 +353,23 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
-    // Y-scale cap should be the lower of the passed in proop and the largest value of the current Y-scale prop
-    yScaleCap = yScaleCap === false ? this.most[yScaleProp] : Math.min(yScaleCap, this.most[yScaleProp]);
+    const isDailyFigures = yScaleProp.indexOf('new') === 0;
+
+    if (isDailyFigures) {
+      yScaleCap = false;
+    }
+
+    const largestVisibleYScaleValue = visiblePlacesData.reduce((memo, d) => {
+      return Math.max.apply(null, [memo].concat(d.dataAsDates.map(t => t[yScaleProp])));
+    }, 0);
+
+    // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
+    yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
 
     const cappedDaysSince100Cases = this.placesData.reduce((memo, d) => {
       return Math.max(
         memo,
-        d.dataAsDaysSince100Cases.filter(
-          item => item[yScaleProp] <= yScaleCap && (xScaleDaysCap === false || item.day <= xScaleDaysCap)
-        ).length - 1
+        d.dataAsDaysSince100Cases.filter(item => xScaleDaysCap === false || item.day <= xScaleDaysCap).length - 1
       );
     }, 0);
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
@@ -423,15 +424,8 @@ export default class CasesGraphic extends Component {
 
       return force;
     };
-    const inclusionCheckGenerator = (collection, itemPropName) => d =>
-      typeof collection === 'boolean'
-        ? collection
-        : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
-    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
-    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
     const isTrendVisible = inclusionCheckGenerator(trends, 'doublingTimePeriods');
     const isTrendHighlighted = inclusionCheckGenerator(highlightedTrends, 'doublingTimePeriods');
-    const visiblePlacesData = this.placesData.filter(isPlaceVisible);
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
       this.earliestDate,
