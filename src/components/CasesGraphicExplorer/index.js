@@ -248,7 +248,15 @@ export default ({ placesData }) => {
             defaultValue={initialProps.yScaleProp}
             value={yScaleProp}
             options={yScalePropOptions}
-            onChange={event => setYScaleProp(event.currentTarget.value)}
+            onChange={event => {
+              const yScaleProp = event.currentTarget.value;
+
+              setYScaleProp(yScaleProp);
+
+              if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
+                setXScaleType('days');
+              }
+            }}
           />
         </div>
         <div key="yscaletype">
@@ -264,9 +272,9 @@ export default ({ placesData }) => {
 
                 setYScaleType(yScaleType);
 
-                // if (yScaleType === 'logarithmic') {
-                //   setXScaleType('days');
-                // }
+                if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
+                  setXScaleType('days');
+                }
               }}
             />
           </div>
