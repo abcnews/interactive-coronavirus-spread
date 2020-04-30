@@ -23,15 +23,21 @@ const SELECT_STYLES = {
 };
 const RADIO_LABELS = {
   cases: 'Cumulative cases',
+  casespmp: 'Cumulative cases / million people',
   dates: 'Date',
   days: 'Days since 100th case',
   deaths: 'Cumulative deaths',
+  deathspmp: 'Cumulative deaths / million people',
   linear: 'Linear',
   logarithmic: 'Logarithmic',
   newcases: 'Daily new cases',
+  newcasespmp: 'Daily new cases / million people',
   newdeaths: 'Daily new deaths',
+  newdeathspmp: 'Daily new deaths / million people',
   newrecoveries: 'Daily new recoveries',
-  recoveries: 'Cumulative recoveries'
+  newrecoveriespmp: 'Daily new recoveries / million people',
+  recoveries: 'Cumulative recoveries',
+  recoveriespmp: 'Cumulative recoveries / million people'
 };
 const Y_SCALE_CAP_OPTIONS = {
   '1000': '1k',
@@ -87,6 +93,7 @@ export default ({ placesData }) => {
   history.replaceState(casesGraphicProps, document.title, `?encoded=${encodeVersionedProps(casesGraphicProps)}`);
 
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
+  const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
   const areTrendsAllowed = yScaleProp === 'cases' && xScaleType === 'days';
 
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
@@ -250,10 +257,16 @@ export default ({ placesData }) => {
             options={yScalePropOptions}
             onChange={event => {
               const yScaleProp = event.currentTarget.value;
+              const isDailyFigures = yScaleProp.indexOf('new') === 0;
+              const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
               setYScaleProp(yScaleProp);
 
-              if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
+              if (isPerCapitaFigures || isDailyFigures) {
+                setYScaleCap(false);
+              }
+
+              if (yScaleType === 'logarithmic' && isDailyFigures) {
                 setXScaleType('days');
               }
             }}
@@ -279,7 +292,7 @@ export default ({ placesData }) => {
             />
           </div>
         </div>
-        {!isDailyFigures && (
+        {!(isDailyFigures || isPerCapitaFigures) && (
           <div>
             <label>Y-axis Cap</label>
             <div className={styles.flexRow}>

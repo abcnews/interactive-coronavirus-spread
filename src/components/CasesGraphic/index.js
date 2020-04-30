@@ -62,8 +62,10 @@ const COLOR_DIBS = {
 export const X_SCALE_TYPES = ['dates', 'days'];
 export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
 const Y_SCALE_TOTAL_PROPS = ['cases', 'deaths', 'recoveries'];
-const Y_SCALE_NEW_PROPS = ['newcases', 'newdeaths', 'newrecoveries'];
-export const Y_SCALE_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_NEW_PROPS);
+const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOTAL_PROPS.map(x => `${x}pmp`));
+export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
+  Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
+);
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
   xScaleType: X_SCALE_TYPES[1],
@@ -210,29 +212,49 @@ export default class CasesGraphic extends Component {
     this.placesData = Object.keys(placesData)
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
+        const population = placesData[place].population || null;
         let dataAsDates = placeDates
-          .map((placeDate, placeDatesIndex) => {
-            const placeDateTotals = placesData[place].dates[placeDate];
-            const placeDateTotalsProps = Object.keys(placeDateTotals);
+          .reduce((memoDataAsDates, placeDate, placeDatesIndex) => {
+            const placeDatesTotals = placesData[place].dates[placeDate];
+            const placeDatesTotalsProps = Object.keys(placeDatesTotals);
+            const placeDatesTotalsIncludingPerMillionPeople =
+              typeof population === 'number'
+                ? {
+                    ...placeDatesTotals,
+                    ...placeDatesTotalsProps.reduce((memoTotals, prop) => {
+                      memoTotals[`${prop}pmp`] = placeDatesTotals[prop] / (population / 1e6);
 
-            return {
-              date: new Date(placeDate),
-              ...placeDateTotals,
-              ...placeDateTotalsProps.reduce((memo, prop) => {
-                const newProp = `new${prop}`;
+                      return memoTotals;
+                    }, {})
+                  }
+                : placeDatesTotals;
+            const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(
+              placeDatesTotalsIncludingPerMillionPeople
+            );
 
-                if (placeDatesIndex === 0) {
-                  memo[newProp] = placeDateTotals[prop];
-                } else {
-                  const previousDateTotals = placesData[place].dates[placeDates[placeDatesIndex - 1]];
+            return memoDataAsDates.concat([
+              {
+                date: new Date(placeDate),
+                ...placeDatesTotalsIncludingPerMillionPeople,
+                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memoTotals, prop) => {
+                  const newProp = `new${prop}`;
 
-                  memo[newProp] = Math.max(0, placeDateTotals[prop] - previousDateTotals[prop]);
-                }
+                  if (placeDatesIndex === 0) {
+                    memoTotals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
+                  } else {
+                    const previousDateTotals = memoDataAsDates[memoDataAsDates.length - 1];
 
-                return memo;
-              }, {})
-            };
-          })
+                    memoTotals[newProp] = Math.max(
+                      0,
+                      placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
+                    );
+                  }
+
+                  return memoTotals;
+                }, {})
+              }
+            ]);
+          }, [])
           .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
         const dataAsDaysSince100Cases = dataAsDates
@@ -242,6 +264,7 @@ export default class CasesGraphic extends Component {
         return {
           key: place,
           type: placesData[place].type,
+          population,
           dataAsDates,
           dataAsDaysSince100Cases,
           ...Y_SCALE_PROPS.reduce((memo, propName) => {
@@ -353,8 +376,9 @@ export default class CasesGraphic extends Component {
     }
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
+    const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
-    if (isDailyFigures) {
+    if (isDailyFigures || isPerCapitaFigures) {
       yScaleCap = false;
     }
 
@@ -463,7 +487,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : `${chartWidth > 640 ? 'Number of d' : 'D'}ays since the 100th case`);
+      .text(xScaleType === 'dates' ? 'Date' : `${chartWidth > 640 ? 'Number of d' : 'D'}ays since 100th case`);
 
     // Rendering > 4: Add/update y-axis
     svg
@@ -478,22 +502,20 @@ export default class CasesGraphic extends Component {
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
+        const words = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
+          .replace('new', 'new ')
+          .replace('pmp', ' per million people')} since 100th case`.split(' ');
+        const halfWordsIndex = Math.floor(words.length / 2);
+
         if (IS_TRIDENT) {
-          selection.text(
-            yScaleType === 'linear'
-              ? `Known ${yScaleProp.replace('new', 'daily new ')}`
-              : `${isDailyFigures ? 'Daily' : 'Cumulative'} number of known ${yScaleProp.replace(
-                  'new',
-                  'new '
-                )} since the 100th case`
-          );
+          selection.text(words.join(' '));
         } else {
           selection.html(
-            yScaleType === 'linear'
-              ? `Known ${yScaleProp.replace('new', 'daily new ')}`
-              : `<tspan x="0" dy="-0.75em">${isDailyFigures ? 'Daily' : 'Cumulative'} number of known${
-                  isDailyFigures ? ' new' : ''
-                }</tspan><tspan x="0" dy="1.25em">${yScaleProp.replace('new', '')} since the 100th case</tspan>`
+            `<tspan x="0" dy="-0.75em">${words
+              .slice(0, halfWordsIndex)
+              .join(' ')}</tspan><tspan x="0" dy="1.25em">${words
+              .slice(halfWordsIndex, words.length)
+              .join(' ')}</tspan>`
           );
         }
       });
