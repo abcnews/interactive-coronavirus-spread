@@ -4,7 +4,8 @@ import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
-import { PLACES_DATA_URL, PRESETS } from './constants';
+import { OTHER_PLACES, PLACES_DATA_URL, PRESETS, SHIPS } from './constants';
+import COUNTRIES_POPULATIONS from './population';
 
 export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
 
@@ -52,6 +53,10 @@ export const fetchPlacesData = () =>
         });
       });
 
+      if (data['Western Sahara']) {
+        delete data['Western Sahara'];
+      }
+
       // Modify existing data format until we have the new format
       Object.keys(data).forEach(place => {
         Object.keys(data[place]).forEach(date => {
@@ -62,10 +67,23 @@ export const fetchPlacesData = () =>
           };
         });
         data[place] = {
-          type: place === 'Worldwide' ? 'aggregate' : 'country',
+          type:
+            place === 'Worldwide'
+              ? 'aggregate'
+              : SHIPS.indexOf(place) > -1
+              ? 'ship'
+              : OTHER_PLACES.indexOf(place) > -1
+              ? 'other'
+              : 'country',
           dates: data[place]
         };
+
+        if (data[place].type === 'country') {
+          data[place].population = COUNTRIES_POPULATIONS[place];
+        }
       });
+
+      console.log(data);
 
       return Promise.resolve(data);
     });

@@ -54,6 +54,8 @@ export const KEY_EUROPEAN_PLACES = [
   'UK'
   // 'Vatican City'
 ];
+export const SHIPS = ['Diamond Princess', 'MS Zaandam'];
+export const OTHER_PLACES = ['Holy See'];
 export const KEY_TRENDS = [2, 3, 7];
 
 export const PRESETS = {
