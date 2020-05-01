@@ -39,7 +39,6 @@ export const fetchPlacesData = () =>
     .then(data => {
       Object.keys(data).forEach(key => {
         let currentPlaceName = key;
-        let wasReplaced = false;
 
         PLACE_NAME_REPLACEMENTS.forEach(pnr => {
           const [pattern, replacement] = pnr;
@@ -60,12 +59,19 @@ export const fetchPlacesData = () =>
       // Modify existing data format until we have the new format
       Object.keys(data).forEach(place => {
         Object.keys(data[place]).forEach(date => {
+          // Remove last Australian date if it's missing cumulative deaths
+          if (place === 'Australia' && data[place][date].deaths == null) {
+            delete data[place][date];
+            return;
+          }
+
           data[place][date] = {
             cases: data[place][date].cases || 0,
             deaths: data[place][date].deaths || 0,
             recoveries: data[place][date].recoveries || data[place][date].recovered || 0
           };
         });
+
         data[place] = {
           type:
             place === 'Worldwide'
