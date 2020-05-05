@@ -8,6 +8,8 @@ import { decodeVersionedProps, encodeVersionedProps } from '../../utils';
 import CasesGraphic, {
   DEFAULT_CASES_CAP,
   DEFAULT_PROPS,
+  UNDERLYING_PROPS_PATTERN,
+  UNDERLYING_PROPS_FOR_X_SCALE_TYPES,
   X_SCALE_TYPES,
   Y_SCALE_TYPES,
   Y_SCALE_PROPS
@@ -15,6 +17,11 @@ import CasesGraphic, {
 import InlineGraphic from '../InlineGraphic';
 import styles from './styles.css';
 
+const X_AXIS_TYPES_FOR_UNDERLYING_PROPS = {
+  cases: 'daysSince100Cases',
+  deaths: 'daysSince1Death',
+  recoveries: 'daysSince1Recovery'
+};
 const SELECT_STYLES = {
   multiValueLabel: (provided, state) => ({
     ...provided,
@@ -25,7 +32,9 @@ const RADIO_LABELS = {
   cases: 'Cumulative cases',
   casespmp: 'Cumulative cases / million people',
   dates: 'Date',
-  days: 'Days since 100th case',
+  daysSince100Cases: 'Days since 100th case',
+  daysSince1Death: 'Days since 1st death',
+  daysSince1Recovery: 'Days since 1st recovery',
   deaths: 'Cumulative deaths',
   deathspmp: 'Cumulative deaths / million people',
   linear: 'Linear',
@@ -94,7 +103,7 @@ export default ({ placesData }) => {
 
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
   const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
-  const areTrendsAllowed = yScaleProp === 'cases' && xScaleType === 'days';
+  const areTrendsAllowed = yScaleProp === 'cases' && xScaleType === 'daysSince100Cases';
 
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
@@ -208,28 +217,33 @@ export default ({ placesData }) => {
         )}
 
         <div key="xscaletype">
-          <label>X-axis Scale</label>
-          <div className={styles.flexRow}>
-            <RadioGroup
-              name="xscaletype"
-              defaultValue={initialProps.xScaleType}
-              value={xScaleType}
-              options={xScaleTypeOptions}
-              onChange={event => {
-                const xScaleType = event.currentTarget.value;
+          <label>X-axis</label>
+          <RadioGroup
+            name="xscaletype"
+            defaultValue={initialProps.xScaleType}
+            value={xScaleType}
+            options={xScaleTypeOptions}
+            onChange={event => {
+              const xScaleType = event.currentTarget.value;
 
-                setXScaleType(xScaleType);
+              // Update x-scale type
+              setXScaleType(xScaleType);
 
-                if (xScaleType === 'dates') {
-                  setYScaleType('linear');
-                }
-              }}
-            />
-          </div>
+              // Update y-scale prop if the underlying prop doesn't fit the x-scale
+              const underlyingProp = UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType];
+              if (underlyingProp && yScaleProp.indexOf(underlyingProp) === -1) {
+                setYScaleProp(yScaleProp.replace(UNDERLYING_PROPS_PATTERN, underlyingProp));
+              }
+
+              // if (xScaleType === 'dates') {
+              //   setYScaleType('linear');
+              // }
+            }}
+          />
         </div>
-        {xScaleType === 'days' && (
+        {xScaleType.indexOf('days') === 0 && (
           <div key="dayscap">
-            <label>X-axis (days) Cap</label>
+            <label>X-axis (days-based) Cap</label>
             <div className={styles.flexRow}>
               <RadioGroup
                 name="dayscap"
@@ -266,8 +280,14 @@ export default ({ placesData }) => {
                 setYScaleCap(false);
               }
 
-              if (yScaleType === 'logarithmic' && isDailyFigures) {
-                setXScaleType('days');
+              // if (yScaleType === 'logarithmic' && isDailyFigures) {
+              //   setXScaleType('daysSince100Cases');
+              // }
+
+              // If we're not looking at dates on the x-axis, set it to a "Days since..."
+              // prop relative to the new y-axis prop
+              if (UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType]) {
+                setXScaleType(X_AXIS_TYPES_FOR_UNDERLYING_PROPS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]);
               }
             }}
           />
@@ -286,7 +306,7 @@ export default ({ placesData }) => {
                 setYScaleType(yScaleType);
 
                 if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
-                  setXScaleType('days');
+                  setXScaleType('daysSince100Cases');
                 }
               }}
             />

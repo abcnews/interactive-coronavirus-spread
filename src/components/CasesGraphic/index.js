@@ -59,17 +59,34 @@ const COLOR_DIBS = {
   Japan: 'green',
   Australia: 'copy'
 };
-export const X_SCALE_TYPES = ['dates', 'days'];
-export const Y_SCALE_TYPES = ['linear', 'logarithmic'];
+export const X_SCALE_TYPES = ['daysSince100Cases', 'daysSince1Death', 'daysSince1Recovery', 'dates'];
+export const Y_SCALE_TYPES = ['logarithmic', 'linear'];
 const Y_SCALE_TOTAL_PROPS = ['cases', 'deaths', 'recoveries'];
 const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOTAL_PROPS.map(x => `${x}pmp`));
 export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
   Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
 );
+// export const UNDERLYING_PROPS_PATTERN = /cases|deaths|recoveries/; // matches all Y_SCALE_TOTAL_PROPS
+export const UNDERLYING_PROPS_PATTERN = new RegExp(Y_SCALE_TOTAL_PROPS.join('|')); // matches all Y_SCALE_TOTAL_PROPS
+export const UNDERLYING_PROPS_FOR_X_SCALE_TYPES = {
+  daysSince100Cases: 'cases',
+  daysSince1Death: 'deaths',
+  daysSince1Recovery: 'recoveries'
+};
+const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENTS = {
+  cases: 100,
+  deaths: 1,
+  recoveries: 1
+};
+const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
+  cases: '100th case',
+  deaths: '1st death',
+  recoveries: '1st recovery'
+};
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
-  xScaleType: X_SCALE_TYPES[1],
-  yScaleType: Y_SCALE_TYPES[1],
+  xScaleType: X_SCALE_TYPES[0],
+  yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
   xScaleDaysCap: false,
   yScaleCap: DEFAULT_CASES_CAP,
@@ -129,28 +146,30 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
-      dataAsDates: casesData.map((cases, i) => ({ date: dates[i], cases })),
-      dataAsDaysSince100Cases: casesData.map((cases, i) => ({ day: i, cases }))
+      dataAs: {
+        dates: casesData.map((cases, i) => ({ date: dates[i], cases })),
+        daysSince100Cases: casesData.map((cases, i) => ({ day: i, cases }))
+      }
     };
 
     const daysToYScaleCap = calculatePeriodsToIncrease(increasePerPeriod, 100, yScaleCap);
     const daysDiff = Math.min(1, daysToYScaleCap - casesData.length + 1);
 
     if (daysDiff > 0) {
-      const lastItem = last(item.dataAsDates);
+      const lastItem = last(item.dataAs.dates);
 
       if (daysDiff < 1) {
         // Meet extent of y-scale
         let fractionalDate = new Date(lastItem.date.valueOf() + ONE_DAY * daysDiff);
 
-        item.dataAsDates.push({ date: fractionalDate, cases: yScaleCap });
-        item.dataAsDaysSince100Cases.push({ day: daysToYScaleCap, cases: yScaleCap });
+        item.dataAs.dates.push({ date: fractionalDate, cases: yScaleCap });
+        item.dataAs.daysSince100Cases.push({ day: daysToYScaleCap, cases: yScaleCap });
       } else {
         // Meet extent of x-scale
         let fractionalCases = lastItem.cases + lastItem.cases * increasePerPeriod;
 
-        item.dataAsDates.push({ date: new Date(lastItem.date.valueOf() + ONE_DAY), cases: fractionalCases });
-        item.dataAsDaysSince100Cases.push({ day: casesData.length, cases: fractionalCases });
+        item.dataAs.dates.push({ date: new Date(lastItem.date.valueOf() + ONE_DAY), cases: fractionalCases });
+        item.dataAs.daysSince100Cases.push({ day: casesData.length, cases: fractionalCases });
       }
     }
 
@@ -213,18 +232,18 @@ export default class CasesGraphic extends Component {
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
-        let dataAsDates = placeDates
-          .reduce((memoDataAsDates, placeDate, placeDatesIndex) => {
+        let dataAs_dates = placeDates
+          .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
             const placeDatesTotals = placesData[place].dates[placeDate];
             const placeDatesTotalsProps = Object.keys(placeDatesTotals);
             const placeDatesTotalsIncludingPerMillionPeople =
               typeof population === 'number'
                 ? {
                     ...placeDatesTotals,
-                    ...placeDatesTotalsProps.reduce((memoTotals, prop) => {
-                      memoTotals[`${prop}pmp`] = placeDatesTotals[prop] / (population / 1e6);
+                    ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
+                      memo_totals[`${prop}pmp`] = placeDatesTotals[prop] / (population / 1e6);
 
-                      return memoTotals;
+                      return memo_totals;
                     }, {})
                   }
                 : placeDatesTotals;
@@ -232,69 +251,81 @@ export default class CasesGraphic extends Component {
               placeDatesTotalsIncludingPerMillionPeople
             );
 
-            return memoDataAsDates.concat([
+            return memo_dataAs_dates.concat([
               {
                 date: new Date(placeDate),
                 ...placeDatesTotalsIncludingPerMillionPeople,
-                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memoTotals, prop) => {
+                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
                   const newProp = `new${prop}`;
 
                   if (placeDatesIndex === 0) {
-                    memoTotals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
+                    memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
                   } else {
-                    const previousDateTotals = memoDataAsDates[memoDataAsDates.length - 1];
+                    const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
 
-                    memoTotals[newProp] = Math.max(
+                    memo_totals[newProp] = Math.max(
                       0,
                       placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
                     );
                   }
 
-                  return memoTotals;
+                  return memo_totals;
                 }, {})
               }
             ]);
           }, [])
           .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
-        const dataAsDaysSince100Cases = dataAsDates
+        const dataAs_daysSince100Cases = dataAs_dates
           .filter(({ cases }) => cases >= 100)
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+        const dataAs_daysSince1Death = dataAs_dates
+          .filter(({ deaths }) => deaths >= 1)
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+        const dataAs_daysSince1Recovery = dataAs_dates
+          .filter(({ recoveries }) => recoveries >= 1)
           .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
         return {
           key: place,
           type: placesData[place].type,
           population,
-          dataAsDates,
-          dataAsDaysSince100Cases,
+          dataAs: {
+            dates: dataAs_dates,
+            daysSince100Cases: dataAs_daysSince100Cases,
+            daysSince1Death: dataAs_daysSince1Death,
+            daysSince1Recovery: dataAs_daysSince1Recovery
+          },
           ...Y_SCALE_PROPS.reduce((memo, propName) => {
-            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAsDates.map(t => t[propName])));
+            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
 
             return memo;
           }, {})
         };
       })
-      .filter(d => d.dataAsDaysSince100Cases.length > 0)
+      .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
       .sort((a, b) => b.cases - a.cases);
 
     this.earliestDate = this.placesData.reduce((memo, d) => {
-      const candidate = d.dataAsDates[0].date;
+      const candidate = d.dataAs.dates[0].date;
 
       if (candidate < memo) {
         return candidate;
       }
 
       return memo;
-    }, this.placesData[0].dataAsDates[0].date);
+    }, this.placesData[0].dataAs.dates[0].date);
     this.latestDate = this.placesData.reduce((memo, d) => {
-      const candidate = last(d.dataAsDates).date;
+      const candidate = last(d.dataAs.dates).date;
 
       if (candidate > memo) {
         return candidate;
       }
 
       return memo;
-    }, last(this.placesData[0].dataAsDates).date);
+    }, last(this.placesData[0].dataAs.dates).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
     this.state = {
@@ -370,10 +401,12 @@ export default class CasesGraphic extends Component {
     const visiblePlacesData = this.placesData.filter(isPlaceVisible);
 
     // Only allow trend lines when we are showing cases since 100th case
-    if (yScaleProp !== 'cases' || xScaleType !== 'days') {
+    if (yScaleProp !== 'cases' || xScaleType !== 'daysSince100Cases') {
       trends = false;
       highlightedTrends = false;
     }
+
+    const underlyingProp = UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType];
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
@@ -383,18 +416,21 @@ export default class CasesGraphic extends Component {
     }
 
     const largestVisibleYScaleValue = visiblePlacesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dataAsDates.map(t => t[yScaleProp])));
+      return Math.max.apply(null, [memo].concat(d.dataAs.dates.map(t => t[yScaleProp])));
     }, 0);
 
     // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
     yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
 
-    const cappedDaysSince100Cases = visiblePlacesData.reduce((memo, d) => {
-      return Math.max(
-        memo,
-        d.dataAsDaysSince100Cases.filter(item => xScaleDaysCap === false || item.day <= xScaleDaysCap).length - 1
-      );
-    }, 0);
+    const cappedNumDays =
+      xScaleType.indexOf('days') === 0
+        ? visiblePlacesData.reduce((memo, d) => {
+            return Math.max(
+              memo,
+              d.dataAs[xScaleType].filter(item => xScaleDaysCap === false || item.day <= xScaleDaysCap).length - 1
+            );
+          }, 0)
+        : null;
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
@@ -402,20 +438,20 @@ export default class CasesGraphic extends Component {
     const xScaleProp = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
-      : scaleLinear().domain([0, cappedDaysSince100Cases])
+      : scaleLinear().domain([0, cappedNumDays])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
-      ? scaleLog().domain([yScaleProp === 'cases' ? 100 : 0.1, yScaleCap], true)
+      ? scaleLog().domain([UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || 0.1, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
-    const getUncappedDataCollection = d => d[xScaleType === 'dates' ? 'dataAsDates' : 'dataAsDaysSince100Cases'];
+    const getUncappedDataCollection = d => d.dataAs[xScaleType];
     const getDataCollection = d =>
       getUncappedDataCollection(d).reduce(
         (memo, item) =>
           memo.concat(
             item[yScaleProp] <= yScaleCap &&
-              (xScaleType === 'dates' || xScaleDaysCap === false || item.day <= xScaleDaysCap)
+              (xScaleType.indexOf('days') === -1 || xScaleDaysCap === false || item.day <= xScaleDaysCap)
               ? [item]
               : []
           ),
@@ -453,7 +489,7 @@ export default class CasesGraphic extends Component {
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
       this.earliestDate,
-      xScaleType === 'dates' ? this.numDates : cappedDaysSince100Cases,
+      xScaleType === 'dates' ? this.numDates : cappedNumDays,
       yScaleCap
     );
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
@@ -487,7 +523,7 @@ export default class CasesGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(xScaleType === 'dates' ? 'Date' : `${chartWidth > 640 ? 'Number of d' : 'D'}ays since 100th case`);
+      .text(underlyingProp ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date');
 
     // Rendering > 4: Add/update y-axis
     svg
@@ -504,7 +540,9 @@ export default class CasesGraphic extends Component {
       .call(selection => {
         const words = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
           .replace('new', 'new ')
-          .replace('pmp', ' per million people')} since 100th case`.split(' ');
+          .replace('pmp', ' per million people')} since ${
+          UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]
+        }`.split(' ');
         const halfWordsIndex = Math.floor(words.length / 2);
 
         if (IS_TRIDENT) {
