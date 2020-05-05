@@ -66,17 +66,16 @@ const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOT
 export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
   Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
 );
-// export const UNDERLYING_PROPS_PATTERN = /cases|deaths|recoveries/; // matches all Y_SCALE_TOTAL_PROPS
+const LOWER_LOGARITHMIC_EXTENTS = {
+  cases: 100,
+  deaths: 1,
+  recoveries: 1
+};
 export const UNDERLYING_PROPS_PATTERN = new RegExp(Y_SCALE_TOTAL_PROPS.join('|')); // matches all Y_SCALE_TOTAL_PROPS
 export const UNDERLYING_PROPS_FOR_X_SCALE_TYPES = {
   daysSince100Cases: 'cases',
   daysSince1Death: 'deaths',
   daysSince1Recovery: 'recoveries'
-};
-const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENTS = {
-  cases: 100,
-  deaths: 1,
-  recoveries: 1
 };
 const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
   cases: '100th case',
@@ -406,7 +405,8 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
-    const underlyingProp = UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType];
+    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
+    const logarithmicLowerExtent = LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || 0.1;
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
@@ -441,11 +441,12 @@ export default class CasesGraphic extends Component {
       : scaleLinear().domain([0, cappedNumDays])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
-      ? scaleLog().domain([UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || 0.1, yScaleCap], true)
+      ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
-    const getUncappedDataCollection = d => d.dataAs[xScaleType];
+    const getUncappedDataCollection = d =>
+      d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
     const getDataCollection = d =>
       getUncappedDataCollection(d).reduce(
         (memo, item) =>

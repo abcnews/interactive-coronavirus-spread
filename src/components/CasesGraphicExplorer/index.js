@@ -305,9 +305,9 @@ export default ({ placesData }) => {
 
                 setYScaleType(yScaleType);
 
-                if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
-                  setXScaleType('daysSince100Cases');
-                }
+                // if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
+                //   setXScaleType('daysSince100Cases');
+                // }
               }}
             />
           </div>
