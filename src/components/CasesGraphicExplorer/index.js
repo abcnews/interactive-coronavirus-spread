@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { TRENDS } from '../../constants';
-import { decodeVersionedProps, encodeVersionedProps } from '../../utils';
+import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
 import CasesGraphic, {
   DEFAULT_CASES_CAP,
   DEFAULT_PROPS,
@@ -74,7 +74,7 @@ const decodeEncodedUrlParam = () => {
 };
 
 export default ({ placesData }) => {
-  const initialProps = decodeEncodedUrlParam() || DEFAULT_PROPS;
+  const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
   const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);

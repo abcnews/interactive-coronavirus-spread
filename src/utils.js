@@ -100,6 +100,15 @@ export const getInclusiveDateFromYYYYMMDD = yyymmdd => {
   }
 };
 
+export const updateLegacyProps = props => {
+  // Support legacy configs (when the "daysSince100Cases" xScaleType was called "days")
+  if (props && props.xScaleType === 'days') {
+    props.xScaleType = 'daysSince100Cases';
+  }
+
+  return props;
+};
+
 export const renderCasesGraphics = placesData =>
   [...document.querySelectorAll(`a[id^=casesgraphic],a[name^=casesgraphic]`)].map(anchorEl => {
     const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
@@ -112,11 +121,19 @@ export const renderCasesGraphics = placesData =>
     anchorEl.parentElement.removeChild(anchorEl);
 
     const casesGraphicPresetProp = props.encoded || props.preset;
-    const casesGraphicOtherProps = props.encoded
-      ? decodeVersionedProps(props.encoded)
-      : props.preset
-      ? PRESETS[props.preset]
-      : null;
+
+    // Look for longform encoded props elsewhere (assuming only a hint is currently used)
+    if (props.encoded) {
+      const longformAnchorEl = document.querySelector(`a[id^="${props.encoded}"],a[name^="${props.encoded}"]`);
+
+      if (longformAnchorEl) {
+        props.encoded = longformAnchorEl.getAttribute('id') || longformAnchorEl.getAttribute('name');
+      }
+    }
+
+    const casesGraphicOtherProps = updateLegacyProps(
+      props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
+    );
 
     render(
       <InlineGraphic>
