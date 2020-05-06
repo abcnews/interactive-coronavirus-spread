@@ -423,14 +423,20 @@ export default class CasesGraphic extends Component {
     yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
 
     const cappedNumDays =
-      xScaleType.indexOf('days') === 0
-        ? visiblePlacesData.reduce((memo, d) => {
-            return Math.max(
-              memo,
-              d.dataAs[xScaleType].filter(item => xScaleDaysCap === false || item.day <= xScaleDaysCap).length - 1
+      xScaleType.indexOf('dates') === 0
+        ? null
+        : visiblePlacesData.reduce((memo, d) => {
+            const itemsWithinCaps = d.dataAs[xScaleType].filter(
+              item => (xScaleDaysCap === false || item.day <= xScaleDaysCap) && item[yScaleProp] <= yScaleCap
             );
-          }, 0)
-        : null;
+
+            if (!itemsWithinCaps.length) {
+              return memo;
+            }
+
+            return Math.max(memo, last(itemsWithinCaps).day);
+          }, 0);
+
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
