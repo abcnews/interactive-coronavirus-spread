@@ -411,7 +411,7 @@ export default class CasesGraphic extends Component {
 
     const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
     const logarithmicLowerExtent =
-      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures) ? 0.01 : 0.1;
+      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures ? 0.01 : 0.1);
 
     if (isDailyFigures || isPerCapitaFigures) {
       yScaleCap = false;
