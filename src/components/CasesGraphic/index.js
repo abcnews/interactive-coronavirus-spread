@@ -437,6 +437,13 @@ export default class CasesGraphic extends Component {
             return Math.max(memo, last(itemsWithinCaps).day);
           }, 0);
 
+    // TODO:
+    // The yScaleCap may have potentially lowered due to cappedNumDays
+    // filtering out some of our data. Before scales & axes are generated,
+    // we could safely adjust yScaleCap now to the smaller of:
+    // * Itself, and
+    // * The largest dataAs[xScaleType]#yScaleProp value
+
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
