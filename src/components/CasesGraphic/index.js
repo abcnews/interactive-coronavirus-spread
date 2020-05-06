@@ -31,8 +31,9 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
-  logarithmic: [1, 10, 1e2, 1e3, 1e4, 1e5, 1e6]
+  logarithmic: [0.01, 0.1, 1, 10, 1e2, 1e3, 1e4, 1e5, 1e6]
 };
+const FORMAT_S = format('~s');
 const TRANSITION_DURATIONS = {
   opacity: 250,
   transform: 1000
@@ -240,7 +241,7 @@ export default class CasesGraphic extends Component {
                 ? {
                     ...placeDatesTotals,
                     ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
-                      memo_totals[`${prop}pmp`] = placeDatesTotals[prop] / (population / 1e6);
+                      memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
 
                       return memo_totals;
                     }, {})
@@ -405,11 +406,12 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
-    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
-    const logarithmicLowerExtent = LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || 0.1;
-
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
+
+    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
+    const logarithmicLowerExtent =
+      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures) ? 0.01 : 0.1;
 
     if (isDailyFigures || isPerCapitaFigures) {
       yScaleCap = false;
@@ -457,7 +459,8 @@ export default class CasesGraphic extends Component {
       ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
-    const safe_yScale = x => yScale(yScaleType === 'logarithmic' && x < 1 ? 0.1 : x);
+    const safe_yScale = x =>
+      yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
     const getUncappedDataCollection = d =>
       d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
     const getDataCollection = d =>
@@ -516,8 +519,11 @@ export default class CasesGraphic extends Component {
     const yAxisGeneratorBase = () =>
       yScaleType === 'linear'
         ? axisLeft(yScale).ticks(5)
-        : axisLeft(yScale).tickValues(TICK_VALUES['logarithmic'].filter(value => value <= yScaleCap));
-    const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
+        : axisLeft(yScale).tickValues(
+            TICK_VALUES['logarithmic'].filter(value => value >= logarithmicLowerExtent && value <= yScaleCap)
+          );
+    // const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
+    const yAxisGenerator = yAxisGeneratorBase().tickFormat(value => (value >= 1 ? FORMAT_S(value) : value));
     const yAxisGridlinesGenerator = yAxisGeneratorBase()
       .tickSize(-chartWidth)
       .tickFormat('');
