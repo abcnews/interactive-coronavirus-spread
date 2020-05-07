@@ -23,7 +23,6 @@
 		"@abcnews/alternating-case-to-object": "^2.0.0",
 		"@abcnews/base-36-props": "^1.0.1",
 		"@abcnews/scrollyteller": "^2.2.1",
-		"@atlaskit/checkbox": "^10.1.10",
 		"@atlaskit/radio": "^3.2.0",
 		"core-js": "^3.6.4",
 		"d3": "^5.15.0",

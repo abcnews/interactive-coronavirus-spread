@@ -4,6 +4,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
+import TestingGraphic from './components/TestingGraphic';
 import { OTHER_PLACES, PLACES_DATA_URL, PRESETS, SHIPS } from './constants';
 import COUNTRIES_POPULATIONS from './population';
 
@@ -143,6 +144,47 @@ export const renderCasesGraphics = placesData =>
             placesData={placesData}
             maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
             {...casesGraphicOtherProps}
+          />
+        )}
+      </InlineGraphic>,
+      mountEl
+    );
+  });
+
+export const renderTestingGraphics = placesData =>
+  [...document.querySelectorAll(`a[id^=testinggraphic],a[name^=testinggraphic]`)].map(anchorEl => {
+    const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
+    const mountEl = document.createElement('div');
+
+    mountEl.className = 'u-pull';
+
+    Object.keys(props).forEach(propName => (mountEl.dataset[propName] = props[propName]));
+    anchorEl.parentElement.insertBefore(mountEl, anchorEl);
+    anchorEl.parentElement.removeChild(anchorEl);
+
+    const testingGraphicPresetProp = props.encoded || props.preset;
+
+    // Look for longform encoded props elsewhere (assuming only a hint is currently used)
+    if (props.encoded) {
+      const longformAnchorEl = document.querySelector(`a[id^="${props.encoded}"],a[name^="${props.encoded}"]`);
+
+      if (longformAnchorEl) {
+        props.encoded = longformAnchorEl.getAttribute('id') || longformAnchorEl.getAttribute('name');
+      }
+    }
+
+    const testingGraphicOtherProps = updateLegacyProps(
+      props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
+    );
+
+    render(
+      <InlineGraphic>
+        {testingGraphicOtherProps && (
+          <TestingGraphic
+            preset={testingGraphicPresetProp}
+            placesData={placesData}
+            maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
+            {...testingGraphicOtherProps}
           />
         )}
       </InlineGraphic>,

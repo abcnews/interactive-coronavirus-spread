@@ -1,4 +1,9 @@
-const ADDITIONAL_ENTRY_POINTS = ['standalone-cases-graphic', 'cases-graphic-explorer'];
+const ADDITIONAL_ENTRY_POINTS = [
+  'standalone-cases-graphic',
+  'cases-graphic-explorer',
+  'standalone-testing-graphic',
+  'testing-graphic-explorer'
+];
 
 module.exports = {
   serve: {

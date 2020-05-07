@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Standalone Testing Graphic</title>
+    <style>
+      html {
+        font-family: system-ui, sans-serif;
+      }
+    </style>
+    <script>
+      var features = ['Object.assign', 'Array.from', 'Symbol', 'Promise', 'fetch'];
+      if (navigator.userAgent.indexOf('Trident') > -1) {
+        document.write(
+          '<script src="https://polyfill.io/v3/polyfill.min.js?features=' + features.join('%2C') + '"></scr' + 'ipt>'
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <h2>Preset</h2>
+    <a name="testinggraphicPRESETaustralia"> </a>
+    <!-- <h2>Encoded</h2>
+    <a name="testinggraphicENCODEDtodo"> </a>
+    <h2>Encoded (hint, with longform elsewhere in the document)</h2>
+    <a name="casesgraphicENCODEDtodo"> </a>
+    <a name="todo"> </a> -->
+    <script src="../standalone-testing-graphic.js"></script>
+  </body>
+</html>

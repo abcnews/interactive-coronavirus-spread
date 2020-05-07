@@ -4,7 +4,7 @@ import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { TRENDS } from '../../constants';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
-import CasesGraphic, {
+import TestingGraphic, {
   DEFAULT_CASES_CAP,
   DEFAULT_PROPS,
   UNDERLYING_PROPS_PATTERN,
@@ -12,9 +12,9 @@ import CasesGraphic, {
   X_SCALE_TYPES,
   Y_SCALE_TYPES,
   Y_SCALE_PROPS
-} from '../CasesGraphic';
+} from '../TestingGraphic';
 import InlineGraphic from '../InlineGraphic';
-import styles from './styles.css';
+import styles from '../CasesGraphicExplorer/styles.css'; // borrow styles from CasesGaphicExplorer (they're visually the same)
 
 const X_AXIS_TYPES_FOR_UNDERLYING_PROPS = {
   cases: 'daysSince100Cases',
@@ -85,7 +85,7 @@ export default ({ placesData }) => {
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
 
-  const casesGraphicProps = {
+  const testingGraphicProps = {
     ...initialProps,
     xScaleType,
     yScaleType,
@@ -98,7 +98,7 @@ export default ({ placesData }) => {
     highlightedTrends
   };
 
-  history.replaceState(casesGraphicProps, document.title, `?encoded=${encodeVersionedProps(casesGraphicProps)}`);
+  history.replaceState(testingGraphicProps, document.title, `?encoded=${encodeVersionedProps(testingGraphicProps)}`);
 
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
   const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
@@ -113,15 +113,15 @@ export default ({ placesData }) => {
     value: doublingTimePeriods
   }));
 
-  const casesGraphicPropsJSON = JSON.stringify(casesGraphicProps, 2, 2);
-  const encodedCasesGraphicProps = encodeVersionedProps(casesGraphicProps);
-  const encodedMarkerText = `#casesgraphicENCODED${encodedCasesGraphicProps}`;
+  const testingGraphicPropsJSON = JSON.stringify(testingGraphicProps, 2, 2);
+  const encodedTestingGraphicProps = encodeVersionedProps(testingGraphicProps);
+  const encodedMarkerText = `#testinggraphicENCODED${encodedTestingGraphicProps}`;
 
   return (
     <div className={styles.root}>
       <div className={styles.graphic}>
         <InlineGraphic>
-          <CasesGraphic preset={Math.random()} placesData={placesData} {...casesGraphicProps} />
+          <TestingGraphic preset={Math.random()} placesData={placesData} {...testingGraphicProps} />
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
@@ -343,9 +343,9 @@ export default ({ placesData }) => {
         <details>
           <summary>
             New Preset Code
-            <button onClick={() => navigator.clipboard.writeText(casesGraphicPropsJSON)}>Copy to clipboard</button>
+            <button onClick={() => navigator.clipboard.writeText(testingGraphicPropsJSON)}>Copy to clipboard</button>
           </summary>
-          <pre>{casesGraphicPropsJSON}</pre>
+          <pre>{testingGraphicPropsJSON}</pre>
         </details>
         <hr />
         <div>
