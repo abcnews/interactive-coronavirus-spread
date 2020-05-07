@@ -17,4 +17,4 @@ const domready = fn => {
   /in/.test(document.readyState) ? setTimeout(() => domready(fn), 9) : fn();
 };
 
-fetchPlacesData().then(placesData => domready(() => renderExplorer(placesData)));
+fetchPlacesData(true).then(placesData => domready(() => renderExplorer(placesData)));

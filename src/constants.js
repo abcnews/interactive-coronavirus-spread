@@ -209,6 +209,10 @@ export const PRESETS = {
     graphic: 'cases',
     yScaleCap: false,
     highlightedPlaces: ['US']
+  },
+  australiantesting: {
+    graphic: 'tests',
+    highlightedPlaces: ['Australia']
   }
 };
 

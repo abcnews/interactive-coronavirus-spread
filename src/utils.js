@@ -34,7 +34,7 @@ const PLACE_NAME_REPLACEMENTS = [
   [/^West\s/, 'W. ']
 ];
 
-export const fetchPlacesData = () =>
+export const fetchPlacesData = shouldMockTestsData =>
   fetch(PLACES_DATA_URL)
     .then(response => response.json())
     .then(data => {
@@ -66,11 +66,15 @@ export const fetchPlacesData = () =>
             return;
           }
 
-          data[place][date] = {
-            cases: data[place][date].cases || 0,
-            deaths: data[place][date].deaths || 0,
-            recoveries: data[place][date].recoveries || data[place][date].recovered || 0
-          };
+          data[place][date] = shouldMockTestsData // TODO: make this real data, not a hack
+            ? {
+                tests: (data[place][date].cases || 0) * 20
+              }
+            : {
+                cases: data[place][date].cases || 0,
+                deaths: data[place][date].deaths || 0,
+                recoveries: data[place][date].recoveries || data[place][date].recovered || 0
+              };
         });
 
         data[place] = {

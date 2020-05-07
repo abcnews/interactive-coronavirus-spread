@@ -31,7 +31,7 @@ const MARGIN = {
 };
 const PLOT_LABEL_HEIGHT = (REM / 4) * 3;
 const TICK_VALUES = {
-  logarithmic: [0.01, 0.1, 1, 10, 1e2, 1e3, 1e4, 1e5, 1e6]
+  logarithmic: [0.01, 0.1, 1, 10, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
 };
 const FORMAT_S = format('~s');
 const TRANSITION_DURATIONS = {
@@ -60,9 +60,8 @@ const COLOR_DIBS = {
   Japan: 'green',
   Australia: 'copy'
 };
-export const X_SCALE_TYPES = ['daysSince100Cases', 'daysSince1Death', 'daysSince1Recovery', 'dates'];
 export const Y_SCALE_TYPES = ['logarithmic', 'linear'];
-const Y_SCALE_TOTAL_PROPS = ['cases', 'deaths', 'recoveries'];
+const Y_SCALE_TOTAL_PROPS = ['tests'];
 const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOTAL_PROPS.map(x => `${x}pmp`));
 export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
   Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
@@ -192,7 +191,7 @@ export default class TestingGraphic extends Component {
               }
             ]);
           }, [])
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+          .filter(({ tests, date }) => tests >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
         return {
           key: place,
@@ -206,8 +205,7 @@ export default class TestingGraphic extends Component {
           }, {})
         };
       })
-      .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
-      .sort((a, b) => b.cases - a.cases);
+      .sort((a, b) => b.tests - a.tests);
 
     this.earliestDate = this.placesData.reduce((memo, d) => {
       const candidate = d.dates[0].date;

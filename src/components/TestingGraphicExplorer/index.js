@@ -14,21 +14,13 @@ const SELECT_STYLES = {
   })
 };
 const RADIO_LABELS = {
-  cases: 'Cumulative cases',
-  casespmp: 'Cumulative cases / million people',
   dates: 'Date',
-  deaths: 'Cumulative deaths',
-  deathspmp: 'Cumulative deaths / million people',
   linear: 'Linear',
   logarithmic: 'Logarithmic',
-  newcases: 'Daily new cases',
-  newcasespmp: 'Daily new cases / million people',
-  newdeaths: 'Daily new deaths',
-  newdeathspmp: 'Daily new deaths / million people',
-  newrecoveries: 'Daily new recoveries',
-  newrecoveriespmp: 'Daily new recoveries / million people',
-  recoveries: 'Cumulative recoveries',
-  recoveriespmp: 'Cumulative recoveries / million people'
+  newtests: 'Daily new tests',
+  newtestspmp: 'Daily new tests / million people',
+  tests: 'Cumulative tests',
+  testspmp: 'Cumulative tests / million people'
 };
 
 const animatedComponents = makeAnimated();
