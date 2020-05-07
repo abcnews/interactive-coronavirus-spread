@@ -2,7 +2,6 @@ import { RadioGroup } from '@atlaskit/radio';
 import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import { TRENDS } from '../../constants';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
 import TestingGraphic, {
   DEFAULT_CASES_CAP,
@@ -82,8 +81,6 @@ export default ({ placesData }) => {
   const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
-  const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
-  const [highlightedTrends, setHighlightedTrends] = useState([]);
 
   const testingGraphicProps = {
     ...initialProps,
@@ -93,25 +90,18 @@ export default ({ placesData }) => {
     yScaleCap,
     xScaleDaysCap,
     places: visiblePlaces,
-    highlightedPlaces,
-    trends: visibleTrends,
-    highlightedTrends
+    highlightedPlaces
   };
 
   history.replaceState(testingGraphicProps, document.title, `?encoded=${encodeVersionedProps(testingGraphicProps)}`);
 
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
   const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
-  const areTrendsAllowed = yScaleProp === 'cases' && xScaleType === 'daysSince100Cases';
 
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
-  const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
-    label: `Every ${name}`,
-    value: doublingTimePeriods
-  }));
 
   const testingGraphicPropsJSON = JSON.stringify(testingGraphicProps, 2, 2);
   const encodedTestingGraphicProps = encodeVersionedProps(testingGraphicProps);
@@ -169,52 +159,6 @@ export default ({ placesData }) => {
             }}
           />
         </div>
-        {areTrendsAllowed && (
-          <div key="highlightedtrends">
-            <label>
-              Highlighted Trends{' '}
-              <button
-                onClick={() => setHighlightedTrends(Array.from(new Set(visibleTrends.concat(highlightedTrends))))}
-                disabled={visibleTrends.sort().join() === highlightedTrends.sort().join()}
-              >
-                Highlight all visible trends
-              </button>
-            </label>
-            <Select
-              components={animatedComponents}
-              styles={SELECT_STYLES}
-              isMulti
-              options={trendsSelectOptions}
-              value={trendsSelectOptions.filter(option => highlightedTrends.indexOf(option.value) > -1)}
-              onChange={selectedOptions => {
-                const nextHighlightedTrends = optionsValues(selectedOptions || []);
-
-                setVisibleTrends(Array.from(new Set(visibleTrends.concat(nextHighlightedTrends))));
-                setHighlightedTrends(nextHighlightedTrends);
-              }}
-            />
-          </div>
-        )}
-        {areTrendsAllowed && (
-          <div key="visibletrends">
-            <label>Visible Trends</label>
-            <Select
-              components={animatedComponents}
-              styles={SELECT_STYLES}
-              defaultValue={trendsSelectOptions.filter(option => initialProps.trends.indexOf(option.value) > -1)}
-              value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
-              isMulti
-              options={trendsSelectOptions}
-              onChange={selectedOptions => {
-                const nextVisibleTrends = optionsValues(selectedOptions || []);
-
-                setVisibleTrends(nextVisibleTrends);
-                setHighlightedTrends(highlightedTrends.filter(trend => nextVisibleTrends.indexOf(trend) > -1));
-              }}
-            />
-          </div>
-        )}
-
         <div key="xscaletype">
           <label>X-axis</label>
           <RadioGroup
