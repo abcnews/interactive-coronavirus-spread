@@ -3,23 +3,10 @@ import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
-import TestingGraphic, {
-  DEFAULT_CASES_CAP,
-  DEFAULT_PROPS,
-  UNDERLYING_PROPS_PATTERN,
-  UNDERLYING_PROPS_FOR_X_SCALE_TYPES,
-  X_SCALE_TYPES,
-  Y_SCALE_TYPES,
-  Y_SCALE_PROPS
-} from '../TestingGraphic';
+import TestingGraphic, { DEFAULT_PROPS, Y_SCALE_TYPES, Y_SCALE_PROPS } from '../TestingGraphic';
 import InlineGraphic from '../InlineGraphic';
 import styles from '../CasesGraphicExplorer/styles.css'; // borrow styles from CasesGaphicExplorer (they're visually the same)
 
-const X_AXIS_TYPES_FOR_UNDERLYING_PROPS = {
-  cases: 'daysSince100Cases',
-  deaths: 'daysSince1Death',
-  recoveries: 'daysSince1Recovery'
-};
 const SELECT_STYLES = {
   multiValueLabel: (provided, state) => ({
     ...provided,
@@ -30,9 +17,6 @@ const RADIO_LABELS = {
   cases: 'Cumulative cases',
   casespmp: 'Cumulative cases / million people',
   dates: 'Date',
-  daysSince100Cases: 'Days since 100th case',
-  daysSince1Death: 'Days since 1st death',
-  daysSince1Recovery: 'Days since 1st recovery',
   deaths: 'Cumulative deaths',
   deathspmp: 'Cumulative deaths / million people',
   linear: 'Linear',
@@ -45,21 +29,6 @@ const RADIO_LABELS = {
   newrecoveriespmp: 'Daily new recoveries / million people',
   recoveries: 'Cumulative recoveries',
   recoveriespmp: 'Cumulative recoveries / million people'
-};
-const Y_SCALE_CAP_OPTIONS = {
-  '1000': '1k',
-  '5000': '5k',
-  '10000': '10k',
-  '50000': '50k',
-  '100000': '100k',
-  '': 'None'
-};
-const DAYS_CAP_OPTIONS = {
-  '10': '10 days',
-  '20': '20 days',
-  '30': '30 days',
-  '40': '40 days',
-  '': 'None'
 };
 
 const animatedComponents = makeAnimated();
@@ -74,21 +43,15 @@ const decodeEncodedUrlParam = () => {
 export default ({ placesData }) => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
-  const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
-  const [xScaleDaysCap, setXScaleDaysCap] = useState(initialProps.xScaleDaysCap);
-  const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
 
   const testingGraphicProps = {
     ...initialProps,
-    xScaleType,
     yScaleType,
     yScaleProp,
-    yScaleCap,
-    xScaleDaysCap,
     places: visiblePlaces,
     highlightedPlaces
   };
@@ -98,7 +61,6 @@ export default ({ placesData }) => {
   const isDailyFigures = yScaleProp.indexOf('new') === 0;
   const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
-  const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
@@ -159,52 +121,6 @@ export default ({ placesData }) => {
             }}
           />
         </div>
-        <div key="xscaletype">
-          <label>X-axis</label>
-          <RadioGroup
-            name="xscaletype"
-            defaultValue={initialProps.xScaleType}
-            value={xScaleType}
-            options={xScaleTypeOptions}
-            onChange={event => {
-              const xScaleType = event.currentTarget.value;
-
-              // Update x-scale type
-              setXScaleType(xScaleType);
-
-              // Update y-scale prop if the underlying prop doesn't fit the x-scale
-              const underlyingProp = UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType];
-              if (underlyingProp && yScaleProp.indexOf(underlyingProp) === -1) {
-                setYScaleProp(yScaleProp.replace(UNDERLYING_PROPS_PATTERN, underlyingProp));
-              }
-
-              // if (xScaleType === 'dates') {
-              //   setYScaleType('linear');
-              // }
-            }}
-          />
-        </div>
-        {xScaleType.indexOf('days') === 0 && (
-          <div key="dayscap">
-            <label>X-axis (days-based) Cap</label>
-            <div className={styles.flexRow}>
-              <RadioGroup
-                name="dayscap"
-                defaultValue={initialProps.xScaleDaysCap ? String(initialProps.xScaleDaysCap) : ''}
-                value={xScaleDaysCap ? String(xScaleDaysCap) : ''}
-                options={Object.keys(DAYS_CAP_OPTIONS).map(value => ({
-                  label: DAYS_CAP_OPTIONS[value],
-                  value
-                }))}
-                onChange={event => {
-                  const xScaleDaysCap = event.currentTarget.value;
-
-                  setXScaleDaysCap(xScaleDaysCap ? +xScaleDaysCap : false);
-                }}
-              />
-            </div>
-          </div>
-        )}
         <div key="yscaleprop">
           <label>Y-axis</label>
           <RadioGroup
@@ -218,20 +134,6 @@ export default ({ placesData }) => {
               const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
               setYScaleProp(yScaleProp);
-
-              if (isPerCapitaFigures || isDailyFigures) {
-                setYScaleCap(false);
-              }
-
-              // if (yScaleType === 'logarithmic' && isDailyFigures) {
-              //   setXScaleType('daysSince100Cases');
-              // }
-
-              // If we're not looking at dates on the x-axis, set it to a "Days since..."
-              // prop relative to the new y-axis prop
-              if (UNDERLYING_PROPS_FOR_X_SCALE_TYPES[xScaleType]) {
-                setXScaleType(X_AXIS_TYPES_FOR_UNDERLYING_PROPS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]);
-              }
             }}
           />
         </div>
@@ -247,35 +149,10 @@ export default ({ placesData }) => {
                 const yScaleType = event.currentTarget.value;
 
                 setYScaleType(yScaleType);
-
-                // if (yScaleType === 'logarithmic' && yScaleProp.indexOf('new') === -1) {
-                //   setXScaleType('daysSince100Cases');
-                // }
               }}
             />
           </div>
         </div>
-        {!(isDailyFigures || isPerCapitaFigures) && (
-          <div>
-            <label>Y-axis Cap</label>
-            <div className={styles.flexRow}>
-              <RadioGroup
-                name="casescap"
-                defaultValue={initialProps.yScaleCap ? String(initialProps.yScaleCap) : ''}
-                value={yScaleCap ? String(yScaleCap) : ''}
-                options={Object.keys(Y_SCALE_CAP_OPTIONS).map(value => ({
-                  label: Y_SCALE_CAP_OPTIONS[value],
-                  value
-                }))}
-                onChange={event => {
-                  const yScaleCap = event.currentTarget.value;
-
-                  setYScaleCap(yScaleCap ? +yScaleCap : false);
-                }}
-              />
-            </div>
-          </div>
-        )}
         <hr />
         <details>
           <summary>

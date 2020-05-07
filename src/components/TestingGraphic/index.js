@@ -67,29 +67,9 @@ const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOT
 export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
   Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
 );
-const LOWER_LOGARITHMIC_EXTENTS = {
-  cases: 100,
-  deaths: 1,
-  recoveries: 1
-};
-export const UNDERLYING_PROPS_PATTERN = new RegExp(Y_SCALE_TOTAL_PROPS.join('|')); // matches all Y_SCALE_TOTAL_PROPS
-export const UNDERLYING_PROPS_FOR_X_SCALE_TYPES = {
-  daysSince100Cases: 'cases',
-  daysSince1Death: 'deaths',
-  daysSince1Recovery: 'recoveries'
-};
-const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
-  cases: '100th case',
-  deaths: '1st death',
-  recoveries: '1st recovery'
-};
-export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
-  xScaleType: X_SCALE_TYPES[0],
   yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
-  xScaleDaysCap: false,
-  yScaleCap: DEFAULT_CASES_CAP,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES
 };
@@ -103,11 +83,7 @@ const last = x => x[x.length - 1];
 const inclusionCheckGenerator = (collection, itemPropName) => d =>
   typeof collection === 'boolean' ? collection : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
 
-function checkScaleTypes(xScaleType, yScaleType) {
-  if (X_SCALE_TYPES.indexOf(xScaleType) === -1) {
-    throw new Error(`Unrecognised xScaleType: ${xScaleType}`);
-  }
-
+function checkScaleTypes(yScaleType) {
   if (Y_SCALE_TYPES.indexOf(yScaleType) === -1) {
     throw new Error(`Unrecognised yScaleType: ${yScaleType}`);
   }
@@ -160,9 +136,9 @@ export default class TestingGraphic extends Component {
   constructor(props) {
     super(props);
 
-    const { placesData, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
+    const { placesData, maxDate, yScaleType } = { ...DEFAULT_PROPS, ...props };
 
-    checkScaleTypes(xScaleType, yScaleType);
+    checkScaleTypes(yScaleType);
 
     this.rootRef = createRef();
     this.svgRef = createRef();
@@ -174,8 +150,8 @@ export default class TestingGraphic extends Component {
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
-        let dataAs_dates = placeDates
-          .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
+        let dates = placeDates
+          .reduce((memo_dates, placeDate, placeDatesIndex) => {
             const placeDatesTotals = placesData[place].dates[placeDate];
             const placeDatesTotalsProps = Object.keys(placeDatesTotals);
             const placeDatesTotalsIncludingPerMillionPeople =
@@ -193,7 +169,7 @@ export default class TestingGraphic extends Component {
               placeDatesTotalsIncludingPerMillionPeople
             );
 
-            return memo_dataAs_dates.concat([
+            return memo_dates.concat([
               {
                 date: new Date(placeDate),
                 ...placeDatesTotalsIncludingPerMillionPeople,
@@ -203,7 +179,7 @@ export default class TestingGraphic extends Component {
                   if (placeDatesIndex === 0) {
                     memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
                   } else {
-                    const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
+                    const previousDateTotals = memo_dates[memo_dates.length - 1];
 
                     memo_totals[newProp] = Math.max(
                       0,
@@ -218,30 +194,13 @@ export default class TestingGraphic extends Component {
           }, [])
           .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
-        const dataAs_daysSince100Cases = dataAs_dates
-          .filter(({ cases }) => cases >= 100)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
-        const dataAs_daysSince1Death = dataAs_dates
-          .filter(({ deaths }) => deaths >= 1)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
-        const dataAs_daysSince1Recovery = dataAs_dates
-          .filter(({ recoveries }) => recoveries >= 1)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
         return {
           key: place,
           type: placesData[place].type,
           population,
-          dataAs: {
-            dates: dataAs_dates,
-            daysSince100Cases: dataAs_daysSince100Cases,
-            daysSince1Death: dataAs_daysSince1Death,
-            daysSince1Recovery: dataAs_daysSince1Recovery
-          },
+          dates,
           ...Y_SCALE_PROPS.reduce((memo, propName) => {
-            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
+            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dates.map(t => t[propName])));
 
             return memo;
           }, {})
@@ -251,23 +210,23 @@ export default class TestingGraphic extends Component {
       .sort((a, b) => b.cases - a.cases);
 
     this.earliestDate = this.placesData.reduce((memo, d) => {
-      const candidate = d.dataAs.dates[0].date;
+      const candidate = d.dates[0].date;
 
       if (candidate < memo) {
         return candidate;
       }
 
       return memo;
-    }, this.placesData[0].dataAs.dates[0].date);
+    }, this.placesData[0].dates[0].date);
     this.latestDate = this.placesData.reduce((memo, d) => {
-      const candidate = last(d.dataAs.dates).date;
+      const candidate = last(d.dates).date;
 
       if (candidate > memo) {
         return candidate;
       }
 
       return memo;
-    }, last(this.placesData[0].dataAs.dates).date);
+    }, last(this.placesData[0].dates).date);
     this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
     this.state = {
@@ -304,7 +263,7 @@ export default class TestingGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    let { places, yScaleCap, xScaleDaysCap, highlightedPlaces, preset, xScaleType, yScaleType, yScaleProp } = {
+    let { places, highlightedPlaces, preset, yScaleType, yScaleProp } = {
       ...DEFAULT_PROPS,
       ...nextProps
     };
@@ -318,7 +277,7 @@ export default class TestingGraphic extends Component {
 
     this.rootRef.current.setAttribute('data-preset', preset);
 
-    checkScaleTypes(xScaleType, yScaleType);
+    checkScaleTypes(yScaleType);
     checkScaleProps(yScaleProp);
 
     if (typeof places === 'function') {
@@ -334,78 +293,35 @@ export default class TestingGraphic extends Component {
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
-    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
-    const logarithmicLowerExtent =
-      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures ? 0.01 : 0.1);
+    const logarithmicLowerExtent = isDailyFigures ? (isPerCapitaFigures ? 0.01 : 0.1) : 1;
 
-    if (isDailyFigures || isPerCapitaFigures) {
-      yScaleCap = false;
-    }
-
-    const largestVisibleYScaleValue = visiblePlacesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dataAs.dates.map(t => t[yScaleProp])));
+    const yScaleCap = visiblePlacesData.reduce((memo, d) => {
+      // TODO: factor in date window filtering once we implement it
+      return Math.max.apply(null, [memo].concat(d.dates.map(t => t[yScaleProp])));
     }, 0);
-
-    // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
-    yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
-
-    const cappedNumDays =
-      xScaleType.indexOf('dates') === 0
-        ? null
-        : visiblePlacesData.reduce((memo, d) => {
-            const itemsWithinCaps = d.dataAs[xScaleType].filter(
-              item => (xScaleDaysCap === false || item.day <= xScaleDaysCap) && item[yScaleProp] <= yScaleCap
-            );
-
-            if (!itemsWithinCaps.length) {
-              return memo;
-            }
-
-            return Math.max(memo, last(itemsWithinCaps).day);
-          }, 0);
-
-    // TODO:
-    // The yScaleCap may have potentially lowered due to cappedNumDays
-    // filtering out some of our data. Before scales & axes are generated,
-    // we could safely adjust yScaleCap now to the smaller of:
-    // * Itself, and
-    // * The largest dataAs[xScaleType]#yScaleProp value
 
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const xScaleProp = xScaleType === 'dates' ? 'date' : 'day';
-    const xScale = (xScaleType === 'dates'
-      ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
-      : scaleLinear().domain([0, cappedNumDays])
-    ).range([0, chartWidth]);
+    const xScale = scaleTime()
+      .domain([new Date(this.earliestDate), new Date(this.latestDate)])
+      .range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
       ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x =>
       yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
-    const getUncappedDataCollection = d =>
-      d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
-    const getDataCollection = d =>
-      getUncappedDataCollection(d).reduce(
-        (memo, item) =>
-          memo.concat(
-            item[yScaleProp] <= yScaleCap &&
-              (xScaleType.indexOf('days') === -1 || xScaleDaysCap === false || item.day <= xScaleDaysCap)
-              ? [item]
-              : []
-          ),
-        []
-      );
+    const getUncappedDataCollection = d => d.dates;
+    const getDataCollection = d => getUncappedDataCollection(d).filter(item => item[yScaleProp] <= yScaleCap);
     const generateLinePath = d =>
       line()
-        .x(d => xScale(d[xScaleProp]))
+        .x(d => xScale(d.date))
         .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
     const isPlaceYCapped = d => last(getUncappedDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
-    const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
+    const plotPointTransformGenerator = d => `translate(${xScale(d.date)}, ${safe_yScale(d[yScaleProp])})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
       let forceNodes;
@@ -427,12 +343,9 @@ export default class TestingGraphic extends Component {
       return force;
     };
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
-    const xAxisGenerator =
-      xScaleType === 'dates'
-        ? axisBottom(xScale)
-            .ticks(timeWeek.every(2))
-            .tickFormat(timeFormat('%-d/%-m'))
-        : axisBottom(xScale).ticks(5);
+    const xAxisGenerator = axisBottom(xScale)
+      .ticks(timeWeek.every(2))
+      .tickFormat(timeFormat('%-d/%-m'));
     const yAxisGeneratorBase = () =>
       yScaleType === 'linear'
         ? axisLeft(yScale).ticks(5)
@@ -460,7 +373,7 @@ export default class TestingGraphic extends Component {
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(underlyingProp ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date');
+      .text('Date');
 
     // Rendering > 4: Add/update y-axis
     svg
@@ -475,22 +388,19 @@ export default class TestingGraphic extends Component {
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        const words = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
+        const textWithoutPMP = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
           .replace('new', 'new ')
-          .replace('pmp', ' per million people')} since ${
-          UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]
-        }`.split(' ');
-        const halfWordsIndex = Math.floor(words.length / 2);
+          .replace('pmp', '')}`;
+        const pmpText = 'per million people';
+        const text = `${textWithoutPMP}${isPerCapitaFigures ? ` ${pmpText}` : ''}`;
 
         if (IS_TRIDENT) {
-          selection.text(words.join(' '));
+          selection.text(text);
         } else {
           selection.html(
-            `<tspan x="0" dy="-0.75em">${words
-              .slice(0, halfWordsIndex)
-              .join(' ')}</tspan><tspan x="0" dy="1.25em">${words
-              .slice(halfWordsIndex, words.length)
-              .join(' ')}</tspan>`
+            isPerCapitaFigures && chartWidth <= 640
+              ? `<tspan x="0" dy="-0.75em">${textWithoutPMP}</tspan><tspan x="0" dy="1.25em">${pmpText}</tspan>`
+              : `<tspan>${text}</tspan>`
           );
         }
       });
@@ -600,21 +510,19 @@ export default class TestingGraphic extends Component {
       fx: 0,
       targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
     }));
-    if (chartWidth < 640 || xScaleType === 'dates' || yScaleType === 'logarithmic') {
-      const plotLabelsForceSimulation = forceSimulation()
-        .nodes(plotLabelForceNodes)
-        .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
-        .force('y', forceY(d => d.targetY).strength(1))
-        .force('clamp', labelForceClamp(0, chartHeight))
-        .stop();
-      for (let i = 0; i < 300; i++) {
-        plotLabelsForceSimulation.tick();
-      }
+    const plotLabelsForceSimulation = forceSimulation()
+      .nodes(plotLabelForceNodes)
+      .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
+      .force('y', forceY(d => d.targetY).strength(1))
+      .force('clamp', labelForceClamp(0, chartHeight))
+      .stop();
+    for (let i = 0; i < 300; i++) {
+      plotLabelsForceSimulation.tick();
     }
     const plotLabelsData = labelledPlacesData.map((d, i) => ({
       key: d.key,
       text: d.key,
-      x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
+      x: 6 + xScale(last(getDataCollection(d)).date),
       y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
     }));
     const plotLabels = svg // Bind
