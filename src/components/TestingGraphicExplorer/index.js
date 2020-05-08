@@ -35,19 +35,24 @@ const decodeEncodedUrlParam = () => {
 };
 
 export default ({ placesData }) => {
+  const availableDates = Object.keys(placesData[Object.keys(placesData)[0]].dates);
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
+  const [fromDate, setFromDate] = useState(initialProps.fromDate || availableDates[0]);
+  const [toDate, setToDate] = useState(initialProps.toDate || availableDates[availableDates.length - 1]);
 
   const testingGraphicProps = {
     ...initialProps,
     yScaleType,
     yScaleProp,
     places: visiblePlaces,
-    highlightedPlaces
+    highlightedPlaces,
+    fromDate,
+    toDate
   };
 
   history.replaceState(testingGraphicProps, document.title, `?encoded=${encodeVersionedProps(testingGraphicProps)}`);
@@ -58,6 +63,12 @@ export default ({ placesData }) => {
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
+  const fromDateSelectOptions = availableDates
+    .filter((date, index) => index < availableDates.indexOf(toDate))
+    .map(date => ({ label: date, value: date }));
+  const toDateSelectOptions = availableDates
+    .filter((date, index) => index > availableDates.indexOf(fromDate))
+    .map(date => ({ label: date, value: date }));
 
   const testingGraphicPropsJSON = JSON.stringify(testingGraphicProps, 2, 2);
   const encodedTestingGraphicProps = encodeVersionedProps(testingGraphicProps);
@@ -114,6 +125,37 @@ export default ({ placesData }) => {
               setHighlightedPlaces(highlightedPlaces.filter(place => nextVisiblePlaces.indexOf(place) > -1));
             }}
           />
+        </div>
+
+        <div key="dates">
+          <label>Dates</label>
+          <div className={styles.flexRow}>
+            <Select
+              components={animatedComponents}
+              styles={SELECT_STYLES}
+              defaultValue={fromDateSelectOptions.find(option => option.value === fromDate)}
+              value={fromDateSelectOptions.find(option => option.value === fromDate)}
+              options={fromDateSelectOptions}
+              onChange={selectedOption => {
+                const [nextFromDate] = optionsValues([selectedOption]);
+
+                setFromDate(nextFromDate);
+              }}
+            />
+            <span>to</span>
+            <Select
+              components={animatedComponents}
+              styles={SELECT_STYLES}
+              defaultValue={toDateSelectOptions.find(option => option.value === toDate)}
+              value={toDateSelectOptions.find(option => option.value === toDate)}
+              options={toDateSelectOptions}
+              onChange={selectedOption => {
+                const [nextToDate] = optionsValues([selectedOption]);
+
+                setToDate(nextToDate);
+              }}
+            />
+          </div>
         </div>
         <div key="yscaleprop">
           <label>Y-axis</label>

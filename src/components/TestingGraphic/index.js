@@ -12,6 +12,7 @@ import {
   scaleLog,
   scaleTime,
   select,
+  timeDay,
   timeWeek,
   timeFormat
 } from 'd3';
@@ -197,7 +198,7 @@ export default class TestingGraphic extends Component {
               }
             ]);
           }, [])
-          .filter(({ tests, date }) => tests >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+          .filter(({ tests, date }) => tests >= 1); // TODO: Do we want to show zero? If so, remove this filter
 
         return {
           key: place,
@@ -231,7 +232,6 @@ export default class TestingGraphic extends Component {
 
       return memo;
     }, last(this.placesData[0].dates).date);
-    this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
 
     this.state = {
       width: 0,
@@ -267,7 +267,7 @@ export default class TestingGraphic extends Component {
     const prevProps = this.props;
     const prevState = this.state;
 
-    let { places, highlightedPlaces, preset, yScaleType, yScaleProp } = {
+    let { places, highlightedPlaces, preset, yScaleType, yScaleProp, fromDate, toDate } = {
       ...DEFAULT_PROPS,
       ...nextProps
     };
@@ -294,6 +294,10 @@ export default class TestingGraphic extends Component {
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
     const visiblePlacesData = this.placesData.filter(isPlaceVisible);
 
+    const timeLowerExtent = fromDate ? new Date(fromDate) : this.earliestDate;
+    const timeUpperExtent = toDate ? new Date(toDate) : this.latestDate;
+    const timeRangeDays = Math.round((timeUpperExtent - timeLowerExtent) / ONE_DAY);
+
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
@@ -310,7 +314,7 @@ export default class TestingGraphic extends Component {
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
     const xScale = scaleTime()
-      .domain([new Date(this.earliestDate), new Date(this.latestDate)])
+      .domain([timeLowerExtent, timeUpperExtent])
       .range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
       ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
@@ -319,7 +323,10 @@ export default class TestingGraphic extends Component {
     const safe_yScale = x =>
       yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
     const getUncappedDataCollection = d => d.dates;
-    const getDataCollection = d => getUncappedDataCollection(d).filter(item => item[yScaleProp] <= yScaleCap);
+    const getDataCollection = d =>
+      getUncappedDataCollection(d).filter(
+        item => item[yScaleProp] <= yScaleCap && item.date >= timeLowerExtent && item.date <= timeUpperExtent
+      );
     const generateLinePath = d =>
       line()
         .x(d => xScale(d.date))
@@ -349,7 +356,8 @@ export default class TestingGraphic extends Component {
     };
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
     const xAxisGenerator = axisBottom(xScale)
-      .ticks(timeWeek.every(2))
+      // .ticks(timeRangeDays < 10 ? timeDay.every(1) : timeRangeDays < 60 ? timeWeek.every(1) : timeWeek.every(2))
+      .ticks(width < 640 ? 4 : 8)
       .tickFormat(timeFormat('%-d/%-m'));
     const yAxisGeneratorBase = () =>
       yScaleType === 'linear'
@@ -393,7 +401,7 @@ export default class TestingGraphic extends Component {
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        const valueText = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
+        const valueText = `${isDailyFigures ? 'Daily' : 'Cumulative'} ${yScaleProp
           .replace('new', 'new ')
           .replace('pcc', '')
           .replace('pmp', '')}`;

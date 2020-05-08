@@ -86,4 +86,13 @@ body {
 .flexRow {
   display: flex;
   flex-direction: row;
+  align-items: center;
+}
+
+.flexRow > div {
+  width: 50%;
+}
+
+.flexRow > span {
+  padding: 0 0.5em;
 }
