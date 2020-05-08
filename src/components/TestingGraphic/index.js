@@ -128,12 +128,6 @@ function generateColorAllocator(placesData) {
   };
 }
 
-function setTruncatedLineDashArray(node) {
-  const pathLength = node.getTotalLength();
-
-  node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
-}
-
 export default class TestingGraphic extends Component {
   constructor(props) {
     super(props);
@@ -289,14 +283,17 @@ export default class TestingGraphic extends Component {
       places = this.placesData.filter(places).map(x => x.key);
     }
 
-    // Filter placesData to just visible places, and create visible/highlighted comparison utils
-    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
-    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = this.placesData.filter(isPlaceVisible);
-
     const timeLowerExtent = fromDate ? new Date(fromDate) : this.earliestDate;
     const timeUpperExtent = toDate ? new Date(toDate) : this.latestDate;
     const timeRangeDays = Math.round((timeUpperExtent - timeLowerExtent) / ONE_DAY);
+    const timeRangeFilter = d => d.date >= timeLowerExtent && d.date <= timeUpperExtent;
+
+    // Filter placesData to just visible places, and create visible/highlighted comparison utils
+    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
+    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
+    const visiblePlacesData = this.placesData
+      .filter(isPlaceVisible)
+      .filter(d => d.dates.filter(timeRangeFilter).length);
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;
@@ -305,8 +302,7 @@ export default class TestingGraphic extends Component {
     const logarithmicLowerExtent = 1 / (isDailyFigures ? 10 : 1) / (isCasesFactoredIn || isPerCapitaFigures ? 10 : 1);
 
     const yScaleCap = visiblePlacesData.reduce((memo, d) => {
-      // TODO: factor in date window filtering once we implement it
-      return Math.max.apply(null, [memo].concat(d.dates.map(t => t[yScaleProp])));
+      return Math.max.apply(null, [memo].concat(d.dates.filter(timeRangeFilter).map(t => t[yScaleProp])));
     }, 0);
 
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
@@ -324,16 +320,13 @@ export default class TestingGraphic extends Component {
       yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
     const getUncappedDataCollection = d => d.dates;
     const getDataCollection = d =>
-      getUncappedDataCollection(d).filter(
-        item => item[yScaleProp] <= yScaleCap && item.date >= timeLowerExtent && item.date <= timeUpperExtent
-      );
+      getUncappedDataCollection(d).filter(item => item[yScaleProp] <= yScaleCap && timeRangeFilter(item));
     const generateLinePath = d =>
       line()
         .x(d => xScale(d.date))
         .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
-    const isPlaceYCapped = d => last(getUncappedDataCollection(d))[yScaleProp] > yScaleCap;
-    const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
-    const plotPointTransformGenerator = d => `translate(${xScale(d.date)}, ${safe_yScale(d[yScaleProp])})`;
+    const plotPointTransformGenerator = d =>
+      d ? `translate(${xScale(d.date)}, ${safe_yScale(d[yScaleProp])})` : 'none';
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
     const labelForceClamp = (min, max) => {
       let forceNodes;
@@ -440,13 +433,6 @@ export default class TestingGraphic extends Component {
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isPlaceHighlighted)
       .attr('d', generateLinePath)
-      .attr('stroke-dasharray', function(d) {
-        if (isPlaceYCapped(d)) {
-          setTimeout(setTruncatedLineDashArray, 0, this);
-        }
-
-        return null;
-      })
       .style('stroke-opacity', 0)
       .transition()
       .duration(opacityTransitionDuration)
@@ -455,7 +441,6 @@ export default class TestingGraphic extends Component {
       .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
       .style('stroke-opacity', null)
-      .attr('stroke-dasharray', null)
       .transition()
       .duration(transformTransitionDuration)
       .attrTween('d', function(d) {
@@ -463,10 +448,6 @@ export default class TestingGraphic extends Component {
 
         const previous = select(this);
         const previousPath = previous.empty() ? currentPath : previous.attr('d');
-
-        if (isPlaceYCapped(d)) {
-          setTimeout(setTruncatedLineDashArray, currentPath === previousPath ? 0 : 1000, this); // post transition
-        }
 
         return interpolatePath(previousPath, currentPath);
       });
@@ -489,7 +470,6 @@ export default class TestingGraphic extends Component {
       .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.plotDot, true)
       .classed(styles.highlighted, isPlaceHighlighted)
-      .classed(styles.yCapped, isPlaceYCapped)
       .attr('r', 2)
       .attr('transform', lineEndTransformGenerator)
       .style('fill-opacity', 0)
@@ -501,7 +481,6 @@ export default class TestingGraphic extends Component {
     plotDots // Update
       .attr('data-color', d => getAllocatedColor(d.key))
       .classed(styles.highlighted, isPlaceHighlighted)
-      .classed(styles.yCapped, isPlaceYCapped)
       .style('fill-opacity', null)
       .style('stroke-opacity', null)
       .transition()
