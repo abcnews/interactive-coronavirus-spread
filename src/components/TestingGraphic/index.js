@@ -61,8 +61,10 @@ const COLOR_DIBS = {
   Australia: 'copy'
 };
 export const Y_SCALE_TYPES = ['logarithmic', 'linear'];
-const Y_SCALE_TOTAL_PROPS = ['tests'];
-const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(Y_SCALE_TOTAL_PROPS.map(x => `${x}pmp`));
+const Y_SCALE_TOTAL_PROPS = ['tests', 'testspcc']; // pcc props shouldn't have pmp added
+const Y_SCALE_TOTAL_INCLUDING_PMP_PROPS = Y_SCALE_TOTAL_PROPS.concat(
+  Y_SCALE_TOTAL_PROPS.filter(x => x.indexOf('pcc') === -1).map(x => `${x}pmp`)
+);
 export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
   Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.map(x => `new${x}`)
 );
@@ -158,6 +160,10 @@ export default class TestingGraphic extends Component {
                 ? {
                     ...placeDatesTotals,
                     ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
+                      if (prop.indexOf('pcc') > -1) {
+                        return memo_totals;
+                      }
+
                       memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
 
                       return memo_totals;
@@ -289,9 +295,10 @@ export default class TestingGraphic extends Component {
     const visiblePlacesData = this.placesData.filter(isPlaceVisible);
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
+    const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
-    const logarithmicLowerExtent = isDailyFigures ? (isPerCapitaFigures ? 0.01 : 0.1) : 1;
+    const logarithmicLowerExtent = 1 / (isDailyFigures ? 10 : 1) / (isCasesFactoredIn || isPerCapitaFigures ? 10 : 1);
 
     const yScaleCap = visiblePlacesData.reduce((memo, d) => {
       // TODO: factor in date window filtering once we implement it
@@ -386,19 +393,20 @@ export default class TestingGraphic extends Component {
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        const textWithoutPMP = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
+        const valueText = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
           .replace('new', 'new ')
+          .replace('pcc', '')
           .replace('pmp', '')}`;
-        const pmpText = 'per million people';
-        const text = `${textWithoutPMP}${isPerCapitaFigures ? ` ${pmpText}` : ''}`;
+        const factorText = isPerCapitaFigures ? 'per million people' : isCasesFactoredIn ? 'per confirmed case' : '';
+        const allText = `${valueText}${factorText ? ` ${factorText}` : ''}`;
 
         if (IS_TRIDENT) {
-          selection.text(text);
+          selection.text(allText);
         } else {
           selection.html(
-            isPerCapitaFigures && chartWidth <= 640
-              ? `<tspan x="0" dy="-0.75em">${textWithoutPMP}</tspan><tspan x="0" dy="1.25em">${pmpText}</tspan>`
-              : `<tspan>${text}</tspan>`
+            factorText && chartWidth <= 640
+              ? `<tspan x="0" dy="-0.75em">${valueText}</tspan><tspan x="0" dy="1.25em">${factorText}</tspan>`
+              : `<tspan>${allText}</tspan>`
           );
         }
       });

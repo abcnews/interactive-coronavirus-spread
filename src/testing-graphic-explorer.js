@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from 'react-dom';
 import TestingGraphicExplorer from './components/TestingGraphicExplorer';
-import { fetchPlacesData } from './utils';
+import { fetchPlacesTestingData } from './utils';
 
 export const renderExplorer = placesData => {
   const anchorEl = document.querySelector(`a[name^=testinggraphicexplorer]`);
@@ -17,4 +17,4 @@ const domready = fn => {
   /in/.test(document.readyState) ? setTimeout(() => domready(fn), 9) : fn();
 };
 
-fetchPlacesData(true).then(placesData => domready(() => renderExplorer(placesData)));
+fetchPlacesTestingData().then(placesData => domready(() => renderExplorer(placesData)));

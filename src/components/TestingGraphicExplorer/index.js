@@ -18,8 +18,10 @@ const RADIO_LABELS = {
   linear: 'Linear',
   logarithmic: 'Logarithmic',
   newtests: 'Daily new tests',
+  newtestspcc: 'Daily new tests / confirmed case',
   newtestspmp: 'Daily new tests / million people',
   tests: 'Cumulative tests',
+  testspcc: 'Cumulative tests / confirmed case',
   testspmp: 'Cumulative tests / million people'
 };
 

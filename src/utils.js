@@ -5,7 +5,7 @@ import { render } from 'react-dom';
 import CasesGraphic from './components/CasesGraphic';
 import InlineGraphic from './components/InlineGraphic';
 import TestingGraphic from './components/TestingGraphic';
-import { OTHER_PLACES, PLACES_DATA_URL, PRESETS, SHIPS } from './constants';
+import { OTHER_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, PRESETS, SHIPS } from './constants';
 import COUNTRIES_POPULATIONS from './population';
 
 export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
@@ -34,7 +34,39 @@ const PLACE_NAME_REPLACEMENTS = [
   [/^West\s/, 'W. ']
 ];
 
-export const fetchPlacesData = shouldMockTestsData =>
+export const fetchPlacesTestingData = () => {
+  return Promise.all([fetch(PLACES_TESTING_DATA_URL).then(response => response.json()), fetchPlacesData()]).then(
+    results => {
+      const [data, supplementaryData] = results;
+
+      Object.keys(data).forEach(place => {
+        const supplementaryDataPlace = supplementaryData[place];
+
+        Object.keys(data[place]).forEach(date => {
+          const tests = data[place][date];
+          const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
+          const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
+
+          data[place][date] = {
+            tests,
+            cases,
+            testspcc: cases ? tests / cases : 0
+          };
+        });
+
+        data[place] = {
+          type: supplementaryDataPlace.type,
+          population: supplementaryDataPlace.population,
+          dates: data[place]
+        };
+      });
+
+      return Promise.resolve(data);
+    }
+  );
+};
+
+export const fetchPlacesData = () =>
   fetch(PLACES_DATA_URL)
     .then(response => response.json())
     .then(data => {
@@ -66,15 +98,11 @@ export const fetchPlacesData = shouldMockTestsData =>
             return;
           }
 
-          data[place][date] = shouldMockTestsData // TODO: make this real data, not a hack
-            ? {
-                tests: (data[place][date].cases || 0) * 20
-              }
-            : {
-                cases: data[place][date].cases || 0,
-                deaths: data[place][date].deaths || 0,
-                recoveries: data[place][date].recoveries || data[place][date].recovered || 0
-              };
+          data[place][date] = {
+            cases: data[place][date].cases || 0,
+            deaths: data[place][date].deaths || 0,
+            recoveries: data[place][date].recoveries || data[place][date].recovered || 0
+          };
         });
 
         data[place] = {
