@@ -3,9 +3,10 @@ import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
 import App from './components/App';
-import { fetchPlacesData, renderCasesGraphics } from './utils';
+import { fetchPlacesData, fetchPlacesTestingData, renderCasesGraphics, renderTestingGraphics } from './utils';
 
 const whenPlacesDataFetched = fetchPlacesData();
+const whenPlacesTestingDataFetched = fetchPlacesTestingData();
 const whenOdysseyLoaded = new Promise(resolve =>
   window.__ODYSSEY__
     ? resolve(window.__ODYSSEY__)
@@ -41,8 +42,9 @@ const whenScrollytellersLoaded = new Promise((resolve, reject) =>
   })
 );
 
-function renderAll(scrollyDatas, placesData) {
+function renderAll(scrollyDatas, placesData, placesTestingData) {
   renderCasesGraphics(placesData);
+  renderTestingGraphics(placesTestingData);
   scrollyDatas.forEach(scrollyData =>
     render(<App scrollyData={scrollyData} placesData={placesData} />, scrollyData.mountNode)
   );
@@ -50,6 +52,6 @@ function renderAll(scrollyDatas, placesData) {
 
 document.documentElement.style.setProperty('--bg', '#f3fcfc');
 
-Promise.all([whenScrollytellersLoaded, whenPlacesDataFetched])
+Promise.all([whenScrollytellersLoaded, whenPlacesDataFetched, whenPlacesTestingDataFetched])
   .then(results => renderAll.apply(null, results))
   .catch(console.error);
