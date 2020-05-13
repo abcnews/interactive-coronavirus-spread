@@ -204,6 +204,14 @@ export default ({ placesData }) => {
           </summary>
           <pre>{testingGraphicPropsJSON}</pre>
         </details>
+        <p>
+          <a
+            href={`https://fallback-automation.drzax.now.sh/api?url=${document.location.href}&selector=%5Bdata-preset%5D&width=600`}
+            download="fallback.png"
+          >
+            Download Fallback Image
+          </a>
+        </p>
         <hr />
         <div>
           <label>
