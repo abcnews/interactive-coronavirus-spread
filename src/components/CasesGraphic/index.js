@@ -214,6 +214,8 @@ function setTruncatedLineDashArray(node) {
   node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
 }
 
+let nextIDIndex = 0;
+
 export default class CasesGraphic extends Component {
   constructor(props) {
     super(props);
@@ -222,8 +224,12 @@ export default class CasesGraphic extends Component {
 
     checkScaleTypes(xScaleType, yScaleType);
 
+    this.idIndex = nextIDIndex++;
+
     this.rootRef = createRef();
     this.svgRef = createRef();
+    this.titleRef = createRef();
+    this.descRef = createRef();
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
@@ -406,6 +412,8 @@ export default class CasesGraphic extends Component {
       highlightedTrends = false;
     }
 
+    const xScaleProp = xScaleType === 'dates' ? 'date' : 'day';
+
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
@@ -446,11 +454,17 @@ export default class CasesGraphic extends Component {
     // * Itself, and
     // * The largest dataAs[xScaleType]#yScaleProp value
 
+    const xAxisLabel =
+      xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';
+    const yAxisLabel = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
+      .replace('new', 'new ')
+      .replace('pmp', ' per million people')} since ${
+      UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]
+    }`;
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const xScaleProp = xScaleType === 'dates' ? 'date' : 'day';
     const xScale = (xScaleType === 'dates'
       ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
       : scaleLinear().domain([0, cappedNumDays])
@@ -533,21 +547,28 @@ export default class CasesGraphic extends Component {
       .attr('width', width)
       .attr('height', height);
 
-    // Rendering > 2: Add/update x-axis
+    // Rendering > 2: Update accessible title and description
+    this.titleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    this.descRef.current.textContent = visiblePlacesData.length
+      ? `A time-based line chart, plotting ${visiblePlacesData
+          .map(x => x.key.replace(/,/g, ''))
+          .join(', ')
+          .replace(/,(?!.*,)/gim, ' and')} by ${xAxisLabel}.`
+      : '';
+
+    // Rendering > 3: Add/update x-axis
     svg
       .select(`.${styles.xAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top + chartHeight})`)
       .call(xAxisGenerator);
 
-    // Rendering > 3: Update x-axis label
+    // Rendering > 4: Update x-axis label
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text(
-        xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date'
-      );
+      .text(xAxisLabel);
 
-    // Rendering > 4: Add/update y-axis
+    // Rendering > 5: Add/update y-axis
     svg
       .select(`.${styles.yAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -555,21 +576,17 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGenerator);
 
-    // Rendering > 5. Update y-axis label
+    // Rendering > 6. Update y-axis label
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        const words = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
-          .replace('new', 'new ')
-          .replace('pmp', ' per million people')} since ${
-          UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]
-        }`.split(' ');
-        const halfWordsIndex = Math.floor(words.length / 2);
-
         if (IS_TRIDENT) {
-          selection.text(words.join(' '));
+          selection.text(yAxisLabel);
         } else {
+          const words = yAxisLabel.split(' ');
+          const halfWordsIndex = Math.floor(words.length / 2);
+
           selection.html(
             `<tspan x="0" dy="-0.75em">${words
               .slice(0, halfWordsIndex)
@@ -580,7 +597,7 @@ export default class CasesGraphic extends Component {
         }
       });
 
-    // Rendering > 6. Add/Update y-axis gridlines
+    // Rendering > 7. Add/Update y-axis gridlines
     svg
       .select(`.${styles.yAxisGridlines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -588,7 +605,7 @@ export default class CasesGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
-    // Rendering > 7. Add/remove/update trend lines
+    // Rendering > 8. Add/remove/update trend lines
     const trendLines = svg // Bind
       .select(`.${styles.trendLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -625,7 +642,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 8. Add/remove/update plot lines
+    // Rendering > 9. Add/remove/update plot lines
     const plotLines = svg // Bind
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -675,7 +692,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 9. Add/remove/update plot dots (at ends of lines)
+    // Rendering > 10. Add/remove/update plot dots (at ends of lines)
     const plotDots = svg // Bind
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -713,7 +730,7 @@ export default class CasesGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 10. Add/remove/update trend labels (near ends of lines)
+    // Rendering > 11. Add/remove/update trend labels (near ends of lines)
     const trendLabelForceNodes = visibleTrendsData.map((d, i) => {
       const dataCollection = getDataCollection(d);
       return {
@@ -794,7 +811,7 @@ export default class CasesGraphic extends Component {
       .style('fill-opacity', 0)
       .remove();
 
-    // Rendering > 11. Add/remove/update plot labels (near ends of lines)
+    // Rendering > 12. Add/remove/update plot labels (near ends of lines)
     const labelledPlacesData = visiblePlacesData.filter(
       d =>
         isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
@@ -866,9 +883,15 @@ export default class CasesGraphic extends Component {
   }
 
   render() {
+    const svgID = `CasesGraphic${this.idIndex}SVG`;
+    const titleID = `CasesGraphic${this.idIndex}Title`;
+    const descID = `CasesGraphic${this.idIndex}Desc`;
+
     return (
       <div ref={this.rootRef} className={styles.root}>
-        <svg ref={this.svgRef} className={styles.svg}>
+        <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
+          <title ref={this.titleRef} id={titleID} />
+          <desc ref={this.descRef} id={descID} />
           <g className={styles.yAxisGridlines} />
           <g className={styles.trendLines} />
           <g className={styles.plotLines} />

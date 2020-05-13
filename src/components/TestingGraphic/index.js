@@ -128,6 +128,8 @@ function generateColorAllocator(placesData) {
   };
 }
 
+let nextIDIndex = 0;
+
 export default class TestingGraphic extends Component {
   constructor(props) {
     super(props);
@@ -136,8 +138,12 @@ export default class TestingGraphic extends Component {
 
     checkScaleTypes(yScaleType);
 
+    this.idIndex = nextIDIndex++;
+
     this.rootRef = createRef();
     this.svgRef = createRef();
+    this.titleRef = createRef();
+    this.descRef = createRef();
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
@@ -305,6 +311,14 @@ export default class TestingGraphic extends Component {
       return Math.max.apply(null, [memo].concat(d.dates.filter(timeRangeFilter).map(t => t[yScaleProp])));
     }, 0);
 
+    const xAxisLabel = 'Date';
+    const yAxisLabelValue = `${isDailyFigures ? 'Daily' : 'Cumulative'} ${yScaleProp
+      .replace('new', 'new ')
+      .replace('pcc', '')
+      .replace('pmp', '')}`;
+    const yAxisLabelFactor = isPerCapitaFigures ? 'per million people' : isCasesFactoredIn ? 'per confirmed case' : '';
+    const yAxisLabel = `${yAxisLabelValue}${yAxisLabelFactor ? ` ${yAxisLabelFactor}` : ''}`;
+
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
@@ -369,19 +383,28 @@ export default class TestingGraphic extends Component {
       .attr('width', width)
       .attr('height', height);
 
-    // Rendering > 2: Add/update x-axis
+    // Rendering > 2: Update accessible title and description
+    this.titleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    this.descRef.current.textContent = visiblePlacesData.length
+      ? `A time-based line chart, plotting ${visiblePlacesData
+          .map(x => x.key.replace(/,/g, ''))
+          .join(', ')
+          .replace(/,(?!.*,)/gim, ' and')} by ${xAxisLabel}.`
+      : '';
+
+    // Rendering > 3: Add/update x-axis
     svg
       .select(`.${styles.xAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top + chartHeight})`)
       .call(xAxisGenerator);
 
-    // Rendering > 3: Update x-axis label
+    // Rendering > 4: Update x-axis label
     svg
       .select(`.${styles.xAxisLabel}`)
       .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
-      .text('Date');
+      .text(xAxisLabel);
 
-    // Rendering > 4: Add/update y-axis
+    // Rendering > 5: Add/update y-axis
     svg
       .select(`.${styles.yAxis}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -389,30 +412,23 @@ export default class TestingGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGenerator);
 
-    // Rendering > 5. Update y-axis label
+    // Rendering > 6. Update y-axis label
     svg
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        const valueText = `${isDailyFigures ? 'Daily' : 'Cumulative'} ${yScaleProp
-          .replace('new', 'new ')
-          .replace('pcc', '')
-          .replace('pmp', '')}`;
-        const factorText = isPerCapitaFigures ? 'per million people' : isCasesFactoredIn ? 'per confirmed case' : '';
-        const allText = `${valueText}${factorText ? ` ${factorText}` : ''}`;
-
         if (IS_TRIDENT) {
-          selection.text(allText);
+          selection.text(yAxisLabel);
         } else {
           selection.html(
-            factorText && chartWidth <= 640
-              ? `<tspan x="0" dy="-0.75em">${valueText}</tspan><tspan x="0" dy="1.25em">${factorText}</tspan>`
-              : `<tspan>${allText}</tspan>`
+            yAxisLabelFactor && chartWidth <= 640
+              ? `<tspan x="0" dy="-0.75em">${yAxisLabelValue}</tspan><tspan x="0" dy="1.25em">${yAxisLabelFactor}</tspan>`
+              : `<tspan>${yAxisLabel}</tspan>`
           );
         }
       });
 
-    // Rendering > 6. Add/Update y-axis gridlines
+    // Rendering > 7. Add/Update y-axis gridlines
     svg
       .select(`.${styles.yAxisGridlines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -420,7 +436,7 @@ export default class TestingGraphic extends Component {
       .duration(transformTransitionDuration)
       .call(yAxisGridlinesGenerator);
 
-    // Rendering > 7. Add/remove/update plot lines
+    // Rendering > 8. Add/remove/update plot lines
     const plotLines = svg // Bind
       .select(`.${styles.plotLines}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -458,7 +474,7 @@ export default class TestingGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 8. Add/remove/update plot dots (at ends of lines)
+    // Rendering > 9. Add/remove/update plot dots (at ends of lines)
     const plotDots = svg // Bind
       .select(`.${styles.plotDots}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
@@ -494,7 +510,7 @@ export default class TestingGraphic extends Component {
       .style('stroke-opacity', 0)
       .remove();
 
-    // Rendering > 9. Add/remove/update plot labels (near ends of lines)
+    // Rendering > 10. Add/remove/update plot labels (near ends of lines)
     const labelledPlacesData = visiblePlacesData.filter(
       d =>
         isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
@@ -564,9 +580,15 @@ export default class TestingGraphic extends Component {
   }
 
   render() {
+    const svgID = `TestingGraphic${this.idIndex}SVG`;
+    const titleID = `TestingGraphic${this.idIndex}Title`;
+    const descID = `TestingGraphic${this.idIndex}Desc`;
+
     return (
       <div ref={this.rootRef} className={styles.root}>
-        <svg ref={this.svgRef} className={styles.svg}>
+        <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
+          <title ref={this.titleRef} id={titleID} />
+          <desc ref={this.descRef} id={descID} />
           <g className={styles.yAxisGridlines} />
           <g className={styles.plotLines} />
           <g className={styles.plotDots} />
