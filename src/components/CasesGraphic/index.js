@@ -731,14 +731,16 @@ export default class CasesGraphic extends Component {
       .remove();
 
     // Rendering > 11. Add/remove/update trend labels (near ends of lines)
-    const trendLabelForceNodes = visibleTrendsData.map((d, i) => {
-      const dataCollection = getDataCollection(d);
-      return {
-        fx: 0,
-        // targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
-        targetY: safe_yScale(dataCollection[dataCollection.length - (i > 0 ? 4 : 2)][yScaleProp])
-      };
-    });
+    const trendLabelForceNodes = visiblePlacesData.length
+      ? visibleTrendsData.map((d, i) => {
+          const dataCollection = getDataCollection(d);
+          return {
+            fx: 0,
+            // targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
+            targetY: safe_yScale(dataCollection[dataCollection.length - (i > 0 ? 4 : 2)][yScaleProp])
+          };
+        })
+      : [];
     const trendLabelsForceSimulation = forceSimulation()
       .nodes(trendLabelForceNodes)
       .force('collide', forceCollide(PLOT_LABEL_HEIGHT * 2))
@@ -748,18 +750,20 @@ export default class CasesGraphic extends Component {
     for (let i = 0; i < 300; i++) {
       trendLabelsForceSimulation.tick();
     }
-    const trendLabelsData = visibleTrendsData.map((d, i) => ({
-      key: d.key,
-      text: `${i === 0 ? `Number of cases ` : '...'}doubles every ${d.key}`,
-      html: `<tspan>${
-        i === 0
-          ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
-          : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
-      }every ${d.key}</tspan>`,
-      doublingTimePeriods: d.doublingTimePeriods,
-      x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
-      y: trendLabelForceNodes[i].y
-    }));
+    const trendLabelsData = visiblePlacesData.length
+      ? visibleTrendsData.map((d, i) => ({
+          key: d.key,
+          text: `${i === 0 ? `Number of cases ` : '...'}doubles every ${d.key}`,
+          html: `<tspan>${
+            i === 0
+              ? `Number of</tspan><tspan x="0" dx="-0.33em" dy="1em">cases doubles</tspan><tspan x="0" dx="-0.67em" dy="1em">`
+              : '...doubles</tspan><tspan x="0" dx="-0.33em" dy="1em">'
+          }every ${d.key}</tspan>`,
+          doublingTimePeriods: d.doublingTimePeriods,
+          x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
+          y: trendLabelForceNodes[i].y
+        }))
+      : [];
     const trendLabels = svg // Bind
       .select(`.${styles.trendLabels}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
