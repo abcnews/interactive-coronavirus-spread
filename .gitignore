@@ -4,6 +4,7 @@
 # output
 /.build
 /.deploy
+/redirect/index.js
 
 # misc
 .DS_Store
