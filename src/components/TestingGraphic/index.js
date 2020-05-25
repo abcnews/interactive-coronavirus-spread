@@ -142,8 +142,8 @@ export default class TestingGraphic extends Component {
 
     this.rootRef = createRef();
     this.svgRef = createRef();
-    this.titleRef = createRef();
-    this.descRef = createRef();
+    this.svgTitleRef = createRef();
+    this.svgDescRef = createRef();
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
@@ -384,8 +384,8 @@ export default class TestingGraphic extends Component {
       .attr('height', height);
 
     // Rendering > 2: Update accessible title and description
-    this.titleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
-    this.descRef.current.textContent = visiblePlacesData.length
+    this.svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    this.svgDescRef.current.textContent = visiblePlacesData.length
       ? `A time-based line chart, plotting ${visiblePlacesData
           .map(x => x.key.replace(/,/g, ''))
           .join(', ')
@@ -587,8 +587,8 @@ export default class TestingGraphic extends Component {
     return (
       <div ref={this.rootRef} className={styles.root}>
         <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
-          <title ref={this.titleRef} id={titleID} />
-          <desc ref={this.descRef} id={descID} />
+          <title ref={this.svgTitleRef} id={titleID} />
+          <desc ref={this.svgDescRef} id={descID} />
           <g className={styles.yAxisGridlines} />
           <g className={styles.plotLines} />
           <g className={styles.plotDots} />

@@ -1,4 +1,6 @@
+import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
+import Textfield from '@atlaskit/textfield';
 import React, { useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
@@ -75,6 +77,8 @@ const decodeEncodedUrlParam = () => {
 export default ({ placesData }) => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
+  const [title, setTitle] = useState(initialProps.title);
+  const [hasFootnotes, setHasFootnotes] = useState(initialProps.hasFootnotes);
   const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
@@ -87,6 +91,8 @@ export default ({ placesData }) => {
 
   const casesGraphicProps = {
     ...initialProps,
+    title,
+    hasFootnotes,
     xScaleType,
     yScaleType,
     yScaleProp,
@@ -125,6 +131,20 @@ export default ({ placesData }) => {
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
+        <div key="title">
+          <label>Chart Title</label>
+          <Textfield name="title" value={title} onChange={event => setTitle(event.currentTarget.value)} />
+        </div>
+        <div key="hasfootnotes">
+          <label>Footnotes</label>
+          <Checkbox
+            name="hasfootnotes"
+            label="Show data sources &amp; story link"
+            value="Show data sources &amp; story link"
+            isChecked={hasFootnotes}
+            onChange={event => setHasFootnotes(event.target.checked)}
+          />
+        </div>
         <div key="highlightedplaces">
           <label>
             Highlighted Places{' '}
@@ -214,7 +234,6 @@ export default ({ placesData }) => {
             />
           </div>
         )}
-
         <div key="xscaletype">
           <label>X-axis</label>
           <RadioGroup

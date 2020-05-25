@@ -85,6 +85,8 @@ const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
 };
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
+  title: null,
+  hasFootnotes: false,
   xScaleType: X_SCALE_TYPES[0],
   yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
@@ -96,6 +98,7 @@ export const DEFAULT_PROPS = {
   highlightedTrends: false
 };
 const KEYING_FN = d => d.key;
+const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, ABC</a></small>`;
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
@@ -227,9 +230,11 @@ export default class CasesGraphic extends Component {
     this.idIndex = nextIDIndex++;
 
     this.rootRef = createRef();
-    this.svgRef = createRef();
     this.titleRef = createRef();
-    this.descRef = createRef();
+    this.svgRef = createRef();
+    this.svgTitleRef = createRef();
+    this.svgDescRef = createRef();
+    this.footnotesRef = createRef();
 
     this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
     this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
@@ -346,8 +351,10 @@ export default class CasesGraphic extends Component {
     }
 
     const { width, height } = this.rootRef.current.getBoundingClientRect();
+    const titleRect = this.titleRef.current.getBoundingClientRect();
+    const footnotesRect = this.footnotesRef.current.getBoundingClientRect();
 
-    this.setState({ width, height });
+    this.setState({ width, height: height - (titleRect.height + footnotesRect.height) });
   }
 
   nonOdysseyMeasureAndSetDimensions() {
@@ -369,6 +376,8 @@ export default class CasesGraphic extends Component {
     const prevState = this.state;
 
     let {
+      title,
+      hasFootnotes,
       places,
       yScaleCap,
       xScaleDaysCap,
@@ -389,6 +398,10 @@ export default class CasesGraphic extends Component {
 
     if (preset === prevProps.preset && !wasResize) {
       return false;
+    }
+
+    if (title !== prevProps.title || hasFootnotes !== prevProps.hasFootnotes) {
+      setTimeout(() => this.measureAndSetDimensions());
     }
 
     this.rootRef.current.setAttribute('data-preset', preset);
@@ -547,14 +560,16 @@ export default class CasesGraphic extends Component {
       .attr('width', width)
       .attr('height', height);
 
-    // Rendering > 2: Update accessible title and description
-    this.titleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
-    this.descRef.current.textContent = visiblePlacesData.length
+    // Rendering > 2: Update accessible titles, description & footnotes
+    this.titleRef.current.textContent = title || '';
+    this.svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    this.svgDescRef.current.textContent = visiblePlacesData.length
       ? `A time-based line chart, plotting ${visiblePlacesData
           .map(x => x.key.replace(/,/g, ''))
           .join(', ')
           .replace(/,(?!.*,)/gim, ' and')} by ${xAxisLabel}.`
       : '';
+    this.footnotesRef.current.innerHTML = hasFootnotes ? FOOTNOTES_MARKUP : '';
 
     // Rendering > 3: Add/update x-axis
     svg
@@ -887,15 +902,19 @@ export default class CasesGraphic extends Component {
   }
 
   render() {
+    const { title, hasFootnotes } = this.props;
     const svgID = `CasesGraphic${this.idIndex}SVG`;
     const titleID = `CasesGraphic${this.idIndex}Title`;
     const descID = `CasesGraphic${this.idIndex}Desc`;
 
     return (
       <div ref={this.rootRef} className={styles.root}>
+        <h3 ref={this.titleRef} className={styles.title}>
+          {title || ''}
+        </h3>
         <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
-          <title ref={this.titleRef} id={titleID} />
-          <desc ref={this.descRef} id={descID} />
+          <title ref={this.svgTitleRef} id={titleID} />
+          <desc ref={this.svgDescRef} id={descID} />
           <g className={styles.yAxisGridlines} />
           <g className={styles.trendLines} />
           <g className={styles.plotLines} />
@@ -907,6 +926,9 @@ export default class CasesGraphic extends Component {
           <g className={styles.trendLabels} />
           <g className={styles.plotLabels} />
         </svg>
+        <p ref={this.footnotesRef} className={styles.footnotes}>
+          {hasFootnotes ? FOOTNOTES_MARKUP : ''}
+        </p>
       </div>
     );
   }

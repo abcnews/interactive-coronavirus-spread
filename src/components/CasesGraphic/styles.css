@@ -16,6 +16,43 @@
   height: 100%;
 }
 
+.title:empty,
+.footnotes:empty {
+  display: none;
+}
+
+.title {
+  margin: 0 !important;
+  padding: 0 0 1.5rem !important;
+  color: #5c6c70;
+  font-family: 'ABCSans', sans-serif;
+  font-size: 1.125rem;
+  font-weight: bold;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.footnotes {
+  margin: 0 !important;
+  padding: 0.75rem 0 0 !important;
+  font-family: 'ABCSans', sans-serif;
+  text-align: center;
+}
+
+.footnotes a,
+.footnotes a:visited {
+  color: #0058cc;
+  text-decoration: none;
+}
+
+.footnotes a:hover {
+  text-decoration: underline;
+}
+
+.footnotes small {
+  font-size: 0.6875rem;
+}
+
 @keyframes enter {
   from {
     opacity: 0;
