@@ -32,6 +32,7 @@ module.exports = {
       );
 
       return {
+        ...config,
         from: 'redirect',
         to: '/www/res/sites/news-projects/<name>/latest'
       };
