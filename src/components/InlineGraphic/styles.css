@@ -5,8 +5,12 @@
   height: 0;
 }
 
+[data-component='LegacyWysiwyg'] .root {
+  margin: 0;
+}
+
 @media (min-width: 40rem) {
   .root {
-    padding-bottom: 75%;
+    padding-bottom: 100%;
   }
 }
