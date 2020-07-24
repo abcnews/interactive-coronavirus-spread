@@ -1,16 +1,17 @@
+import { ensureBlockMount, exactMountSelector } from '@abcnews/mount-utils';
 import React from 'react';
 import { render } from 'react-dom';
 import TestingGraphicExplorer from './components/TestingGraphicExplorer';
 import { fetchPlacesTestingData } from './utils';
 
 export const renderExplorer = placesData => {
-  const anchorEl = document.querySelector(`a[name^=testinggraphicexplorer]`);
-  const mountEl = document.createElement('div');
+  const mountEl = document.querySelector(exactMountSelector('testinggraphicexplorer'));
 
-  anchorEl.parentElement.insertBefore(mountEl, anchorEl);
-  anchorEl.parentElement.removeChild(anchorEl);
+  if (!mountEl) {
+    return;
+  }
 
-  render(<TestingGraphicExplorer placesData={placesData} />, mountEl);
+  render(<TestingGraphicExplorer placesData={placesData} />, ensureBlockMount(mountEl));
 };
 
 const domready = fn => {

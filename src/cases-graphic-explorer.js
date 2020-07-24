@@ -1,16 +1,17 @@
+import { ensureBlockMount, exactMountSelector } from '@abcnews/mount-utils';
 import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphicExplorer from './components/CasesGraphicExplorer';
 import { fetchPlacesData } from './utils';
 
 export const renderExplorer = placesData => {
-  const anchorEl = document.querySelector(`a[name^=casesgraphicexplorer]`);
-  const mountEl = document.createElement('div');
+  const mountEl = document.querySelector(exactMountSelector('casesgraphicexplorer'));
 
-  anchorEl.parentElement.insertBefore(mountEl, anchorEl);
-  anchorEl.parentElement.removeChild(anchorEl);
+  if (!mountEl) {
+    return;
+  }
 
-  render(<CasesGraphicExplorer placesData={placesData} />, mountEl);
+  render(<CasesGraphicExplorer placesData={placesData} />, ensureBlockMount(mountEl));
 };
 
 const domready = fn => {

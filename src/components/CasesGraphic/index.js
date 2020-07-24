@@ -350,6 +350,10 @@ export default class CasesGraphic extends Component {
       return;
     }
 
+    if (!this.rootRef.current) {
+      return;
+    }
+
     const { width, height } = this.rootRef.current.getBoundingClientRect();
     const titleRect = this.titleRef.current.getBoundingClientRect();
     const footnotesRect = this.footnotesRef.current.getBoundingClientRect();

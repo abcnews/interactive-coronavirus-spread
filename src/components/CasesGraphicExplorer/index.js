@@ -133,7 +133,7 @@ export default ({ placesData }) => {
       <div className={styles.controls}>
         <div key="title">
           <label>Chart Title</label>
-          <Textfield name="title" value={title} onChange={event => setTitle(event.currentTarget.value)} />
+          <Textfield name="title" value={title || ''} onChange={event => setTitle(event.currentTarget.value)} />
         </div>
         <div key="hasfootnotes">
           <label>Footnotes</label>

@@ -1,4 +1,5 @@
-import * as a2o from '@abcnews/alternating-case-to-object';
+import * as acto from '@abcnews/alternating-case-to-object';
+import { getTrailingMountValue, isMount, prefixedMountSelector } from '@abcnews/mount-utils';
 import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
@@ -14,8 +15,8 @@ const whenOdysseyLoaded = new Promise(resolve =>
 );
 const whenScrollytellersLoaded = new Promise((resolve, reject) =>
   whenOdysseyLoaded.then(odyssey => {
-    const scrollyNames = [...document.querySelectorAll(`[name^="scrollyteller"]`)].map(
-      el => a2o(el.getAttribute('name')).name
+    const scrollyNames = [...document.querySelectorAll(prefixedMountSelector('scrollytellerNAME'))].map(
+      mountEl => acto(getTrailingMountValue(mountEl, 'scrollyteller')).name
     );
     const scrollyDatas = [];
 
@@ -30,7 +31,7 @@ const whenScrollytellersLoaded = new Promise((resolve, reject) =>
 
       // Keep the DOM tidy.
       if (scrollyData && scrollyData.mountNode) {
-        while (scrollyData.mountNode.nextElementSibling.tagName === 'A') {
+        while (isMount(scrollyData.mountNode.nextElementSibling)) {
           odyssey.utils.dom.detach(scrollyData.mountNode.nextElementSibling);
         }
       }

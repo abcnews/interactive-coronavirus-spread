@@ -7,7 +7,7 @@ import DoublingGraphic from '../DoublingGraphic';
 import Placeholder from '../TestComponent';
 import styles from './styles.css';
 
-export default ({ scrollyData, placesData }) => {
+const App = ({ scrollyData, placesData }) => {
   const [preset, setPreset] = useState('initial');
   let maxDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
 
@@ -44,3 +44,7 @@ export default ({ scrollyData, placesData }) => {
     </Scrollyteller>
   );
 };
+
+App.displayName = 'App';
+
+export default App;

@@ -17,13 +17,14 @@
 		"test": "aunty test"
 	},
 	"devDependencies": {
-		"@abcnews/aunty": "^10.9.1",
+		"@abcnews/aunty": "^10.9.5",
 		"react-test-renderer": "^16.13.0"
 	},
 	"dependencies": {
 		"@abcnews/alternating-case-to-object": "^2.0.0",
 		"@abcnews/base-36-props": "^1.0.1",
-		"@abcnews/scrollyteller": "^2.2.1",
+		"@abcnews/mount-utils": "^1.0.0",
+		"@abcnews/scrollyteller": "^3.0.1",
 		"@atlaskit/checkbox": "^10.1.12",
 		"@atlaskit/radio": "^3.2.0",
 		"@atlaskit/textfield": "^3.1.11",
@@ -32,8 +33,8 @@
 		"d3-force-reuse": "^1.0.1",
 		"d3-interpolate-path": "^2.1.2",
 		"d3-selection": "^1.4.1",
-		"react": "^16.13.0",
-		"react-dom": "^16.13.0",
+		"react": "^16.13.1",
+		"react-dom": "^16.13.1",
 		"react-reveal": "^1.2.2",
 		"react-select": "^3.1.0",
 		"styled-components": "^5.0.1"

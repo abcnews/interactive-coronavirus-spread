@@ -1,4 +1,11 @@
-import * as a2o from '@abcnews/alternating-case-to-object';
+import {
+  ensureBlockMount,
+  exactMountSelector,
+  getMountValue,
+  getTrailingMountValue,
+  prefixedMountSelector
+} from '@abcnews/mount-utils';
+import * as acto from '@abcnews/alternating-case-to-object';
 import { decode, encode } from '@abcnews/base-36-props';
 import React from 'react';
 import { render } from 'react-dom';
@@ -20,6 +27,8 @@ export const decodeVersionedProps = encoded => {
   return decoded;
 };
 
+const CASES_GRAPHIC_MOUNT_PREFIX = 'casesgraphic';
+const TESTING_GRAPHIC_MOUNT_PREFIX = 'testinggraphic';
 const PLACE_NAME_REPLACEMENTS = [
   [/^([A-Z])\w+\s([A-Z])\w+\s([A-Z])\w+$/, '$1$2$3'],
   [/\sand(\sthe)?\s/, ' & '],
@@ -142,84 +151,70 @@ export const updateLegacyProps = props => {
   return props;
 };
 
-export const renderCasesGraphics = placesData =>
-  [...document.querySelectorAll(`a[id^=casesgraphic],a[name^=casesgraphic]`)].map(anchorEl => {
-    const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
-    const mountEl = document.createElement('div');
+const prepareMountAndResolveProps = (mountEl, props) => {
+  const presetProp = props.encoded || props.preset;
 
-    mountEl.className = 'u-pull';
-
-    Object.keys(props).forEach(propName => (mountEl.dataset[propName] = props[propName]));
-    anchorEl.parentElement.insertBefore(mountEl, anchorEl);
-    anchorEl.parentElement.removeChild(anchorEl);
-
-    const casesGraphicPresetProp = props.encoded || props.preset;
-
-    // Look for longform encoded props elsewhere (assuming only a hint is currently used)
-    if (props.encoded) {
-      const longformAnchorEl = document.querySelector(`a[id^="${props.encoded}"],a[name^="${props.encoded}"]`);
-
-      if (longformAnchorEl) {
-        props.encoded = longformAnchorEl.getAttribute('id') || longformAnchorEl.getAttribute('name');
-      }
-    }
-
-    const casesGraphicOtherProps = updateLegacyProps(
-      props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
-    );
-
-    render(
-      <InlineGraphic>
-        {casesGraphicOtherProps && (
-          <CasesGraphic
-            preset={casesGraphicPresetProp}
-            placesData={placesData}
-            maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
-            {...casesGraphicOtherProps}
-          />
-        )}
-      </InlineGraphic>,
-      mountEl
-    );
+  mountEl.className = 'u-pull';
+  Object.keys(props).forEach(propName => {
+    mountEl.dataset[propName] = props[propName];
   });
+
+  // Look for longform encoded props elsewhere (assuming only a hint is currently used)
+  if (props.encoded) {
+    const longformMountEl = document.querySelector(prefixedMountSelector(props.encoded));
+
+    if (longformMountEl) {
+      props.encoded = getMountValue(longformMountEl);
+    }
+  }
+
+  const otherProps = updateLegacyProps(
+    props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
+  );
+
+  return [presetProp, otherProps];
+};
+
+export const renderCasesGraphics = placesData =>
+  [...document.querySelectorAll(prefixedMountSelector(CASES_GRAPHIC_MOUNT_PREFIX))]
+    .map(ensureBlockMount)
+    .map(mountEl => {
+      const props = acto(getTrailingMountValue(mountEl, CASES_GRAPHIC_MOUNT_PREFIX));
+      const [presetProp, otherProps] = prepareMountAndResolveProps(mountEl, props);
+
+      render(
+        <InlineGraphic>
+          {otherProps && (
+            <CasesGraphic
+              preset={presetProp}
+              placesData={placesData}
+              maxDate={getInclusiveDateFromYYYYMMDD(props.maxdate)}
+              {...otherProps}
+            />
+          )}
+        </InlineGraphic>,
+        mountEl
+      );
+    });
 
 export const renderTestingGraphics = placesData =>
-  [...document.querySelectorAll(`a[id^=testinggraphic],a[name^=testinggraphic]`)].map(anchorEl => {
-    const props = a2o(anchorEl.getAttribute('id') || anchorEl.getAttribute('name'));
-    const mountEl = document.createElement('div');
+  [...document.querySelectorAll(prefixedMountSelector(TESTING_GRAPHIC_MOUNT_PREFIX))]
+    .map(ensureBlockMount)
+    .map(mountEl => {
+      const props = acto(getTrailingMountValue(mountEl, TESTING_GRAPHIC_MOUNT_PREFIX));
+      const [presetProp, otherProps] = prepareMountAndResolveProps(mountEl, props);
 
-    mountEl.className = 'u-pull';
-
-    Object.keys(props).forEach(propName => (mountEl.dataset[propName] = props[propName]));
-    anchorEl.parentElement.insertBefore(mountEl, anchorEl);
-    anchorEl.parentElement.removeChild(anchorEl);
-
-    const testingGraphicPresetProp = props.encoded || props.preset;
-
-    // Look for longform encoded props elsewhere (assuming only a hint is currently used)
-    if (props.encoded) {
-      const longformAnchorEl = document.querySelector(`a[id^="${props.encoded}"],a[name^="${props.encoded}"]`);
-
-      if (longformAnchorEl) {
-        props.encoded = longformAnchorEl.getAttribute('id') || longformAnchorEl.getAttribute('name');
-      }
-    }
-
-    const testingGraphicOtherProps = updateLegacyProps(
-      props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
-    );
-
-    render(
-      <InlineGraphic>
-        {testingGraphicOtherProps && (
-          <TestingGraphic
-            preset={testingGraphicPresetProp}
-            placesData={placesData}
-            maxDate={getInclusiveDateFromYYYYMMDD(mountEl.dataset.maxdate)}
-            {...testingGraphicOtherProps}
-          />
-        )}
-      </InlineGraphic>,
-      mountEl
-    );
-  });
+      render(
+        <InlineGraphic>
+          {otherProps && (
+            <TestingGraphic
+              preset={presetProp}
+              placesData={placesData}
+              maxDate={getInclusiveDateFromYYYYMMDD(props.maxdate)}
+              {...otherProps}
+            />
+          )}
+        </InlineGraphic>,
+        mountEl
+      );
+    });
