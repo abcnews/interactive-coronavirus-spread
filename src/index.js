@@ -4,10 +4,9 @@ import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
 import App from './components/App';
-import { fetchPlacesData, fetchPlacesTestingData, renderCasesGraphics, renderTestingGraphics } from './utils';
+import renderCasesGraphics from './components/CasesGraphic/mounts';
+import renderTestingGraphics from './components/CasesGraphic/mounts';
 
-const whenPlacesDataFetched = fetchPlacesData();
-const whenPlacesTestingDataFetched = fetchPlacesTestingData();
 const whenOdysseyLoaded = new Promise(resolve =>
   window.__ODYSSEY__
     ? resolve(window.__ODYSSEY__)
@@ -43,16 +42,12 @@ const whenScrollytellersLoaded = new Promise((resolve, reject) =>
   })
 );
 
-function renderAll(scrollyDatas, placesData, placesTestingData) {
-  renderCasesGraphics(placesData);
-  renderTestingGraphics(placesTestingData);
-  scrollyDatas.forEach(scrollyData =>
-    render(<App scrollyData={scrollyData} placesData={placesData} />, scrollyData.mountNode)
-  );
-}
-
 document.documentElement.style.setProperty('--bg', '#f3fcfc');
 
-Promise.all([whenScrollytellersLoaded, whenPlacesDataFetched, whenPlacesTestingDataFetched])
-  .then(results => renderAll.apply(null, results))
+whenScrollytellersLoaded
+  .then(scrollyDatas => {
+    renderCasesGraphics();
+    renderTestingGraphics();
+    scrollyDatas.forEach(scrollyData => render(<App scrollyData={scrollyData} />, scrollyData.mountNode));
+  })
   .catch(console.error);

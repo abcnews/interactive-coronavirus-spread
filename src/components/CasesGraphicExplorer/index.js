@@ -1,10 +1,11 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import Textfield from '@atlaskit/textfield';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import { TRENDS } from '../../constants';
+import { PLACES_DATA_URL, TRENDS } from '../../constants';
+import { usePlacesData } from '../../data-loader';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
 import CasesGraphic, {
   DEFAULT_CASES_CAP,
@@ -74,9 +75,10 @@ const decodeEncodedUrlParam = () => {
   return result ? decodeVersionedProps(result[1]) : null;
 };
 
-export default ({ placesData }) => {
+export default () => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
+  const [placesDataURL, setPlacesDataURL] = useState(PLACES_DATA_URL);
   const [title, setTitle] = useState(initialProps.title);
   const [hasFootnotes, setHasFootnotes] = useState(initialProps.hasFootnotes);
   const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
@@ -88,9 +90,14 @@ export default ({ placesData }) => {
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
+  const [
+    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
+    setExplorerPlacesDataURL
+  ] = usePlacesData(placesDataURL);
 
   const casesGraphicProps = {
     ...initialProps,
+    placesDataURL,
     title,
     hasFootnotes,
     xScaleType,
@@ -113,7 +120,10 @@ export default ({ placesData }) => {
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
-  const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
+  const placesSelectOptions = useMemo(
+    () => Object.keys(explorerPlacesData || {}).map(place => ({ label: place, value: place })),
+    [explorerPlacesData]
+  );
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
@@ -127,10 +137,24 @@ export default ({ placesData }) => {
     <div className={styles.root}>
       <div className={styles.graphic}>
         <InlineGraphic>
-          <CasesGraphic preset={Math.random()} placesData={placesData} {...casesGraphicProps} />
+          <CasesGraphic preset={Math.random()} {...casesGraphicProps} />
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
+        {/* <div key="places-data-url">
+          <label>Places Data URL</label>
+          <button
+            onClick={() => {
+              const query = Math.random();
+              setVisiblePlaces([]);
+              setHighlightedPlaces([]);
+              setPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
+              setExplorerPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
+            }}
+          >
+            Update to random
+          </button>
+        </div> */}
         <div key="title">
           <label>Chart Title</label>
           <Textfield name="title" value={title || ''} onChange={event => setTitle(event.currentTarget.value)} />

@@ -16,7 +16,8 @@ import {
   timeFormat
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
-import React, { Component, createRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { usePlacesData } from '../../data-loader';
 import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
 import styles from './styles.css';
 
@@ -85,8 +86,8 @@ const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
 };
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
-  title: null,
-  hasFootnotes: false,
+  title: undefined,
+  hasFootnotes: undefined,
   xScaleType: X_SCALE_TYPES[0],
   yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
@@ -217,109 +218,136 @@ function setTruncatedLineDashArray(node) {
   node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
 }
 
+function casesGraphicPlacesData(placesData, maxDate) {
+  return Object.keys(placesData)
+    .map(place => {
+      const placeDates = Object.keys(placesData[place].dates);
+      const population = placesData[place].population || null;
+      let dataAs_dates = placeDates
+        .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
+          const placeDatesTotals = placesData[place].dates[placeDate];
+          const placeDatesTotalsProps = Object.keys(placeDatesTotals);
+          const placeDatesTotalsIncludingPerMillionPeople =
+            typeof population === 'number'
+              ? {
+                  ...placeDatesTotals,
+                  ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
+                    memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
+
+                    return memo_totals;
+                  }, {})
+                }
+              : placeDatesTotals;
+          const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(placeDatesTotalsIncludingPerMillionPeople);
+
+          return memo_dataAs_dates.concat([
+            {
+              date: new Date(placeDate),
+              ...placeDatesTotalsIncludingPerMillionPeople,
+              ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
+                const newProp = `new${prop}`;
+
+                if (placeDatesIndex === 0) {
+                  memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
+                } else {
+                  const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
+
+                  memo_totals[newProp] = Math.max(
+                    0,
+                    placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
+                  );
+                }
+
+                return memo_totals;
+              }, {})
+            }
+          ]);
+        }, [])
+        .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+
+      const dataAs_daysSince100Cases = dataAs_dates
+        .filter(({ cases }) => cases >= 100)
+        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+      const dataAs_daysSince1Death = dataAs_dates
+        .filter(({ deaths }) => deaths >= 1)
+        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+      const dataAs_daysSince1Recovery = dataAs_dates
+        .filter(({ recoveries }) => recoveries >= 1)
+        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+      return {
+        key: place,
+        type: placesData[place].type,
+        population,
+        dataAs: {
+          dates: dataAs_dates,
+          daysSince100Cases: dataAs_daysSince100Cases,
+          daysSince1Death: dataAs_daysSince1Death,
+          daysSince1Recovery: dataAs_daysSince1Recovery
+        },
+        ...Y_SCALE_PROPS.reduce((memo, propName) => {
+          memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
+
+          return memo;
+        }, {})
+      };
+    })
+    .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
+    .sort((a, b) => b.cases - a.cases);
+}
+
+function usePrevious(value) {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+}
+
+const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
+
 let nextIDIndex = 0;
 
-export default class CasesGraphic extends Component {
-  constructor(props) {
-    super(props);
+const CasesGraphic = props => {
+  const renderId = generateRenderId();
 
-    const { placesData, maxDate, xScaleType, yScaleType } = { ...DEFAULT_PROPS, ...props };
+  const { placesDataURL, maxDate, xScaleType, yScaleType, title, hasFootnotes } = {
+    ...DEFAULT_PROPS,
+    ...props
+  };
 
-    checkScaleTypes(xScaleType, yScaleType);
+  checkScaleTypes(xScaleType, yScaleType);
 
-    this.idIndex = nextIDIndex++;
+  const rootRef = useRef();
+  const titleRef = useRef();
+  const svgRef = useRef();
+  const svgTitleRef = useRef();
+  const svgDescRef = useRef();
+  const footnotesRef = useRef();
+  const [idIndex, svgID, titleID, descID] = useMemo(
+    () => [
+      nextIDIndex,
+      `CasesGraphic${nextIDIndex}SVG`,
+      `CasesGraphic${nextIDIndex}Title`,
+      `CasesGraphic${nextIDIndex++}Desc`
+    ],
+    []
+  );
+  const [
+    { isLoading: isPlacesDataLoading, error: placesDataError, data: commonPlacesData },
+    setPlacesDataURL
+  ] = usePlacesData(placesDataURL);
+  const [placesData, earliestDate, latestDate, numDates] = useMemo(() => {
+    if (!commonPlacesData) {
+      return [];
+    }
 
-    this.rootRef = createRef();
-    this.titleRef = createRef();
-    this.svgRef = createRef();
-    this.svgTitleRef = createRef();
-    this.svgDescRef = createRef();
-    this.footnotesRef = createRef();
-
-    this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
-    this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
-
-    this.placesData = Object.keys(placesData)
-      .map(place => {
-        const placeDates = Object.keys(placesData[place].dates);
-        const population = placesData[place].population || null;
-        let dataAs_dates = placeDates
-          .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
-            const placeDatesTotals = placesData[place].dates[placeDate];
-            const placeDatesTotalsProps = Object.keys(placeDatesTotals);
-            const placeDatesTotalsIncludingPerMillionPeople =
-              typeof population === 'number'
-                ? {
-                    ...placeDatesTotals,
-                    ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
-                      memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
-
-                      return memo_totals;
-                    }, {})
-                  }
-                : placeDatesTotals;
-            const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(
-              placeDatesTotalsIncludingPerMillionPeople
-            );
-
-            return memo_dataAs_dates.concat([
-              {
-                date: new Date(placeDate),
-                ...placeDatesTotalsIncludingPerMillionPeople,
-                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
-                  const newProp = `new${prop}`;
-
-                  if (placeDatesIndex === 0) {
-                    memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
-                  } else {
-                    const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
-
-                    memo_totals[newProp] = Math.max(
-                      0,
-                      placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
-                    );
-                  }
-
-                  return memo_totals;
-                }, {})
-              }
-            ]);
-          }, [])
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
-
-        const dataAs_daysSince100Cases = dataAs_dates
-          .filter(({ cases }) => cases >= 100)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
-        const dataAs_daysSince1Death = dataAs_dates
-          .filter(({ deaths }) => deaths >= 1)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
-        const dataAs_daysSince1Recovery = dataAs_dates
-          .filter(({ recoveries }) => recoveries >= 1)
-          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
-
-        return {
-          key: place,
-          type: placesData[place].type,
-          population,
-          dataAs: {
-            dates: dataAs_dates,
-            daysSince100Cases: dataAs_daysSince100Cases,
-            daysSince1Death: dataAs_daysSince1Death,
-            daysSince1Recovery: dataAs_daysSince1Recovery
-          },
-          ...Y_SCALE_PROPS.reduce((memo, propName) => {
-            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
-
-            return memo;
-          }, {})
-        };
-      })
-      .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
-      .sort((a, b) => b.cases - a.cases);
-
-    this.earliestDate = this.placesData.reduce((memo, d) => {
+    const placesData = casesGraphicPlacesData(commonPlacesData, maxDate);
+    const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
       if (candidate < memo) {
@@ -327,8 +355,8 @@ export default class CasesGraphic extends Component {
       }
 
       return memo;
-    }, this.placesData[0].dataAs.dates[0].date);
-    this.latestDate = this.placesData.reduce((memo, d) => {
+    }, placesData[0].dataAs.dates[0].date);
+    const latestDate = placesData.reduce((memo, d) => {
       const candidate = last(d.dataAs.dates).date;
 
       if (candidate > memo) {
@@ -336,48 +364,70 @@ export default class CasesGraphic extends Component {
       }
 
       return memo;
-    }, last(this.placesData[0].dataAs.dates).date);
-    this.numDates = Math.round((this.latestDate - this.earliestDate) / ONE_DAY);
+    }, last(placesData[0].dataAs.dates).date);
+    const numDates = Math.round((latestDate - earliestDate) / ONE_DAY);
 
-    this.state = {
-      width: 0,
-      height: 0
-    };
+    return [placesData, earliestDate, latestDate, numDates];
+  }, [commonPlacesData, maxDate]);
+  const [state, setState] = useState({
+    width: null,
+    height: null,
+    svgHeight: null
+  });
+  const prevProps = usePrevious(props);
+  const prevCommonPlacesData = usePrevious(commonPlacesData);
+  const prevState = usePrevious(state);
+
+  function debug(message) {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[CasesGraphic ${idIndex}:${renderId}] ${message}`);
+    }
   }
 
-  measureAndSetDimensions(client) {
+  function measureAndSetDimensions(client) {
     if (client && !client.hasChanged) {
       return;
     }
 
-    if (!this.rootRef.current) {
+    if (!rootRef.current) {
       return;
     }
 
-    const { width, height } = this.rootRef.current.getBoundingClientRect();
-    const titleRect = this.titleRef.current.getBoundingClientRect();
-    const footnotesRect = this.footnotesRef.current.getBoundingClientRect();
+    const { width, height } = rootRef.current.getBoundingClientRect();
+    const titleRect = titleRef.current.getBoundingClientRect();
+    const footnotesRect = footnotesRef.current.getBoundingClientRect();
 
-    this.setState({ width, height: height - (titleRect.height + footnotesRect.height) });
+    setState({ width, height, svgHeight: height - (titleRect.height + footnotesRect.height) });
   }
 
-  nonOdysseyMeasureAndSetDimensions() {
-    this.measureAndSetDimensions({ hasChanged: true });
+  function nonOdysseyMeasureAndSetDimensions() {
+    measureAndSetDimensions({ hasChanged: true });
   }
 
-  componentDidMount() {
-    this.measureAndSetDimensions();
+  useEffect(() => {
+    measureAndSetDimensions();
 
     if (window.__ODYSSEY__) {
-      window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+      window.__ODYSSEY__.scheduler.subscribe(measureAndSetDimensions);
     } else {
-      window.addEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
+      window.addEventListener('resize', nonOdysseyMeasureAndSetDimensions);
     }
-  }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const prevProps = this.props;
-    const prevState = this.state;
+    return () => {
+      if (window.__ODYSSEY__) {
+        window.__ODYSSEY__.scheduler.unsubscribe(measureAndSetDimensions);
+      } else {
+        window.removeEventListener('resize', nonOdysseyMeasureAndSetDimensions);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!prevProps) {
+      // Dont update on initial render
+      debug('After initial render');
+      return;
+    }
 
     let {
       title,
@@ -394,34 +444,54 @@ export default class CasesGraphic extends Component {
       yScaleProp
     } = {
       ...DEFAULT_PROPS,
-      ...nextProps
+      ...props
     };
-    const { width, height } = nextState;
 
-    const wasResize = width !== prevState.width || height !== prevState.height;
+    if (placesDataURL !== prevProps.placesDataURL) {
+      debug('Places data URL change requires reload');
 
-    if (preset === prevProps.preset && !wasResize) {
-      return false;
+      return setPlacesDataURL(placesDataURL);
+    }
+
+    const { width, height, svgHeight } = state;
+    const wasResize = width !== prevState.width || height !== prevState.height || svgHeight !== prevState.svgHeight;
+
+    if (preset === prevProps.preset && commonPlacesData === prevCommonPlacesData && !wasResize) {
+      debug("No changes to preset or commonPlacesData and wasn't resized");
+      return;
     }
 
     if (title !== prevProps.title || hasFootnotes !== prevProps.hasFootnotes) {
-      setTimeout(() => this.measureAndSetDimensions());
+      debug('Title / footnotes change requires resize');
+      requestAnimationFrame(() => measureAndSetDimensions());
     }
 
-    this.rootRef.current.setAttribute('data-preset', preset);
+    if (isPlacesDataLoading) {
+      debug('Places data is still loading');
+      return;
+    }
+
+    if (placesDataError) {
+      debug(`Error loading places data: ${placesDataError}`);
+      return;
+    }
+
+    debug('Performing standard update');
+
+    rootRef.current.setAttribute('data-preset', preset);
 
     checkScaleTypes(xScaleType, yScaleType);
     checkScaleProps(yScaleProp);
 
     if (typeof places === 'function') {
       // Apply a filter
-      places = this.placesData.filter(places).map(x => x.key);
+      places = placesData.filter(places).map(x => x.key);
     }
 
     // Filter placesData to just visible places, and create visible/highlighted comparison utils
     const isPlaceVisible = inclusionCheckGenerator(places, 'key');
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = this.placesData.filter(isPlaceVisible);
+    const visiblePlacesData = placesData.filter(isPlaceVisible);
 
     // Only allow trend lines when we are showing cases since 100th case
     if (yScaleProp !== 'cases' || xScaleType !== 'daysSince100Cases') {
@@ -481,9 +551,9 @@ export default class CasesGraphic extends Component {
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
-    const chartHeight = height - MARGIN.top - MARGIN.bottom;
+    const chartHeight = svgHeight - MARGIN.top - MARGIN.bottom;
     const xScale = (xScaleType === 'dates'
-      ? scaleTime().domain([new Date(this.earliestDate), new Date(this.latestDate)])
+      ? scaleTime().domain([new Date(earliestDate), new Date(latestDate)])
       : scaleLinear().domain([0, cappedNumDays])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
@@ -536,8 +606,8 @@ export default class CasesGraphic extends Component {
     const isTrendHighlighted = inclusionCheckGenerator(highlightedTrends, 'doublingTimePeriods');
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
-      this.earliestDate,
-      xScaleType === 'dates' ? this.numDates : cappedNumDays,
+      earliestDate,
+      xScaleType === 'dates' ? numDates : cappedNumDays,
       yScaleCap
     );
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
@@ -560,20 +630,18 @@ export default class CasesGraphic extends Component {
       .tickFormat('');
 
     // Rendering > 1: Update SVG dimensions
-    const svg = select(this.svgRef.current)
+    const svg = select(svgRef.current)
       .attr('width', width)
-      .attr('height', height);
+      .attr('height', svgHeight);
 
-    // Rendering > 2: Update accessible titles, description & footnotes
-    this.titleRef.current.textContent = title || '';
-    this.svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
-    this.svgDescRef.current.textContent = visiblePlacesData.length
+    // Rendering > 2: Update accessible SVG title & description
+    svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    svgDescRef.current.textContent = visiblePlacesData.length
       ? `A time-based line chart, plotting ${visiblePlacesData
           .map(x => x.key.replace(/,/g, ''))
           .join(', ')
           .replace(/,(?!.*,)/gim, ' and')} by ${xAxisLabel}.`
       : '';
-    this.footnotesRef.current.innerHTML = hasFootnotes ? FOOTNOTES_MARKUP : '';
 
     // Rendering > 3: Add/update x-axis
     svg
@@ -584,7 +652,7 @@ export default class CasesGraphic extends Component {
     // Rendering > 4: Update x-axis label
     svg
       .select(`.${styles.xAxisLabel}`)
-      .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${height - REM / 2})`)
+      .attr('transform', `translate(${MARGIN.left + chartWidth / 2} ${svgHeight - REM / 2})`)
       .text(xAxisLabel);
 
     // Rendering > 5: Add/update y-axis
@@ -892,48 +960,36 @@ export default class CasesGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', 0)
       .remove();
+  }, [renderId]); // Run every time state/props change
 
-    // Finally, stop React from updating the component (we've managed everything above)
-    return false;
-  }
+  return (
+    <div ref={rootRef} className={styles.root}>
+      <h3 ref={titleRef} className={styles.title}>
+        {title || ''}
+      </h3>
+      <svg ref={svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
+        <title ref={svgTitleRef} id={titleID} />
+        <desc ref={svgDescRef} id={descID} />
+        <g className={styles.yAxisGridlines} />
+        <g className={styles.trendLines} />
+        <g className={styles.plotLines} />
+        <g className={styles.plotDots} />
+        <g className={styles.xAxis} />
+        <text className={styles.xAxisLabel} />
+        <g className={styles.yAxis} />
+        <text className={styles.yAxisLabel} />
+        <g className={styles.trendLabels} />
+        <g className={styles.plotLabels} />
+      </svg>
+      <p
+        ref={footnotesRef}
+        className={styles.footnotes}
+        dangerouslySetInnerHTML={{ __html: hasFootnotes ? FOOTNOTES_MARKUP : '' }}
+      ></p>
+    </div>
+  );
+};
 
-  componentWillUnmount() {
-    if (window.__ODYSSEY__) {
-      window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
-    } else {
-      window.removeEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
-    }
-  }
+CasesGraphic.displayName = 'CasesGraphic';
 
-  render() {
-    const { title, hasFootnotes } = this.props;
-    const svgID = `CasesGraphic${this.idIndex}SVG`;
-    const titleID = `CasesGraphic${this.idIndex}Title`;
-    const descID = `CasesGraphic${this.idIndex}Desc`;
-
-    return (
-      <div ref={this.rootRef} className={styles.root}>
-        <h3 ref={this.titleRef} className={styles.title}>
-          {title || ''}
-        </h3>
-        <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
-          <title ref={this.svgTitleRef} id={titleID} />
-          <desc ref={this.svgDescRef} id={descID} />
-          <g className={styles.yAxisGridlines} />
-          <g className={styles.trendLines} />
-          <g className={styles.plotLines} />
-          <g className={styles.plotDots} />
-          <g className={styles.xAxis} />
-          <text className={styles.xAxisLabel} />
-          <g className={styles.yAxis} />
-          <text className={styles.yAxisLabel} />
-          <g className={styles.trendLabels} />
-          <g className={styles.plotLabels} />
-        </svg>
-        <p ref={this.footnotesRef} className={styles.footnotes}>
-          {hasFootnotes ? FOOTNOTES_MARKUP : ''}
-        </p>
-      </div>
-    );
-  }
-}
+export default CasesGraphic;

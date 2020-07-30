@@ -1,7 +1,9 @@
 import { RadioGroup } from '@atlaskit/radio';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
+import { PLACES_TESTING_DATA_URL } from '../../constants';
+import { usePlacesTestingData } from '../../data-loader';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
 import TestingGraphic, { DEFAULT_PROPS, Y_SCALE_TYPES, Y_SCALE_PROPS } from '../TestingGraphic';
 import InlineGraphic from '../InlineGraphic';
@@ -34,19 +36,24 @@ const decodeEncodedUrlParam = () => {
   return result ? decodeVersionedProps(result[1]) : null;
 };
 
-export default ({ placesData }) => {
-  const availableDates = Object.keys(placesData[Object.keys(placesData)[0]].dates);
+export default () => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
+  const [placesDataURL, setPlacesDataURL] = useState(PLACES_TESTING_DATA_URL);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
-  const [fromDate, setFromDate] = useState(initialProps.fromDate || availableDates[0]);
-  const [toDate, setToDate] = useState(initialProps.toDate || availableDates[availableDates.length - 1]);
+  const [fromDate, setFromDate] = useState(initialProps.fromDate);
+  const [toDate, setToDate] = useState(initialProps.toDate);
+  const [
+    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
+    setExplorerPlacesDataURL
+  ] = usePlacesTestingData(placesDataURL);
 
   const testingGraphicProps = {
     ...initialProps,
+    placesDataURL,
     yScaleType,
     yScaleProp,
     places: visiblePlaces,
@@ -62,14 +69,39 @@ export default ({ placesData }) => {
 
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
-  const placesSelectOptions = Object.keys(placesData).map(place => ({ label: place, value: place }));
-  const fromDateSelectOptions = availableDates
-    .filter((date, index) => index < availableDates.indexOf(toDate))
-    .map(date => ({ label: date, value: date }));
-  const toDateSelectOptions = availableDates
-    .filter((date, index) => index > availableDates.indexOf(fromDate))
-    .map(date => ({ label: date, value: date }));
+  const [placesSelectOptions, availableDates] = useMemo(() => {
+    if (!explorerPlacesData) {
+      return [[], null];
+    }
 
+    const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({ label: place, value: place }));
+    const availableDates = Object.keys(explorerPlacesData[Object.keys(explorerPlacesData)[0]].dates);
+    const hadFromDate = !!fromDate;
+    const hadToDate = !!toDate;
+
+    requestAnimationFrame(() => {
+      if (!hadFromDate) {
+        setFromDate(availableDates[0]);
+      }
+      if (!hadToDate) {
+        setToDate(availableDates[availableDates.length - 1]);
+      }
+    });
+
+    return [placesSelectOptions, availableDates];
+  }, [explorerPlacesData]);
+  const fromDateSelectOptions =
+    availableDates && toDate
+      ? availableDates
+          .filter((date, index) => index < availableDates.indexOf(toDate))
+          .map(date => ({ label: date, value: date }))
+      : [];
+  const toDateSelectOptions =
+    availableDates && fromDate
+      ? availableDates
+          .filter((date, index) => index > availableDates.indexOf(fromDate))
+          .map(date => ({ label: date, value: date }))
+      : [];
   const testingGraphicPropsJSON = JSON.stringify(testingGraphicProps, 2, 2);
   const encodedTestingGraphicProps = encodeVersionedProps(testingGraphicProps);
   const encodedMarkerText = `#testinggraphicENCODED${encodedTestingGraphicProps}`;
@@ -78,10 +110,26 @@ export default ({ placesData }) => {
     <div className={styles.root}>
       <div className={styles.graphic}>
         <InlineGraphic>
-          <TestingGraphic preset={Math.random()} placesData={placesData} {...testingGraphicProps} />
+          <TestingGraphic preset={Math.random()} {...testingGraphicProps} />
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
+        {/* <div key="places-data-url">
+          <label>Places Data URL</label>
+          <button
+            onClick={() => {
+              const query = Math.random();
+              setVisiblePlaces([]);
+              setHighlightedPlaces([]);
+              setFromDate(null);
+              setToDate(null);
+              setPlacesDataURL(`${PLACES_TESTING_DATA_URL}?${query}`);
+              setExplorerPlacesDataURL(`${PLACES_TESTING_DATA_URL}?${query}`);
+            }}
+          >
+            Update to random
+          </button>
+        </div> */}
         <div key="highlightedplaces">
           <label>
             Highlighted Places{' '}
