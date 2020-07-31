@@ -129,70 +129,80 @@ function generateColorAllocator(placesData) {
   };
 }
 
-function testingGraphicPlacesData(placesData, maxDate) {
-  return Object.keys(placesData)
-    .map(place => {
-      const placeDates = Object.keys(placesData[place].dates);
-      const population = placesData[place].population || null;
-      let dates = placeDates
-        .reduce((memo_dates, placeDate, placeDatesIndex) => {
-          const placeDatesTotals = placesData[place].dates[placeDate];
-          const placeDatesTotalsProps = Object.keys(placeDatesTotals);
-          const placeDatesTotalsIncludingPerMillionPeople =
-            typeof population === 'number'
-              ? {
-                  ...placeDatesTotals,
-                  ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
-                    if (prop.indexOf('pcc') > -1) {
+let transformedPlacesDataCache = {};
+
+function transformPlacesData(placesData, maxDate, placesDataURL) {
+  const cacheKey = `${placesDataURL}_${maxDate}`;
+
+  if (!transformedPlacesDataCache[cacheKey]) {
+    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+      .map(place => {
+        const placeDates = Object.keys(placesData[place].dates);
+        const population = placesData[place].population || null;
+        let dates = placeDates
+          .reduce((memo_dates, placeDate, placeDatesIndex) => {
+            const placeDatesTotals = placesData[place].dates[placeDate];
+            const placeDatesTotalsProps = Object.keys(placeDatesTotals);
+            const placeDatesTotalsIncludingPerMillionPeople =
+              typeof population === 'number'
+                ? {
+                    ...placeDatesTotals,
+                    ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
+                      if (prop.indexOf('pcc') > -1) {
+                        return memo_totals;
+                      }
+
+                      memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
+
                       return memo_totals;
-                    }
+                    }, {})
+                  }
+                : placeDatesTotals;
+            const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(
+              placeDatesTotalsIncludingPerMillionPeople
+            );
 
-                    memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
+            return memo_dates.concat([
+              {
+                date: new Date(placeDate),
+                ...placeDatesTotalsIncludingPerMillionPeople,
+                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
+                  const newProp = `new${prop}`;
 
-                    return memo_totals;
-                  }, {})
-                }
-              : placeDatesTotals;
-          const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(placeDatesTotalsIncludingPerMillionPeople);
+                  if (placeDatesIndex === 0) {
+                    memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
+                  } else {
+                    const previousDateTotals = memo_dates[memo_dates.length - 1];
 
-          return memo_dates.concat([
-            {
-              date: new Date(placeDate),
-              ...placeDatesTotalsIncludingPerMillionPeople,
-              ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
-                const newProp = `new${prop}`;
+                    memo_totals[newProp] = Math.max(
+                      0,
+                      placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
+                    );
+                  }
 
-                if (placeDatesIndex === 0) {
-                  memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
-                } else {
-                  const previousDateTotals = memo_dates[memo_dates.length - 1];
+                  return memo_totals;
+                }, {})
+              }
+            ]);
+          }, [])
+          .filter(({ tests, date }) => tests >= 1); // TODO: Do we want to show zero? If so, remove this filter
 
-                  memo_totals[newProp] = Math.max(
-                    0,
-                    placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
-                  );
-                }
+        return {
+          key: place,
+          type: placesData[place].type,
+          population,
+          dates,
+          ...Y_SCALE_PROPS.reduce((memo, propName) => {
+            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dates.map(t => t[propName])));
 
-                return memo_totals;
-              }, {})
-            }
-          ]);
-        }, [])
-        .filter(({ tests, date }) => tests >= 1); // TODO: Do we want to show zero? If so, remove this filter
+            return memo;
+          }, {})
+        };
+      })
+      .sort((a, b) => b.tests - a.tests);
+  }
 
-      return {
-        key: place,
-        type: placesData[place].type,
-        population,
-        dates,
-        ...Y_SCALE_PROPS.reduce((memo, propName) => {
-          memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dates.map(t => t[propName])));
-
-          return memo;
-        }, {})
-      };
-    })
-    .sort((a, b) => b.tests - a.tests);
+  return transformedPlacesDataCache[cacheKey];
 }
 
 function usePrevious(value) {
@@ -233,17 +243,16 @@ const TestingGraphic = props => {
     []
   );
   const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: commonPlacesData },
+    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
   ] = usePlacesTestingData(placesDataURL);
   const [placesData, earliestDate, latestDate] = useMemo(() => {
-    if (!commonPlacesData) {
+    if (!untransformedPlacesData) {
       return [];
     }
 
-    const placesData = testingGraphicPlacesData(commonPlacesData, maxDate);
+    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
-      // TODO
       const candidate = d.dates[0].date;
 
       if (candidate < memo) {
@@ -263,13 +272,13 @@ const TestingGraphic = props => {
     }, last(placesData[0].dates).date);
 
     return [placesData, earliestDate, latestDate];
-  }, [commonPlacesData, maxDate]);
+  }, [untransformedPlacesData, maxDate]);
   const [state, setState] = useState({
     width: null,
     height: null
   });
   const prevProps = usePrevious(props);
-  const prevCommonPlacesData = usePrevious(commonPlacesData);
+  const prevUntransformedPlacesData = usePrevious(untransformedPlacesData);
   const prevState = usePrevious(state);
 
   function debug(message) {
@@ -331,8 +340,8 @@ const TestingGraphic = props => {
     const { width, height } = state;
     const wasResize = width !== prevState.width || height !== prevState.height;
 
-    if (preset === prevProps.preset && commonPlacesData === prevCommonPlacesData && !wasResize) {
-      debug("No changes to preset or commonPlacesData and wasn't resized");
+    if (preset === prevProps.preset && untransformedPlacesData === prevUntransformedPlacesData && !wasResize) {
+      debug("No changes to preset or untransformedPlacesData and wasn't resized");
       return;
     }
 

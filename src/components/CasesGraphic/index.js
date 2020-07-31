@@ -218,84 +218,94 @@ function setTruncatedLineDashArray(node) {
   node.setAttribute('stroke-dasharray', `${pathLength - 32} 2 6 2 6 2 6 2 6`);
 }
 
-function casesGraphicPlacesData(placesData, maxDate) {
-  return Object.keys(placesData)
-    .map(place => {
-      const placeDates = Object.keys(placesData[place].dates);
-      const population = placesData[place].population || null;
-      let dataAs_dates = placeDates
-        .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
-          const placeDatesTotals = placesData[place].dates[placeDate];
-          const placeDatesTotalsProps = Object.keys(placeDatesTotals);
-          const placeDatesTotalsIncludingPerMillionPeople =
-            typeof population === 'number'
-              ? {
-                  ...placeDatesTotals,
-                  ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
-                    memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
+let transformedPlacesDataCache = {};
 
-                    return memo_totals;
-                  }, {})
-                }
-              : placeDatesTotals;
-          const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(placeDatesTotalsIncludingPerMillionPeople);
+function transformPlacesData(placesData, maxDate, placesDataURL) {
+  const cacheKey = `${placesDataURL}_${maxDate}`;
 
-          return memo_dataAs_dates.concat([
-            {
-              date: new Date(placeDate),
-              ...placeDatesTotalsIncludingPerMillionPeople,
-              ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
-                const newProp = `new${prop}`;
+  if (!transformedPlacesDataCache[cacheKey]) {
+    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+      .map(place => {
+        const placeDates = Object.keys(placesData[place].dates);
+        const population = placesData[place].population || null;
+        let dataAs_dates = placeDates
+          .reduce((memo_dataAs_dates, placeDate, placeDatesIndex) => {
+            const placeDatesTotals = placesData[place].dates[placeDate];
+            const placeDatesTotalsProps = Object.keys(placeDatesTotals);
+            const placeDatesTotalsIncludingPerMillionPeople =
+              typeof population === 'number'
+                ? {
+                    ...placeDatesTotals,
+                    ...placeDatesTotalsProps.reduce((memo_totals, prop) => {
+                      memo_totals[`${prop}pmp`] = (placeDatesTotals[prop] / population) * 1e6;
 
-                if (placeDatesIndex === 0) {
-                  memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
-                } else {
-                  const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
+                      return memo_totals;
+                    }, {})
+                  }
+                : placeDatesTotals;
+            const placeDatesTotalsIncludingPerMillionPeopleProps = Object.keys(
+              placeDatesTotalsIncludingPerMillionPeople
+            );
 
-                  memo_totals[newProp] = Math.max(
-                    0,
-                    placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
-                  );
-                }
+            return memo_dataAs_dates.concat([
+              {
+                date: new Date(placeDate),
+                ...placeDatesTotalsIncludingPerMillionPeople,
+                ...placeDatesTotalsIncludingPerMillionPeopleProps.reduce((memo_totals, prop) => {
+                  const newProp = `new${prop}`;
 
-                return memo_totals;
-              }, {})
-            }
-          ]);
-        }, [])
-        .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+                  if (placeDatesIndex === 0) {
+                    memo_totals[newProp] = placeDatesTotalsIncludingPerMillionPeople[prop];
+                  } else {
+                    const previousDateTotals = memo_dataAs_dates[memo_dataAs_dates.length - 1];
 
-      const dataAs_daysSince100Cases = dataAs_dates
-        .filter(({ cases }) => cases >= 100)
-        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+                    memo_totals[newProp] = Math.max(
+                      0,
+                      placeDatesTotalsIncludingPerMillionPeople[prop] - previousDateTotals[prop]
+                    );
+                  }
 
-      const dataAs_daysSince1Death = dataAs_dates
-        .filter(({ deaths }) => deaths >= 1)
-        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+                  return memo_totals;
+                }, {})
+              }
+            ]);
+          }, [])
+          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
 
-      const dataAs_daysSince1Recovery = dataAs_dates
-        .filter(({ recoveries }) => recoveries >= 1)
-        .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+        const dataAs_daysSince100Cases = dataAs_dates
+          .filter(({ cases }) => cases >= 100)
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
-      return {
-        key: place,
-        type: placesData[place].type,
-        population,
-        dataAs: {
-          dates: dataAs_dates,
-          daysSince100Cases: dataAs_daysSince100Cases,
-          daysSince1Death: dataAs_daysSince1Death,
-          daysSince1Recovery: dataAs_daysSince1Recovery
-        },
-        ...Y_SCALE_PROPS.reduce((memo, propName) => {
-          memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
+        const dataAs_daysSince1Death = dataAs_dates
+          .filter(({ deaths }) => deaths >= 1)
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
 
-          return memo;
-        }, {})
-      };
-    })
-    .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
-    .sort((a, b) => b.cases - a.cases);
+        const dataAs_daysSince1Recovery = dataAs_dates
+          .filter(({ recoveries }) => recoveries >= 1)
+          .map(({ date, ...otherProps }, index) => ({ day: index, ...otherProps }));
+
+        return {
+          key: place,
+          type: placesData[place].type,
+          population,
+          dataAs: {
+            dates: dataAs_dates,
+            daysSince100Cases: dataAs_daysSince100Cases,
+            daysSince1Death: dataAs_daysSince1Death,
+            daysSince1Recovery: dataAs_daysSince1Recovery
+          },
+          ...Y_SCALE_PROPS.reduce((memo, propName) => {
+            memo[`${propName}Max`] = Math.max.apply(null, [0].concat(dataAs_dates.map(t => t[propName])));
+
+            return memo;
+          }, {})
+        };
+      })
+      .filter(d => d.casesMax >= 100) // Restrict to countries with at least 100 cases
+      .sort((a, b) => b.cases - a.cases);
+  }
+
+  return transformedPlacesDataCache[cacheKey];
 }
 
 function usePrevious(value) {
@@ -338,15 +348,15 @@ const CasesGraphic = props => {
     []
   );
   const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: commonPlacesData },
+    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
   ] = usePlacesData(placesDataURL);
   const [placesData, earliestDate, latestDate, numDates] = useMemo(() => {
-    if (!commonPlacesData) {
+    if (!untransformedPlacesData) {
       return [];
     }
 
-    const placesData = casesGraphicPlacesData(commonPlacesData, maxDate);
+    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -368,14 +378,14 @@ const CasesGraphic = props => {
     const numDates = Math.round((latestDate - earliestDate) / ONE_DAY);
 
     return [placesData, earliestDate, latestDate, numDates];
-  }, [commonPlacesData, maxDate]);
+  }, [untransformedPlacesData, maxDate]);
   const [state, setState] = useState({
     width: null,
     height: null,
     svgHeight: null
   });
   const prevProps = usePrevious(props);
-  const prevCommonPlacesData = usePrevious(commonPlacesData);
+  const prevUntransformedPlacesData = usePrevious(untransformedPlacesData);
   const prevState = usePrevious(state);
 
   function debug(message) {
@@ -456,8 +466,8 @@ const CasesGraphic = props => {
     const { width, height, svgHeight } = state;
     const wasResize = width !== prevState.width || height !== prevState.height || svgHeight !== prevState.svgHeight;
 
-    if (preset === prevProps.preset && commonPlacesData === prevCommonPlacesData && !wasResize) {
-      debug("No changes to preset or commonPlacesData and wasn't resized");
+    if (preset === prevProps.preset && untransformedPlacesData === prevUntransformedPlacesData && !wasResize) {
+      debug("No changes to preset or untransformedPlacesData and wasn't resized");
       return;
     }
 
