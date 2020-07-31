@@ -17,7 +17,8 @@ import {
   timeFormat
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
-import React, { Component, createRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { usePlacesTestingData } from '../../data-loader';
 import { KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
 import styles from '../CasesGraphic/styles.css'; // borrow styles from CasesGaphic (they're visually the same)
 
@@ -128,27 +129,13 @@ function generateColorAllocator(placesData) {
   };
 }
 
-let nextIDIndex = 0;
+let transformedPlacesDataCache = {};
 
-export default class TestingGraphic extends Component {
-  constructor(props) {
-    super(props);
+function transformPlacesData(placesData, maxDate, placesDataURL) {
+  const cacheKey = `${placesDataURL}_${maxDate}`;
 
-    const { placesData, maxDate, yScaleType } = { ...DEFAULT_PROPS, ...props };
-
-    checkScaleTypes(yScaleType);
-
-    this.idIndex = nextIDIndex++;
-
-    this.rootRef = createRef();
-    this.svgRef = createRef();
-    this.svgTitleRef = createRef();
-    this.svgDescRef = createRef();
-
-    this.measureAndSetDimensions = this.measureAndSetDimensions.bind(this);
-    this.nonOdysseyMeasureAndSetDimensions = this.nonOdysseyMeasureAndSetDimensions.bind(this);
-
-    this.placesData = Object.keys(placesData)
+  if (!transformedPlacesDataCache[cacheKey]) {
+    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
@@ -213,8 +200,59 @@ export default class TestingGraphic extends Component {
         };
       })
       .sort((a, b) => b.tests - a.tests);
+  }
 
-    this.earliestDate = this.placesData.reduce((memo, d) => {
+  return transformedPlacesDataCache[cacheKey];
+}
+
+function usePrevious(value) {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+}
+
+const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
+
+let nextIDIndex = 0;
+
+const TestingGraphic = props => {
+  const renderId = generateRenderId();
+
+  const { placesDataURL, maxDate, yScaleType } = {
+    ...DEFAULT_PROPS,
+    ...props
+  };
+
+  checkScaleTypes(yScaleType);
+
+  const rootRef = useRef();
+  const svgRef = useRef();
+  const svgTitleRef = useRef();
+  const svgDescRef = useRef();
+  const [idIndex, svgID, titleID, descID] = useMemo(
+    () => [
+      nextIDIndex,
+      `CasesGraphic${nextIDIndex}SVG`,
+      `CasesGraphic${nextIDIndex}Title`,
+      `CasesGraphic${nextIDIndex++}Desc`
+    ],
+    []
+  );
+  const [
+    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
+    setPlacesDataURL
+  ] = usePlacesTestingData(placesDataURL);
+  const [placesData, earliestDate, latestDate] = useMemo(() => {
+    if (!untransformedPlacesData) {
+      return [];
+    }
+
+    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
+    const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dates[0].date;
 
       if (candidate < memo) {
@@ -222,8 +260,8 @@ export default class TestingGraphic extends Component {
       }
 
       return memo;
-    }, this.placesData[0].dates[0].date);
-    this.latestDate = this.placesData.reduce((memo, d) => {
+    }, placesData[0].dates[0].date);
+    const latestDate = placesData.reduce((memo, d) => {
       const candidate = last(d.dates).date;
 
       if (candidate > memo) {
@@ -231,75 +269,113 @@ export default class TestingGraphic extends Component {
       }
 
       return memo;
-    }, last(this.placesData[0].dates).date);
+    }, last(placesData[0].dates).date);
 
-    this.state = {
-      width: 0,
-      height: 0
-    };
+    return [placesData, earliestDate, latestDate];
+  }, [untransformedPlacesData, maxDate]);
+  const [state, setState] = useState({
+    width: null,
+    height: null
+  });
+  const prevProps = usePrevious(props);
+  const prevUntransformedPlacesData = usePrevious(untransformedPlacesData);
+  const prevState = usePrevious(state);
+
+  function debug(message) {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[TestingGraphic ${idIndex}:${renderId}] ${message}`);
+    }
   }
 
-  measureAndSetDimensions(client) {
+  function measureAndSetDimensions(client) {
     if (client && !client.hasChanged) {
       return;
     }
 
-    const { width, height } = this.rootRef.current.getBoundingClientRect();
+    const { width, height } = rootRef.current.getBoundingClientRect();
 
-    this.setState({ width, height });
+    setState({ width, height });
   }
 
-  nonOdysseyMeasureAndSetDimensions() {
-    this.measureAndSetDimensions({ hasChanged: true });
+  function nonOdysseyMeasureAndSetDimensions() {
+    measureAndSetDimensions({ hasChanged: true });
   }
 
-  componentDidMount() {
-    this.measureAndSetDimensions();
+  useEffect(() => {
+    measureAndSetDimensions();
 
     if (window.__ODYSSEY__) {
-      window.__ODYSSEY__.scheduler.subscribe(this.measureAndSetDimensions);
+      window.__ODYSSEY__.scheduler.subscribe(measureAndSetDimensions);
     } else {
-      window.addEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
+      window.addEventListener('resize', nonOdysseyMeasureAndSetDimensions);
     }
-  }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const prevProps = this.props;
-    const prevState = this.state;
+    return () => {
+      if (window.__ODYSSEY__) {
+        window.__ODYSSEY__.scheduler.unsubscribe(measureAndSetDimensions);
+      } else {
+        window.removeEventListener('resize', nonOdysseyMeasureAndSetDimensions);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!prevProps) {
+      // Dont update on initial render
+      debug('After initial render');
+      return;
+    }
 
     let { places, highlightedPlaces, preset, yScaleType, yScaleProp, fromDate, toDate } = {
       ...DEFAULT_PROPS,
-      ...nextProps
+      ...props
     };
-    const { width, height } = nextState;
 
-    const wasResize = width !== prevState.width || height !== prevState.height;
+    if (placesDataURL !== prevProps.placesDataURL) {
+      debug('Places data URL change requires reload');
 
-    if (preset === prevProps.preset && !wasResize) {
-      return false;
+      return setPlacesDataURL(placesDataURL);
     }
 
-    this.rootRef.current.setAttribute('data-preset', preset);
+    const { width, height } = state;
+    const wasResize = width !== prevState.width || height !== prevState.height;
+
+    if (preset === prevProps.preset && untransformedPlacesData === prevUntransformedPlacesData && !wasResize) {
+      debug("No changes to preset or untransformedPlacesData and wasn't resized");
+      return;
+    }
+
+    if (isPlacesDataLoading) {
+      debug('Places data is still loading');
+      return;
+    }
+
+    if (placesDataError) {
+      debug(`Error loading places data: ${placesDataError}`);
+      return;
+    }
+
+    debug('Performing standard update');
+
+    rootRef.current.setAttribute('data-preset', preset);
 
     checkScaleTypes(yScaleType);
     checkScaleProps(yScaleProp);
 
     if (typeof places === 'function') {
       // Apply a filter
-      places = this.placesData.filter(places).map(x => x.key);
+      places = placesData.filter(places).map(x => x.key);
     }
 
-    const timeLowerExtent = fromDate ? new Date(fromDate) : this.earliestDate;
-    const timeUpperExtent = toDate ? new Date(toDate) : this.latestDate;
+    const timeLowerExtent = fromDate ? new Date(fromDate) : earliestDate;
+    const timeUpperExtent = toDate ? new Date(toDate) : latestDate;
     const timeRangeDays = Math.round((timeUpperExtent - timeLowerExtent) / ONE_DAY);
     const timeRangeFilter = d => d.date >= timeLowerExtent && d.date <= timeUpperExtent;
 
     // Filter placesData to just visible places, and create visible/highlighted comparison utils
     const isPlaceVisible = inclusionCheckGenerator(places, 'key');
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = this.placesData
-      .filter(isPlaceVisible)
-      .filter(d => d.dates.filter(timeRangeFilter).length);
+    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(d => d.dates.filter(timeRangeFilter).length);
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;
@@ -379,13 +455,13 @@ export default class TestingGraphic extends Component {
       .tickFormat('');
 
     // Rendering > 1: Update SVG dimensions
-    const svg = select(this.svgRef.current)
+    const svg = select(svgRef.current)
       .attr('width', width)
       .attr('height', height);
 
     // Rendering > 2: Update accessible title and description
-    this.svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
-    this.svgDescRef.current.textContent = visiblePlacesData.length
+    svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
+    svgDescRef.current.textContent = visiblePlacesData.length
       ? `A time-based line chart, plotting ${visiblePlacesData
           .map(x => x.key.replace(/,/g, ''))
           .join(', ')
@@ -566,39 +642,26 @@ export default class TestingGraphic extends Component {
       .duration(opacityTransitionDuration)
       .style('fill-opacity', 0)
       .remove();
+  }, [renderId]);
 
-    // Finally, stop React from updating the component (we've managed everything above)
-    return false;
-  }
+  return (
+    <div ref={rootRef} className={styles.root}>
+      <svg ref={svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
+        <title ref={svgTitleRef} id={titleID} />
+        <desc ref={svgDescRef} id={descID} />
+        <g className={styles.yAxisGridlines} />
+        <g className={styles.plotLines} />
+        <g className={styles.plotDots} />
+        <g className={styles.xAxis} />
+        <text className={styles.xAxisLabel} />
+        <g className={styles.yAxis} />
+        <text className={styles.yAxisLabel} />
+        <g className={styles.plotLabels} />
+      </svg>
+    </div>
+  );
+};
 
-  componentWillUnmount() {
-    if (window.__ODYSSEY__) {
-      window.__ODYSSEY__.scheduler.unsubscribe(this.measureAndSetDimensions);
-    } else {
-      window.removeEventListener('resize', this.nonOdysseyMeasureAndSetDimensions);
-    }
-  }
+TestingGraphic.displayName = 'TestingGraphic';
 
-  render() {
-    const svgID = `TestingGraphic${this.idIndex}SVG`;
-    const titleID = `TestingGraphic${this.idIndex}Title`;
-    const descID = `TestingGraphic${this.idIndex}Desc`;
-
-    return (
-      <div ref={this.rootRef} className={styles.root}>
-        <svg ref={this.svgRef} className={styles.svg} id={svgID} role="img" aria-labelledby={`${titleID} ${descID}`}>
-          <title ref={this.svgTitleRef} id={titleID} />
-          <desc ref={this.svgDescRef} id={descID} />
-          <g className={styles.yAxisGridlines} />
-          <g className={styles.plotLines} />
-          <g className={styles.plotDots} />
-          <g className={styles.xAxis} />
-          <text className={styles.xAxisLabel} />
-          <g className={styles.yAxis} />
-          <text className={styles.yAxisLabel} />
-          <g className={styles.plotLabels} />
-        </svg>
-      </div>
-    );
-  }
-}
+export default TestingGraphic;
