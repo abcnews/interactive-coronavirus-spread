@@ -504,13 +504,6 @@ const CasesGraphic = props => {
     const timeRangeFilter = d => d.date >= timeLowerExtent && d.date <= timeUpperExtent;
     const daysCapFilter = d => xScaleDaysCap === false || d.day <= xScaleDaysCap;
 
-    // Filter placesData to just visible places, and create visible/highlighted comparison utils
-    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
-    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = placesData
-      .filter(isPlaceVisible)
-      .filter(d => xScaleType !== 'dates' || d.dataAs.dates.filter(timeRangeFilter).length > 0);
-
     // Only allow trend lines when we are showing cases since 100th case
     if (yScaleProp !== 'cases' || xScaleType !== 'daysSince100Cases') {
       trends = false;
@@ -525,6 +518,17 @@ const CasesGraphic = props => {
     const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
     const logarithmicLowerExtent =
       LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures ? 0.01 : 0.1);
+    const logarithmicLowerExtentFilter = d => d[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp];
+
+    // Filter placesData to just visible places, and create visible/highlighted comparison utils
+    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
+    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
+    const visiblePlacesData = placesData
+      .filter(isPlaceVisible)
+      .filter(d => xScaleType !== 'dates' || d.dataAs.dates.filter(timeRangeFilter).length > 0)
+      .filter(
+        d => yScaleType !== 'logarithmic' || d.dataAs[xScaleType].filter(logarithmicLowerExtentFilter).length > 0
+      );
 
     if (isDailyFigures || isPerCapitaFigures) {
       yScaleCap = false;
@@ -583,13 +587,13 @@ const CasesGraphic = props => {
     ).range([chartHeight, 0]);
     const safe_yScale = x =>
       yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
-    const getUncappedDataCollection = d =>
-      d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
+    const getUncappedDataCollection = d => d.dataAs[xScaleType];
     const getDataCollection = d =>
       getUncappedDataCollection(d).filter(
         item =>
           item[yScaleProp] <= yScaleCap &&
-          (xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item))
+          (xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item)) &&
+          (yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(item))
       );
     const generateLinePath = d =>
       line()
