@@ -62,6 +62,14 @@ const prepareMountAndResolveProps = (mountEl, props) => {
     props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
   );
 
+  if (props.maxdate) {
+    const maxDate = getInclusiveDateFromYYYYMMDD(props.maxdate);
+
+    if (maxDate) {
+      otherProps.toDate = maxDate;
+    }
+  }
+
   return [presetProp, otherProps];
 };
 
@@ -70,12 +78,5 @@ export const renderInlineGraphics = (mountPrefix, Graphic) =>
     const props = acto(getTrailingMountValue(mountEl, mountPrefix));
     const [presetProp, otherProps] = prepareMountAndResolveProps(mountEl, props);
 
-    render(
-      <InlineGraphic>
-        {otherProps && (
-          <Graphic preset={presetProp} toDate={getInclusiveDateFromYYYYMMDD(props.maxdate)} {...otherProps} />
-        )}
-      </InlineGraphic>,
-      mountEl
-    );
+    render(<InlineGraphic>{otherProps && <Graphic preset={presetProp} {...otherProps} />}</InlineGraphic>, mountEl);
   });
