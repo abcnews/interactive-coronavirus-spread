@@ -88,6 +88,8 @@ export default () => {
   const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
+  const [fromDate, setFromDate] = useState(initialProps.fromDate);
+  const [toDate, setToDate] = useState(initialProps.toDate);
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
   const [
@@ -107,6 +109,8 @@ export default () => {
     xScaleDaysCap,
     places: visiblePlaces,
     highlightedPlaces,
+    fromDate,
+    toDate,
     trends: visibleTrends,
     highlightedTrends
   };
@@ -120,10 +124,43 @@ export default () => {
   const xScaleTypeOptions = X_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
-  const placesSelectOptions = useMemo(
-    () => Object.keys(explorerPlacesData || {}).map(place => ({ label: place, value: place })),
-    [explorerPlacesData]
-  );
+  const [placesSelectOptions, availableDates] = useMemo(() => {
+    if (!explorerPlacesData) {
+      return [[], null];
+    }
+
+    const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({ label: place, value: place }));
+    const availableDates = Object.keys(explorerPlacesData).reduce((memo, place) => {
+      const dates = Object.keys(explorerPlacesData[place].dates);
+
+      return dates.length > memo.length ? dates : memo;
+    }, []);
+    const hadFromDate = !!fromDate;
+    const hadToDate = !!toDate;
+
+    requestAnimationFrame(() => {
+      if (!hadFromDate) {
+        setFromDate(availableDates[0]);
+      }
+      if (!hadToDate) {
+        setToDate(availableDates[availableDates.length - 1]);
+      }
+    });
+
+    return [placesSelectOptions, availableDates];
+  }, [explorerPlacesData]);
+  const fromDateSelectOptions =
+    availableDates && toDate
+      ? availableDates
+          .filter((date, index) => index < availableDates.indexOf(toDate))
+          .map(date => ({ label: date, value: date }))
+      : [];
+  const toDateSelectOptions =
+    availableDates && fromDate
+      ? availableDates
+          .filter((date, index) => index > availableDates.indexOf(fromDate))
+          .map(date => ({ label: date, value: date }))
+      : [];
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
@@ -148,6 +185,8 @@ export default () => {
               const query = Math.random();
               setVisiblePlaces([]);
               setHighlightedPlaces([]);
+              setFromDate(null);
+              setToDate(null);
               setPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
               setExplorerPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
             }}
@@ -213,51 +252,6 @@ export default () => {
             }}
           />
         </div>
-        {areTrendsAllowed && (
-          <div key="highlightedtrends">
-            <label>
-              Highlighted Trends{' '}
-              <button
-                onClick={() => setHighlightedTrends(Array.from(new Set(visibleTrends.concat(highlightedTrends))))}
-                disabled={visibleTrends.sort().join() === highlightedTrends.sort().join()}
-              >
-                Highlight all visible trends
-              </button>
-            </label>
-            <Select
-              components={animatedComponents}
-              styles={SELECT_STYLES}
-              isMulti
-              options={trendsSelectOptions}
-              value={trendsSelectOptions.filter(option => highlightedTrends.indexOf(option.value) > -1)}
-              onChange={selectedOptions => {
-                const nextHighlightedTrends = optionsValues(selectedOptions || []);
-
-                setVisibleTrends(Array.from(new Set(visibleTrends.concat(nextHighlightedTrends))));
-                setHighlightedTrends(nextHighlightedTrends);
-              }}
-            />
-          </div>
-        )}
-        {areTrendsAllowed && (
-          <div key="visibletrends">
-            <label>Visible Trends</label>
-            <Select
-              components={animatedComponents}
-              styles={SELECT_STYLES}
-              defaultValue={trendsSelectOptions.filter(option => initialProps.trends.indexOf(option.value) > -1)}
-              value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
-              isMulti
-              options={trendsSelectOptions}
-              onChange={selectedOptions => {
-                const nextVisibleTrends = optionsValues(selectedOptions || []);
-
-                setVisibleTrends(nextVisibleTrends);
-                setHighlightedTrends(highlightedTrends.filter(trend => nextVisibleTrends.indexOf(trend) > -1));
-              }}
-            />
-          </div>
-        )}
         <div key="xscaletype">
           <label>X-axis</label>
           <RadioGroup
@@ -277,9 +271,11 @@ export default () => {
                 setYScaleProp(yScaleProp.replace(UNDERLYING_PROPS_PATTERN, underlyingProp));
               }
 
-              // if (xScaleType === 'dates') {
-              //   setYScaleType('linear');
-              // }
+              // Remove date boxing, in case we later switch back to dates
+              if (xScaleType !== 'dates') {
+                setFromDate(availableDates[0]);
+                setToDate(availableDates[availableDates.length - 1]);
+              }
             }}
           />
         </div>
@@ -299,6 +295,38 @@ export default () => {
                   const xScaleDaysCap = event.currentTarget.value;
 
                   setXScaleDaysCap(xScaleDaysCap ? +xScaleDaysCap : false);
+                }}
+              />
+            </div>
+          </div>
+        )}
+        {xScaleType === 'dates' && (
+          <div key="dates">
+            <label>X-axis (dates-based) Extents</label>
+            <div className={styles.flexRow}>
+              <Select
+                components={animatedComponents}
+                styles={SELECT_STYLES}
+                defaultValue={fromDateSelectOptions.find(option => option.value === fromDate)}
+                value={fromDateSelectOptions.find(option => option.value === fromDate)}
+                options={fromDateSelectOptions}
+                onChange={selectedOption => {
+                  const [nextFromDate] = optionsValues([selectedOption]);
+
+                  setFromDate(nextFromDate);
+                }}
+              />
+              <span>to</span>
+              <Select
+                components={animatedComponents}
+                styles={SELECT_STYLES}
+                defaultValue={toDateSelectOptions.find(option => option.value === toDate)}
+                value={toDateSelectOptions.find(option => option.value === toDate)}
+                options={toDateSelectOptions}
+                onChange={selectedOption => {
+                  const [nextToDate] = optionsValues([selectedOption]);
+
+                  setToDate(nextToDate);
                 }}
               />
             </div>
@@ -373,6 +401,51 @@ export default () => {
                 }}
               />
             </div>
+          </div>
+        )}
+        {areTrendsAllowed && (
+          <div key="highlightedtrends">
+            <label>
+              Highlighted Trends{' '}
+              <button
+                onClick={() => setHighlightedTrends(Array.from(new Set(visibleTrends.concat(highlightedTrends))))}
+                disabled={visibleTrends.sort().join() === highlightedTrends.sort().join()}
+              >
+                Highlight all visible trends
+              </button>
+            </label>
+            <Select
+              components={animatedComponents}
+              styles={SELECT_STYLES}
+              isMulti
+              options={trendsSelectOptions}
+              value={trendsSelectOptions.filter(option => highlightedTrends.indexOf(option.value) > -1)}
+              onChange={selectedOptions => {
+                const nextHighlightedTrends = optionsValues(selectedOptions || []);
+
+                setVisibleTrends(Array.from(new Set(visibleTrends.concat(nextHighlightedTrends))));
+                setHighlightedTrends(nextHighlightedTrends);
+              }}
+            />
+          </div>
+        )}
+        {areTrendsAllowed && (
+          <div key="visibletrends">
+            <label>Visible Trends</label>
+            <Select
+              components={animatedComponents}
+              styles={SELECT_STYLES}
+              defaultValue={trendsSelectOptions.filter(option => initialProps.trends.indexOf(option.value) > -1)}
+              value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
+              isMulti
+              options={trendsSelectOptions}
+              onChange={selectedOptions => {
+                const nextVisibleTrends = optionsValues(selectedOptions || []);
+
+                setVisibleTrends(nextVisibleTrends);
+                setHighlightedTrends(highlightedTrends.filter(trend => nextVisibleTrends.indexOf(trend) > -1));
+              }}
+            />
           </div>
         )}
         <hr />
