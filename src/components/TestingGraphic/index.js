@@ -373,7 +373,7 @@ const TestingGraphic = props => {
     // Filter placesData to just visible places, and create visible/highlighted comparison utils
     const isPlaceVisible = inclusionCheckGenerator(places, 'key');
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(d => d.dates.filter(timeRangeFilter).length);
+    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(d => d.dates.filter(timeRangeFilter).length > 0);
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;
