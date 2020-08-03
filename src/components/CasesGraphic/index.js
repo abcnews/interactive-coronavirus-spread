@@ -12,6 +12,7 @@ import {
   scaleLog,
   scaleTime,
   select,
+  timeDay,
   timeWeek,
   timeFormat
 } from 'd3';
@@ -349,7 +350,7 @@ const CasesGraphic = props => {
     { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
   ] = usePlacesData(placesDataURL);
-  const [placesData, earliestDate, latestDate, numDates] = useMemo(() => {
+  const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData) {
       return [];
     }
@@ -373,9 +374,8 @@ const CasesGraphic = props => {
 
       return memo;
     }, last(placesData[0].dataAs.dates).date);
-    const numDates = Math.round((latestDate - earliestDate) / ONE_DAY);
 
-    return [placesData, earliestDate, latestDate, numDates];
+    return [placesData, earliestDate, latestDate];
   }, [untransformedPlacesData]);
   const [state, setState] = useState({
     width: null,
@@ -449,7 +449,9 @@ const CasesGraphic = props => {
       trends,
       xScaleType,
       yScaleType,
-      yScaleProp
+      yScaleProp,
+      fromDate,
+      toDate
     } = {
       ...DEFAULT_PROPS,
       ...props
@@ -496,10 +498,18 @@ const CasesGraphic = props => {
       places = placesData.filter(places).map(x => x.key);
     }
 
+    const timeLowerExtent = fromDate ? new Date(fromDate) : earliestDate;
+    const timeUpperExtent = toDate ? new Date(toDate) : latestDate;
+    const timeRangeDays = Math.round((timeUpperExtent - timeLowerExtent) / ONE_DAY);
+    const timeRangeFilter = d => d.date >= timeLowerExtent && d.date <= timeUpperExtent;
+    const daysCapFilter = d => xScaleDaysCap === false || d.day <= xScaleDaysCap;
+
     // Filter placesData to just visible places, and create visible/highlighted comparison utils
     const isPlaceVisible = inclusionCheckGenerator(places, 'key');
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = placesData.filter(isPlaceVisible);
+    const visiblePlacesData = placesData
+      .filter(isPlaceVisible)
+      .filter(d => xScaleType !== 'dates' || d.dataAs.dates.filter(timeRangeFilter).length > 0);
 
     // Only allow trend lines when we are showing cases since 100th case
     if (yScaleProp !== 'cases' || xScaleType !== 'daysSince100Cases') {
@@ -521,18 +531,21 @@ const CasesGraphic = props => {
     }
 
     const largestVisibleYScaleValue = visiblePlacesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dataAs.dates.map(t => t[yScaleProp])));
+      return Math.max.apply(
+        null,
+        [memo].concat(d.dataAs.dates.filter(d => xScaleType !== 'dates' || timeRangeFilter(d)).map(d => d[yScaleProp]))
+      );
     }, 0);
 
     // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
     yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
 
     const cappedNumDays =
-      xScaleType.indexOf('dates') === 0
+      xScaleType === 'dates'
         ? null
         : visiblePlacesData.reduce((memo, d) => {
             const itemsWithinCaps = d.dataAs[xScaleType].filter(
-              item => (xScaleDaysCap === false || item.day <= xScaleDaysCap) && item[yScaleProp] <= yScaleCap
+              item => daysCapFilter(item) && item[yScaleProp] <= yScaleCap
             );
 
             if (!itemsWithinCaps.length) {
@@ -561,7 +574,7 @@ const CasesGraphic = props => {
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = svgHeight - MARGIN.top - MARGIN.bottom;
     const xScale = (xScaleType === 'dates'
-      ? scaleTime().domain([new Date(earliestDate), new Date(latestDate)])
+      ? scaleTime().domain([timeLowerExtent, timeUpperExtent])
       : scaleLinear().domain([0, cappedNumDays])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
@@ -573,15 +586,10 @@ const CasesGraphic = props => {
     const getUncappedDataCollection = d =>
       d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
     const getDataCollection = d =>
-      getUncappedDataCollection(d).reduce(
-        (memo, item) =>
-          memo.concat(
-            item[yScaleProp] <= yScaleCap &&
-              (xScaleType.indexOf('days') === -1 || xScaleDaysCap === false || item.day <= xScaleDaysCap)
-              ? [item]
-              : []
-          ),
-        []
+      getUncappedDataCollection(d).filter(
+        item =>
+          item[yScaleProp] <= yScaleCap &&
+          (xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item))
       );
     const generateLinePath = d =>
       line()
@@ -615,13 +623,14 @@ const CasesGraphic = props => {
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
       earliestDate,
-      xScaleType === 'dates' ? numDates : cappedNumDays,
+      xScaleType === 'dates' ? timeRangeDays : cappedNumDays,
       yScaleCap
     );
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
     const xAxisGenerator =
       xScaleType === 'dates'
         ? axisBottom(xScale)
+            // .ticks(timeRangeDays < 10 ? timeDay.every(1) : timeRangeDays < 60 ? timeWeek.every(1) : timeWeek.every(2))
             .ticks(timeWeek.every(2))
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
