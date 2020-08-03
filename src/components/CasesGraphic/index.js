@@ -220,9 +220,7 @@ function setTruncatedLineDashArray(node) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, maxDate, placesDataURL) {
-  const cacheKey = `${placesDataURL}_${maxDate}`;
-
+function transformPlacesData(placesData, cacheKey) {
   if (!transformedPlacesDataCache[cacheKey]) {
     transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
       .map(place => {
@@ -270,7 +268,7 @@ function transformPlacesData(placesData, maxDate, placesDataURL) {
               }
             ]);
           }, [])
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+          .filter(({ cases, date }) => cases >= 1);
 
         const dataAs_daysSince100Cases = dataAs_dates
           .filter(({ cases }) => cases >= 100)
@@ -325,7 +323,7 @@ let nextIDIndex = 0;
 const CasesGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, maxDate, xScaleType, yScaleType, title, hasFootnotes } = {
+  const { placesDataURL, xScaleType, yScaleType, title, hasFootnotes } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -356,7 +354,7 @@ const CasesGraphic = props => {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -378,7 +376,7 @@ const CasesGraphic = props => {
     const numDates = Math.round((latestDate - earliestDate) / ONE_DAY);
 
     return [placesData, earliestDate, latestDate, numDates];
-  }, [untransformedPlacesData, maxDate]);
+  }, [untransformedPlacesData]);
   const [state, setState] = useState({
     width: null,
     height: null,
