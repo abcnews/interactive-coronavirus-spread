@@ -73,7 +73,7 @@ export const renderInlineGraphics = (mountPrefix, Graphic) =>
     render(
       <InlineGraphic>
         {otherProps && (
-          <Graphic preset={presetProp} maxDate={getInclusiveDateFromYYYYMMDD(props.maxdate)} {...otherProps} />
+          <Graphic preset={presetProp} toDate={getInclusiveDateFromYYYYMMDD(props.maxdate)} {...otherProps} />
         )}
       </InlineGraphic>,
       mountEl

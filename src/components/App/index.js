@@ -9,7 +9,7 @@ import styles from './styles.css';
 
 const App = ({ scrollyData }) => {
   const [preset, setPreset] = useState('initial');
-  let maxDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
+  let toDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
 
   const onMarker = useCallback(config => {
     const { preset } = config;
@@ -24,7 +24,7 @@ const App = ({ scrollyData }) => {
     Graphic = CasesGraphic;
     graphicProps = {
       ...graphicProps,
-      maxDate
+      toDate
     };
   } else if (graphic === 'doubling') {
     Graphic = DoublingGraphic;
