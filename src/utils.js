@@ -41,6 +41,9 @@ export const updateLegacyProps = props => {
   return props;
 };
 
+const ONE_DAY = 864e5;
+const DATE_USA_HIT_100_CASES = new Date(2020, 2, 4);
+
 const prepareMountAndResolveProps = (mountEl, props) => {
   const presetProp = props.encoded || props.preset;
 
@@ -67,6 +70,7 @@ const prepareMountAndResolveProps = (mountEl, props) => {
 
     if (maxDate) {
       otherProps.toDate = maxDate;
+      otherProps.xScaleDaysCap = Math.max(30, Math.round((maxDate - DATE_USA_HIT_100_CASES) / ONE_DAY));
     }
   }
 

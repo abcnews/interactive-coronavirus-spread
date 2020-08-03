@@ -7,6 +7,9 @@ import DoublingGraphic from '../DoublingGraphic';
 import Placeholder from '../TestComponent';
 import styles from './styles.css';
 
+const ONE_DAY = 864e5;
+const DATE_USA_HIT_100_CASES = new Date(2020, 2, 4);
+
 const App = ({ scrollyData }) => {
   const [preset, setPreset] = useState('initial');
   const onMarker = useCallback(config => {
@@ -20,10 +23,13 @@ const App = ({ scrollyData }) => {
 
   if (graphic === 'cases') {
     Graphic = CasesGraphic;
+
     const maxDate = getInclusiveDateFromYYYYMMDD(scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '');
 
     if (maxDate) {
       graphicProps.toDate = maxDate;
+      graphicProps.xScaleDaysCap = Math.max(30, Math.round((maxDate - DATE_USA_HIT_100_CASES) / ONE_DAY));
+      console.log(graphicProps);
     }
   } else if (graphic === 'doubling') {
     Graphic = DoublingGraphic;
