@@ -88,8 +88,8 @@ export default () => {
   const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
-  const [fromDate, setFromDate] = useState(initialProps.fromDate);
-  const [toDate, setToDate] = useState(initialProps.toDate);
+  const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
+  const [toDate, setToDate] = useState(initialProps.toDate || null);
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
   const [
@@ -135,32 +135,27 @@ export default () => {
 
       return dates.length > memo.length ? dates : memo;
     }, []);
-    const hadFromDate = !!fromDate;
-    const hadToDate = !!toDate;
 
     requestAnimationFrame(() => {
-      if (!hadFromDate) {
-        setFromDate(availableDates[0]);
-      }
-      if (!hadToDate) {
-        setToDate(availableDates[availableDates.length - 1]);
-      }
+      setFromDate(null);
+      setToDate(null);
     });
 
     return [placesSelectOptions, availableDates];
   }, [explorerPlacesData]);
-  const fromDateSelectOptions =
-    availableDates && toDate
+  const fromDateSelectOptions = [{ label: 'Earliest known', value: null }].concat(
+    availableDates
       ? availableDates
-          .filter((date, index) => index < availableDates.indexOf(toDate))
+          .filter((date, index) => index < (toDate ? availableDates.indexOf(toDate) : Infinity))
           .map(date => ({ label: date, value: date }))
-      : [];
-  const toDateSelectOptions =
-    availableDates && fromDate
-      ? availableDates
-          .filter((date, index) => index > availableDates.indexOf(fromDate))
-          .map(date => ({ label: date, value: date }))
-      : [];
+      : []
+  );
+  const toDateSelectOptions = (availableDates
+    ? availableDates
+        .filter((date, index) => index > (fromDate ? availableDates.indexOf(fromDate) : -1))
+        .map(date => ({ label: date, value: date }))
+    : []
+  ).concat([{ label: 'Latest known', value: null }]);
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
@@ -273,8 +268,8 @@ export default () => {
 
               // Remove date boxing, in case we later switch back to dates
               if (xScaleType !== 'dates') {
-                setFromDate(availableDates[0]);
-                setToDate(availableDates[availableDates.length - 1]);
+                setFromDate(null);
+                setToDate(null);
               }
             }}
           />
