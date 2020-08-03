@@ -918,7 +918,7 @@ const CasesGraphic = props => {
       fx: 0,
       targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
     }));
-    if (chartWidth < 640 || xScaleType === 'dates' || yScaleType === 'logarithmic') {
+    if (chartWidth < 640 || xScaleType === 'dates' || xScaleDaysCap || yScaleType === 'logarithmic') {
       const plotLabelsForceSimulation = forceSimulation()
         .nodes(plotLabelForceNodes)
         .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
