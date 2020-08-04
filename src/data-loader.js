@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import { OTHER_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
+import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
 import COUNTRIES_POPULATIONS from './population';
 
 const PLACE_NAME_REPLACEMENTS = [
@@ -49,6 +49,7 @@ const fetchCache = {};
 const useDataLoader = initialURL => {
   const [url, setURL] = useState(initialURL);
   const [state, dispatch] = useReducer(dataFetchReducer, {
+    url,
     isLoading: false,
     error: null,
     data: null
@@ -84,15 +85,11 @@ const useDataLoader = initialURL => {
 };
 
 function clone(value) {
-  if (typeof value !== 'object') {
+  if (typeof value !== 'object' || value === null) {
     return value;
   }
 
-  if (Array.isArray(value)) {
-    return value.map(clone);
-  }
-
-  const _value = {};
+  const _value = Array.isArray(value) ? [] : {};
 
   for (const key in value) {
     _value[key] = clone(value[key]);
@@ -101,8 +98,10 @@ function clone(value) {
   return _value;
 }
 
+const placesDataCache = {};
+
 export const usePlacesData = initialURL => {
-  const [{ isLoading, error, data: loadedData }, setURL] = useDataLoader(initialURL || PLACES_DATA_URL);
+  const [{ url, isLoading, error, data: loadedData }, setURL] = useDataLoader(initialURL || PLACES_DATA_URL);
 
   return [
     {
@@ -113,63 +112,74 @@ export const usePlacesData = initialURL => {
           return null;
         }
 
-        const data = clone(loadedData);
+        if (!placesDataCache[url]) {
+          const data = clone(loadedData);
 
-        for (const originalPlaceName in data) {
-          let nextPlaceName = originalPlaceName;
+          for (const originalPlaceName in data) {
+            let nextPlaceName = originalPlaceName;
 
-          PLACE_NAME_REPLACEMENTS.forEach(pnr => {
-            const [pattern, replacement] = pnr;
+            // Fix names of some places with multiple RegExp passes
+            PLACE_NAME_REPLACEMENTS.forEach(pnr => {
+              const [pattern, replacement] = pnr;
 
-            if (pattern.test(nextPlaceName)) {
-              nextPlaceName = nextPlaceName.replace(pattern, replacement);
+              if (pattern.test(nextPlaceName)) {
+                nextPlaceName = nextPlaceName.replace(pattern, replacement);
+              }
+            });
+
+            // Replace any updated place names
+            if (nextPlaceName !== originalPlaceName) {
+              data[nextPlaceName] = data[originalPlaceName];
+              delete data[originalPlaceName];
             }
-          });
-
-          if (nextPlaceName !== originalPlaceName) {
-            data[nextPlaceName] = data[originalPlaceName];
-            delete data[originalPlaceName];
-          }
-        }
-
-        if (data['Western Sahara']) {
-          delete data['Western Sahara'];
-        }
-
-        // Modify existing data format until we have the new format
-        for (const place in data) {
-          for (const date in data[place]) {
-            // Remove last Australian date if it's missing cumulative deaths
-            if (place === 'Australia' && data[place][date].deaths == null) {
-              delete data[place][date];
-              continue;
-            }
-
-            data[place][date] = {
-              cases: data[place][date].cases || 0,
-              deaths: data[place][date].deaths || 0,
-              recoveries: data[place][date].recoveries || data[place][date].recovered || 0
-            };
           }
 
-          data[place] = {
-            type:
+          // Remove places we want to exclude
+          for (const place of EXCLUDED_PLACES) {
+            if (data[EXCLUDED_PLACES]) {
+              delete data[EXCLUDED_PLACES];
+            }
+          }
+
+          for (const place in data) {
+            // Remove `country` prop from regions
+            delete data[place].country;
+
+            // Re-type some places
+            data[place].type =
               place === 'Worldwide'
                 ? 'aggregate'
                 : SHIPS.indexOf(place) > -1
                 ? 'ship'
                 : OTHER_PLACES.indexOf(place) > -1
                 ? 'other'
-                : 'country',
-            dates: data[place]
-          };
+                : data[place].type;
 
-          if (data[place].type === 'country') {
-            data[place].population = COUNTRIES_POPULATIONS[place];
+            // Add `population` to countries
+            if (data[place].type === 'country' && COUNTRIES_POPULATIONS[place]) {
+              data[place].population = COUNTRIES_POPULATIONS[place];
+            }
+
+            const { dates } = data[place];
+
+            for (const date in dates) {
+              // Remove last Australian date if it's missing cumulative deaths
+              if (place === 'Australia' && dates[date].deaths == null) {
+                delete dates[date];
+                continue;
+              }
+
+              // Fill in non-zeroed props
+              dates[date].cases = dates[date].cases || 0;
+              dates[date].deaths = dates[date].deaths || 0;
+              dates[date].recoveries = dates[date].recoveries || 0;
+            }
           }
+
+          placesDataCache[url] = data;
         }
 
-        return data;
+        return clone(placesDataCache[url]);
       }, [loadedData])
     },
     setURL
@@ -184,8 +194,10 @@ function getSupplementaryURL(url) {
   return supplementaryURLs[url.split('?')[0]];
 }
 
+const placesTestingDataCache = {};
+
 export const usePlacesTestingData = initialURL => {
-  const [{ isLoading, error, data: loadedData }, setPlacesTestingDataURL] = useDataLoader(
+  const [{ url, isLoading, error, data: loadedData }, setPlacesTestingDataURL] = useDataLoader(
     initialURL || PLACES_TESTING_DATA_URL
   );
   const [
@@ -202,31 +214,35 @@ export const usePlacesTestingData = initialURL => {
           return null;
         }
 
-        const data = clone(loadedData);
+        if (!placesTestingDataCache[url]) {
+          const data = clone(loadedData);
 
-        for (const place in data) {
-          const supplementaryDataPlace = supplementaryData[place];
+          for (const place in data) {
+            const supplementaryDataPlace = supplementaryData[place];
 
-          for (const date in data[place]) {
-            const tests = data[place][date];
-            const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
-            const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
+            for (const date in data[place]) {
+              const tests = data[place][date];
+              const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
+              const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
 
-            data[place][date] = {
-              tests,
-              cases,
-              testspcc: cases ? tests / cases : 0
+              data[place][date] = {
+                tests,
+                cases,
+                testspcc: cases ? tests / cases : 0
+              };
+            }
+
+            data[place] = {
+              type: supplementaryDataPlace.type,
+              population: supplementaryDataPlace.population,
+              dates: data[place]
             };
           }
 
-          data[place] = {
-            type: supplementaryDataPlace.type,
-            population: supplementaryDataPlace.population,
-            dates: data[place]
-          };
+          placesTestingDataCache[url] = data;
         }
 
-        return data;
+        return clone(placesTestingDataCache[url]);
       }, [loadedData, supplementaryData])
     },
     url => {

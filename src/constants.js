@@ -1,6 +1,5 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
-// export const PLACES_DATA_URL = `${DATA_ENDPOINT}places-totals.json`;
-export const PLACES_DATA_URL = `${DATA_ENDPOINT}country-totals-extra.json`;
+export const PLACES_DATA_URL = `${DATA_ENDPOINT}places-totals.json`;
 export const PLACES_TESTING_DATA_URL = `${__webpack_public_path__}data/cumulative-testing-by-place-and-date.json`;
 export const KEY_PLACES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
 export const KEY_EUROPEAN_PLACES = [
@@ -57,6 +56,7 @@ export const KEY_EUROPEAN_PLACES = [
 ];
 export const SHIPS = ['Diamond Princess', 'MS Zaandam'];
 export const OTHER_PLACES = ['Holy See'];
+export const EXCLUDED_PLACES = ['Western Sahara'];
 export const KEY_TRENDS = [2, 3, 7];
 
 export const PRESETS = {
