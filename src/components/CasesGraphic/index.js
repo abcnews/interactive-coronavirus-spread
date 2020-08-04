@@ -531,26 +531,29 @@ const CasesGraphic = props => {
     let yUpperExtent = yScaleCap || 0;
     let xDaysUpperExtent = xScaleDaysCap || 0;
 
-    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(
-      place =>
-        place.dataAs[xScaleType]
-          .filter(d => (xScaleType !== 'dates' ? daysCapFilter(d) : timeRangeFilter(d)))
-          .filter(d => typeof yScaleCap !== 'number' || d[yScaleProp] <= yScaleCap)
-          .filter(d => yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(d))
-          .map(d => {
-            // Update dataset-limited extents for use in scales/filters later
+    const visiblePlacesData = placesData
+      .filter(isPlaceVisible)
+      .filter(d => !isPerCapitaFigures || d.population != null)
+      .filter(
+        place =>
+          place.dataAs[xScaleType]
+            .filter(d => (xScaleType !== 'dates' ? daysCapFilter(d) : timeRangeFilter(d)))
+            .filter(d => typeof yScaleCap !== 'number' || d[yScaleProp] <= yScaleCap)
+            .filter(d => yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(d))
+            .map(d => {
+              // Update dataset-limited extents for use in scales/filters later
 
-            if (xScaleType !== 'dates') {
-              xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
-            }
+              if (xScaleType !== 'dates') {
+                xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
+              }
 
-            if (typeof yScaleCap !== 'number') {
-              yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
-            }
+              if (typeof yScaleCap !== 'number') {
+                yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+              }
 
-            return d;
-          }).length > 0
-    );
+              return d;
+            }).length > 0
+      );
 
     const xAxisLabel =
       xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';
