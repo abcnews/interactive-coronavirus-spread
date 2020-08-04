@@ -13,7 +13,14 @@ const PLACE_NAME_REPLACEMENTS = [
   [/^(\w+),\sSouth/, 'S. $1'],
   [/\*$/, ''],
   [/nited\s([A-Z])\w+$/, '$1'],
-  [/^West\s/, 'W. ']
+  [/^West\s/, 'W. '],
+  [/^(\w)\w+ Australia$/, '$1A'],
+  [/^Victoria$/, 'Vic'],
+  [/^Tasmania$/, 'Tas'],
+  [/^Queensland$/, 'Qld'],
+  [/^Australian Capital Territory$/, 'ACT'],
+  [/^Northern Territory$/, 'NT'],
+  [/^New South Wales$/, 'NSW']
 ];
 
 const dataFetchReducer = (state, action) => {
