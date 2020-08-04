@@ -19,16 +19,36 @@ import CasesGraphic, {
 import InlineGraphic from '../InlineGraphic';
 import styles from './styles.css';
 
+const placeTypeBG = type =>
+  type === 'aggregate'
+    ? 'peachpuff'
+    : type === 'other'
+    ? 'thistle'
+    : type === 'ship'
+    ? 'paleturquoise'
+    : type === 'region'
+    ? 'lavender'
+    : undefined;
+
 const X_AXIS_TYPES_FOR_UNDERLYING_PROPS = {
   cases: 'daysSince100Cases',
   deaths: 'daysSince1Death',
   recoveries: 'daysSince1Recovery'
 };
 const SELECT_STYLES = {
-  multiValueLabel: (provided, state) => ({
-    ...provided,
-    fontFamily: 'ABCSans'
-  })
+  multiValueLabel: (provided, { data: { _type } }) => {
+    return {
+      ...provided,
+      fontFamily: 'ABCSans',
+      backgroundColor: placeTypeBG(_type)
+    };
+  },
+  multiValueRemove: (provided, { data: { _type } }) => {
+    return {
+      ...provided,
+      backgroundColor: placeTypeBG(_type)
+    };
+  }
 };
 const RADIO_LABELS = {
   cases: 'Cumulative cases',
@@ -129,7 +149,11 @@ export default () => {
       return [[], null];
     }
 
-    const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({ label: place, value: place }));
+    const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({
+      label: place,
+      value: place,
+      _type: explorerPlacesData[place].type
+    }));
     const availableDates = Object.keys(explorerPlacesData).reduce((memo, place) => {
       const dates = Object.keys(explorerPlacesData[place].dates);
 
