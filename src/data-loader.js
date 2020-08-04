@@ -83,6 +83,24 @@ const useDataLoader = initialURL => {
   return [state, setURL];
 };
 
+function clone(value) {
+  if (typeof value !== 'object') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(clone);
+  }
+
+  const _value = {};
+
+  for (const key in value) {
+    _value[key] = clone(value[key]);
+  }
+
+  return _value;
+}
+
 export const usePlacesData = initialURL => {
   const [{ isLoading, error, data: loadedData }, setURL] = useDataLoader(initialURL || PLACES_DATA_URL);
 
@@ -95,34 +113,36 @@ export const usePlacesData = initialURL => {
           return null;
         }
 
-        const data = JSON.parse(JSON.stringify(loadedData));
+        const data = clone(loadedData);
 
-        Object.keys(data).forEach(key => {
-          let currentPlaceName = key;
+        for (const originalPlaceName in data) {
+          let nextPlaceName = originalPlaceName;
 
           PLACE_NAME_REPLACEMENTS.forEach(pnr => {
             const [pattern, replacement] = pnr;
 
-            if (pattern.test(currentPlaceName)) {
-              const nextPlaceName = currentPlaceName.replace(pattern, replacement);
-              data[nextPlaceName] = data[currentPlaceName];
-              delete data[currentPlaceName];
-              currentPlaceName = nextPlaceName;
+            if (pattern.test(nextPlaceName)) {
+              nextPlaceName = nextPlaceName.replace(pattern, replacement);
             }
           });
-        });
+
+          if (nextPlaceName !== originalPlaceName) {
+            data[nextPlaceName] = data[originalPlaceName];
+            delete data[originalPlaceName];
+          }
+        }
 
         if (data['Western Sahara']) {
           delete data['Western Sahara'];
         }
 
         // Modify existing data format until we have the new format
-        Object.keys(data).forEach(place => {
-          Object.keys(data[place]).forEach(date => {
+        for (const place in data) {
+          for (const date in data[place]) {
             // Remove last Australian date if it's missing cumulative deaths
             if (place === 'Australia' && data[place][date].deaths == null) {
               delete data[place][date];
-              return;
+              continue;
             }
 
             data[place][date] = {
@@ -130,7 +150,7 @@ export const usePlacesData = initialURL => {
               deaths: data[place][date].deaths || 0,
               recoveries: data[place][date].recoveries || data[place][date].recovered || 0
             };
-          });
+          }
 
           data[place] = {
             type:
@@ -147,7 +167,7 @@ export const usePlacesData = initialURL => {
           if (data[place].type === 'country') {
             data[place].population = COUNTRIES_POPULATIONS[place];
           }
-        });
+        }
 
         return data;
       }, [loadedData])
@@ -182,12 +202,12 @@ export const usePlacesTestingData = initialURL => {
           return null;
         }
 
-        const data = JSON.parse(JSON.stringify(loadedData));
+        const data = clone(loadedData);
 
-        Object.keys(data).forEach(place => {
+        for (const place in data) {
           const supplementaryDataPlace = supplementaryData[place];
 
-          Object.keys(data[place]).forEach(date => {
+          for (const date in data[place]) {
             const tests = data[place][date];
             const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
             const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
@@ -197,14 +217,14 @@ export const usePlacesTestingData = initialURL => {
               cases,
               testspcc: cases ? tests / cases : 0
             };
-          });
+          }
 
           data[place] = {
             type: supplementaryDataPlace.type,
             population: supplementaryDataPlace.population,
             dates: data[place]
           };
-        });
+        }
 
         return data;
       }, [loadedData, supplementaryData])
