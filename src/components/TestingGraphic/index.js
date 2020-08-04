@@ -131,9 +131,7 @@ function generateColorAllocator(placesData) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, maxDate, placesDataURL) {
-  const cacheKey = `${placesDataURL}_${maxDate}`;
-
+function transformPlacesData(placesData, cacheKey) {
   if (!transformedPlacesDataCache[cacheKey]) {
     transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
       .map(place => {
@@ -222,7 +220,7 @@ let nextIDIndex = 0;
 const TestingGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, maxDate, yScaleType } = {
+  const { placesDataURL, yScaleType } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -251,7 +249,7 @@ const TestingGraphic = props => {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dates[0].date;
 
@@ -272,7 +270,7 @@ const TestingGraphic = props => {
     }, last(placesData[0].dates).date);
 
     return [placesData, earliestDate, latestDate];
-  }, [untransformedPlacesData, maxDate]);
+  }, [untransformedPlacesData]);
   const [state, setState] = useState({
     width: null,
     height: null
@@ -375,7 +373,7 @@ const TestingGraphic = props => {
     // Filter placesData to just visible places, and create visible/highlighted comparison utils
     const isPlaceVisible = inclusionCheckGenerator(places, 'key');
     const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(d => d.dates.filter(timeRangeFilter).length);
+    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(d => d.dates.filter(timeRangeFilter).length > 0);
 
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isCasesFactoredIn = yScaleProp.indexOf('pcc') > -1;

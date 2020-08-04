@@ -44,8 +44,8 @@ export default () => {
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
-  const [fromDate, setFromDate] = useState(initialProps.fromDate);
-  const [toDate, setToDate] = useState(initialProps.toDate);
+  const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
+  const [toDate, setToDate] = useState(initialProps.toDate || null);
   const [
     { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
     setExplorerPlacesDataURL
@@ -76,32 +76,27 @@ export default () => {
 
     const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({ label: place, value: place }));
     const availableDates = Object.keys(explorerPlacesData[Object.keys(explorerPlacesData)[0]].dates);
-    const hadFromDate = !!fromDate;
-    const hadToDate = !!toDate;
 
     requestAnimationFrame(() => {
-      if (!hadFromDate) {
-        setFromDate(availableDates[0]);
-      }
-      if (!hadToDate) {
-        setToDate(availableDates[availableDates.length - 1]);
-      }
+      setFromDate(null);
+      setToDate(null);
     });
 
     return [placesSelectOptions, availableDates];
   }, [explorerPlacesData]);
-  const fromDateSelectOptions =
-    availableDates && toDate
+  const fromDateSelectOptions = [{ label: 'Earliest known', value: null }].concat(
+    availableDates
       ? availableDates
-          .filter((date, index) => index < availableDates.indexOf(toDate))
+          .filter((date, index) => index < (toDate ? availableDates.indexOf(toDate) : Infinity))
           .map(date => ({ label: date, value: date }))
-      : [];
-  const toDateSelectOptions =
-    availableDates && fromDate
-      ? availableDates
-          .filter((date, index) => index > availableDates.indexOf(fromDate))
-          .map(date => ({ label: date, value: date }))
-      : [];
+      : []
+  );
+  const toDateSelectOptions = (availableDates
+    ? availableDates
+        .filter((date, index) => index > (fromDate ? availableDates.indexOf(fromDate) : -1))
+        .map(date => ({ label: date, value: date }))
+    : []
+  ).concat([{ label: 'Latest known', value: null }]);
   const testingGraphicPropsJSON = JSON.stringify(testingGraphicProps, 2, 2);
   const encodedTestingGraphicProps = encodeVersionedProps(testingGraphicProps);
   const encodedMarkerText = `#testinggraphicENCODED${encodedTestingGraphicProps}`;

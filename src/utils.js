@@ -41,6 +41,9 @@ export const updateLegacyProps = props => {
   return props;
 };
 
+const ONE_DAY = 864e5;
+const DATE_USA_HIT_100_CASES = new Date(2020, 2, 4);
+
 const prepareMountAndResolveProps = (mountEl, props) => {
   const presetProp = props.encoded || props.preset;
 
@@ -62,6 +65,15 @@ const prepareMountAndResolveProps = (mountEl, props) => {
     props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
   );
 
+  if (props.maxdate) {
+    const maxDate = getInclusiveDateFromYYYYMMDD(props.maxdate);
+
+    if (maxDate) {
+      otherProps.toDate = maxDate;
+      otherProps.xScaleDaysCap = Math.max(30, Math.round((maxDate - DATE_USA_HIT_100_CASES) / ONE_DAY));
+    }
+  }
+
   return [presetProp, otherProps];
 };
 
@@ -70,12 +82,5 @@ export const renderInlineGraphics = (mountPrefix, Graphic) =>
     const props = acto(getTrailingMountValue(mountEl, mountPrefix));
     const [presetProp, otherProps] = prepareMountAndResolveProps(mountEl, props);
 
-    render(
-      <InlineGraphic>
-        {otherProps && (
-          <Graphic preset={presetProp} maxDate={getInclusiveDateFromYYYYMMDD(props.maxdate)} {...otherProps} />
-        )}
-      </InlineGraphic>,
-      mountEl
-    );
+    render(<InlineGraphic>{otherProps && <Graphic preset={presetProp} {...otherProps} />}</InlineGraphic>, mountEl);
   });

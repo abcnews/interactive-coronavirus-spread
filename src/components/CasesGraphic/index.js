@@ -12,6 +12,7 @@ import {
   scaleLog,
   scaleTime,
   select,
+  timeDay,
   timeWeek,
   timeFormat
 } from 'd3';
@@ -135,7 +136,7 @@ function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) 
   return data;
 }
 
-function generateTrendsData(trends, startDate, numDays, yScaleCap) {
+function generateTrendsData(trends, startDate, numDays, yUpperExtent) {
   const dates = [];
   let currentDate = new Date(startDate);
 
@@ -146,7 +147,7 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
 
   return trends.reduce((memo, trend) => {
     const increasePerPeriod = calculateIncreasePerPeriod(trend.doublingTimePeriods);
-    const casesData = createTrendCasesData(increasePerPeriod, numDays, 100).filter(count => count <= yScaleCap);
+    const casesData = createTrendCasesData(increasePerPeriod, numDays, 100).filter(count => count <= yUpperExtent);
     const item = {
       key: trend.name,
       doublingTimePeriods: trend.doublingTimePeriods,
@@ -156,8 +157,8 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
       }
     };
 
-    const daysToYScaleCap = calculatePeriodsToIncrease(increasePerPeriod, 100, yScaleCap);
-    const daysDiff = Math.min(1, daysToYScaleCap - casesData.length + 1);
+    const daysToYUpperExtent = calculatePeriodsToIncrease(increasePerPeriod, 100, yUpperExtent);
+    const daysDiff = Math.min(1, daysToYUpperExtent - casesData.length + 1);
 
     if (daysDiff > 0) {
       const lastItem = last(item.dataAs.dates);
@@ -166,8 +167,8 @@ function generateTrendsData(trends, startDate, numDays, yScaleCap) {
         // Meet extent of y-scale
         let fractionalDate = new Date(lastItem.date.valueOf() + ONE_DAY * daysDiff);
 
-        item.dataAs.dates.push({ date: fractionalDate, cases: yScaleCap });
-        item.dataAs.daysSince100Cases.push({ day: daysToYScaleCap, cases: yScaleCap });
+        item.dataAs.dates.push({ date: fractionalDate, cases: yUpperExtent });
+        item.dataAs.daysSince100Cases.push({ day: daysToYUpperExtent, cases: yUpperExtent });
       } else {
         // Meet extent of x-scale
         let fractionalCases = lastItem.cases + lastItem.cases * increasePerPeriod;
@@ -220,9 +221,7 @@ function setTruncatedLineDashArray(node) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, maxDate, placesDataURL) {
-  const cacheKey = `${placesDataURL}_${maxDate}`;
-
+function transformPlacesData(placesData, cacheKey) {
   if (!transformedPlacesDataCache[cacheKey]) {
     transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
       .map(place => {
@@ -270,7 +269,7 @@ function transformPlacesData(placesData, maxDate, placesDataURL) {
               }
             ]);
           }, [])
-          .filter(({ cases, date }) => cases >= 1 && (!maxDate || date <= maxDate)); // should this be filtered on maxDate at render time?
+          .filter(({ cases, date }) => cases >= 1);
 
         const dataAs_daysSince100Cases = dataAs_dates
           .filter(({ cases }) => cases >= 100)
@@ -325,7 +324,7 @@ let nextIDIndex = 0;
 const CasesGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, maxDate, xScaleType, yScaleType, title, hasFootnotes } = {
+  const { placesDataURL, xScaleType, yScaleType, title, hasFootnotes } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -351,12 +350,12 @@ const CasesGraphic = props => {
     { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
   ] = usePlacesData(placesDataURL);
-  const [placesData, earliestDate, latestDate, numDates] = useMemo(() => {
+  const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData) {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, maxDate, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -375,10 +374,9 @@ const CasesGraphic = props => {
 
       return memo;
     }, last(placesData[0].dataAs.dates).date);
-    const numDates = Math.round((latestDate - earliestDate) / ONE_DAY);
 
-    return [placesData, earliestDate, latestDate, numDates];
-  }, [untransformedPlacesData, maxDate]);
+    return [placesData, earliestDate, latestDate];
+  }, [untransformedPlacesData]);
   const [state, setState] = useState({
     width: null,
     height: null,
@@ -451,7 +449,9 @@ const CasesGraphic = props => {
       trends,
       xScaleType,
       yScaleType,
-      yScaleProp
+      yScaleProp,
+      fromDate,
+      toDate
     } = {
       ...DEFAULT_PROPS,
       ...props
@@ -498,10 +498,11 @@ const CasesGraphic = props => {
       places = placesData.filter(places).map(x => x.key);
     }
 
-    // Filter placesData to just visible places, and create visible/highlighted comparison utils
-    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
-    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
-    const visiblePlacesData = placesData.filter(isPlaceVisible);
+    const timeLowerExtent = fromDate ? new Date(fromDate) : earliestDate;
+    const timeUpperExtent = toDate ? new Date(toDate) : latestDate;
+    const timeRangeDays = Math.round((timeUpperExtent - timeLowerExtent) / ONE_DAY);
+    const timeRangeFilter = d => d.date >= timeLowerExtent && d.date <= timeUpperExtent;
+    const daysCapFilter = d => xScaleDaysCap === false || d.day <= xScaleDaysCap;
 
     // Only allow trend lines when we are showing cases since 100th case
     if (yScaleProp !== 'cases' || xScaleType !== 'daysSince100Cases') {
@@ -514,42 +515,42 @@ const CasesGraphic = props => {
     const isDailyFigures = yScaleProp.indexOf('new') === 0;
     const isPerCapitaFigures = yScaleProp.indexOf('pmp') > -1;
 
-    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
-    const logarithmicLowerExtent =
-      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures ? 0.01 : 0.1);
-
     if (isDailyFigures || isPerCapitaFigures) {
       yScaleCap = false;
     }
 
-    const largestVisibleYScaleValue = visiblePlacesData.reduce((memo, d) => {
-      return Math.max.apply(null, [memo].concat(d.dataAs.dates.map(t => t[yScaleProp])));
-    }, 0);
+    const underlyingProp = yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0];
+    const logarithmicLowerExtent =
+      LOWER_LOGARITHMIC_EXTENTS[yScaleProp] || (isDailyFigures && isPerCapitaFigures ? 0.01 : 0.1);
+    const logarithmicLowerExtentFilter = d => d[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp];
 
-    // Y-scale cap should be the lower of the passed in prop and the largest value of the current Y-scale prop
-    yScaleCap = yScaleCap === false ? largestVisibleYScaleValue : Math.min(yScaleCap, largestVisibleYScaleValue);
+    // Filter placesData to just visible places, and create visible/highlighted comparison utils
+    const isPlaceVisible = inclusionCheckGenerator(places, 'key');
+    const isPlaceHighlighted = inclusionCheckGenerator(highlightedPlaces, 'key');
 
-    const cappedNumDays =
-      xScaleType.indexOf('dates') === 0
-        ? null
-        : visiblePlacesData.reduce((memo, d) => {
-            const itemsWithinCaps = d.dataAs[xScaleType].filter(
-              item => (xScaleDaysCap === false || item.day <= xScaleDaysCap) && item[yScaleProp] <= yScaleCap
-            );
+    let yUpperExtent = yScaleCap || 0;
+    let xDaysUpperExtent = xScaleDaysCap || 0;
 
-            if (!itemsWithinCaps.length) {
-              return memo;
+    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(
+      place =>
+        place.dataAs[xScaleType]
+          .filter(d => (xScaleType !== 'dates' ? daysCapFilter(d) : timeRangeFilter(d)))
+          .filter(d => typeof yScaleCap !== 'number' || d[yScaleProp] <= yScaleCap)
+          .filter(d => yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(d))
+          .map(d => {
+            // Update dataset-limited extents for use in scales/filters later
+
+            if (xScaleType !== 'dates') {
+              xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
             }
 
-            return Math.max(memo, last(itemsWithinCaps).day);
-          }, 0);
+            if (typeof yScaleCap !== 'number') {
+              yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+            }
 
-    // TODO:
-    // The yScaleCap may have potentially lowered due to cappedNumDays
-    // filtering out some of our data. Before scales & axes are generated,
-    // we could safely adjust yScaleCap now to the smaller of:
-    // * Itself, and
-    // * The largest dataAs[xScaleType]#yScaleProp value
+            return d;
+          }).length > 0
+    );
 
     const xAxisLabel =
       xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';
@@ -563,33 +564,29 @@ const CasesGraphic = props => {
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = svgHeight - MARGIN.top - MARGIN.bottom;
     const xScale = (xScaleType === 'dates'
-      ? scaleTime().domain([new Date(earliestDate), new Date(latestDate)])
-      : scaleLinear().domain([0, cappedNumDays])
+      ? scaleTime().domain([timeLowerExtent, timeUpperExtent])
+      : scaleLinear().domain([0, xDaysUpperExtent])
     ).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
-      ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
-      : scaleLinear().domain([0, yScaleCap], true)
+      ? scaleLog().domain([logarithmicLowerExtent, yUpperExtent], true)
+      : scaleLinear().domain([0, yUpperExtent], true)
     ).range([chartHeight, 0]);
     const safe_yScale = x =>
       yScale(yScaleType === 'logarithmic' && x <= logarithmicLowerExtent ? logarithmicLowerExtent : x);
-    const getUncappedDataCollection = d =>
-      d.dataAs[xScaleType].filter(item => item[underlyingProp] >= LOWER_LOGARITHMIC_EXTENTS[underlyingProp]);
+    const getUncappedYDataCollection = d =>
+      d.dataAs[xScaleType].filter(item =>
+        xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item)
+      );
     const getDataCollection = d =>
-      getUncappedDataCollection(d).reduce(
-        (memo, item) =>
-          memo.concat(
-            item[yScaleProp] <= yScaleCap &&
-              (xScaleType.indexOf('days') === -1 || xScaleDaysCap === false || item.day <= xScaleDaysCap)
-              ? [item]
-              : []
-          ),
-        []
+      getUncappedYDataCollection(d).filter(
+        item => item[yScaleProp] <= yUpperExtent && (yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(item))
       );
     const generateLinePath = d =>
       line()
         .x(d => xScale(d[xScaleProp]))
         .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
-    const isPlaceYCapped = d => last(getUncappedDataCollection(d))[yScaleProp] > yScaleCap;
+    const isPlaceYCapped = d =>
+      typeof yScaleCap === 'number' && last(getUncappedYDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
     const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
@@ -617,21 +614,21 @@ const CasesGraphic = props => {
     const visibleTrendsData = generateTrendsData(
       TRENDS.filter(isTrendVisible),
       earliestDate,
-      xScaleType === 'dates' ? numDates : cappedNumDays,
-      yScaleCap
+      xScaleType === 'dates' ? timeRangeDays : xDaysUpperExtent,
+      yUpperExtent
     );
     const getAllocatedColor = generateColorAllocator(visiblePlacesData);
     const xAxisGenerator =
       xScaleType === 'dates'
         ? axisBottom(xScale)
-            .ticks(timeWeek.every(2))
+            .ticks(timeRangeDays < 10 ? timeDay.every(1) : timeRangeDays < 60 ? timeWeek.every(1) : timeWeek.every(2))
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
     const yAxisGeneratorBase = () =>
       yScaleType === 'linear'
         ? axisLeft(yScale).ticks(5)
         : axisLeft(yScale).tickValues(
-            TICK_VALUES['logarithmic'].filter(value => value >= logarithmicLowerExtent && value <= yScaleCap)
+            TICK_VALUES['logarithmic'].filter(value => value >= logarithmicLowerExtent && value <= yUpperExtent)
           );
     // const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
     const yAxisGenerator = yAxisGeneratorBase().tickFormat(value => (value >= 1 ? FORMAT_S(value) : value));
@@ -921,7 +918,7 @@ const CasesGraphic = props => {
       fx: 0,
       targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
     }));
-    if (chartWidth < 640 || xScaleType === 'dates' || yScaleType === 'logarithmic') {
+    if (chartWidth < 640 || xScaleType === 'dates' || xScaleDaysCap || yScaleType === 'logarithmic') {
       const plotLabelsForceSimulation = forceSimulation()
         .nodes(plotLabelForceNodes)
         .force('collide', forceCollide(PLOT_LABEL_HEIGHT / 2))
