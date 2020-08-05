@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
-import COUNTRIES_POPULATIONS from './population';
+import PLACES_POPULATIONS from './population';
 
-const PLACE_NAME_REPLACEMENTS = [
+const PLACE_NAME_FULL_REPLACEMENTS = {
+  Victoria: 'Vic',
+  Tasmania: 'Tas',
+  Queensland: 'Qld',
+  'Australian Capital Territory': 'ACT',
+  'Northern Territory': 'NT',
+  'New South Wales': 'NSW'
+};
+const PLACE_NAME_PARTIAL_REPLACEMENTS = [
   [/^([A-Z])\w+\s([A-Z])\w+\s([A-Z])\w+$/, '$1$2$3'],
   [/\sand(\sthe)?\s/, ' & '],
   [/^East\s/, 'E. '],
@@ -14,13 +22,7 @@ const PLACE_NAME_REPLACEMENTS = [
   [/\*$/, ''],
   [/nited\s([A-Z])\w+$/, '$1'],
   [/^West\s/, 'W. '],
-  [/^(\w)\w+ Australia$/, '$1A'],
-  [/^Victoria$/, 'Vic'],
-  [/^Tasmania$/, 'Tas'],
-  [/^Queensland$/, 'Qld'],
-  [/^Australian Capital Territory$/, 'ACT'],
-  [/^Northern Territory$/, 'NT'],
-  [/^New South Wales$/, 'NSW']
+  [/^(\w)\w+ Australia$/, '$1A']
 ];
 
 const dataFetchReducer = (state, action) => {
@@ -122,21 +124,28 @@ export const usePlacesData = initialURL => {
         if (!placesDataCache[url]) {
           const data = clone(loadedData);
 
+          // Update some place names
           for (const originalPlaceName in data) {
             let nextPlaceName = originalPlaceName;
 
-            // Fix names of some places with multiple RegExp passes
-            PLACE_NAME_REPLACEMENTS.forEach(pnr => {
-              const [pattern, replacement] = pnr;
+            // Check for full replacements
+            nextPlaceName = PLACE_NAME_FULL_REPLACEMENTS[originalPlaceName] || originalPlaceName;
 
-              if (pattern.test(nextPlaceName)) {
-                nextPlaceName = nextPlaceName.replace(pattern, replacement);
-              }
-            });
+            // ...or incremental partial replacements
+            if (nextPlaceName !== originalPlaceName) {
+              PLACE_NAME_PARTIAL_REPLACEMENTS.forEach(pnr => {
+                const [pattern, replacement] = pnr;
 
-            // Replace any updated place names
+                if (pattern.test(nextPlaceName)) {
+                  nextPlaceName = nextPlaceName.replace(pattern, replacement);
+                }
+              });
+            }
+
+            // Finally, mount their data onto new keys
             if (nextPlaceName !== originalPlaceName) {
               data[nextPlaceName] = data[originalPlaceName];
+              data[nextPlaceName].alias = originalPlaceName;
               delete data[originalPlaceName];
             }
           }
@@ -162,9 +171,9 @@ export const usePlacesData = initialURL => {
                 ? 'other'
                 : data[place].type;
 
-            // Add `population` to countries
-            if (data[place].type === 'country' && COUNTRIES_POPULATIONS[place]) {
-              data[place].population = COUNTRIES_POPULATIONS[place];
+            // Add `population` to places we have local data for
+            if (PLACES_POPULATIONS[place]) {
+              data[place].population = PLACES_POPULATIONS[place];
             }
 
             const { dates } = data[place];

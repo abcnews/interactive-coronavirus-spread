@@ -1,4 +1,5 @@
 export default {
+  // Countries
   Afghanistan: 37172386,
   Albania: 2866376,
   Algeria: 42228429,
@@ -179,5 +180,14 @@ export default {
   'W. Bank & Gaza': 4569087,
   Yemen: 28498687,
   Zambia: 17351822,
-  Zimbabwe: 14439018
+  Zimbabwe: 14439018,
+  // Australian states & territories
+  ACT: 427419,
+  NSW: 8128984,
+  NT: 244761,
+  Qld: 5129996,
+  SA: 1759184,
+  Tas: 537012,
+  Vic: 6651074,
+  WA: 2639080
 };
