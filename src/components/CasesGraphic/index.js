@@ -137,6 +137,9 @@ function createTrendCasesData(increasePerPeriod, daysToSimulate, startingValue) 
 }
 
 function generateTrendsData(trends, startDate, numDays, yUpperExtent) {
+  if (numDays === 0) {
+    return [];
+  }
   const dates = [];
   let currentDate = new Date(startDate);
 
