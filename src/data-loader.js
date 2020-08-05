@@ -4,7 +4,7 @@ import PLACES_POPULATIONS from './population';
 
 const PLACE_NAME_FULL_REPLACEMENTS = {
   Connecticut: 'Conn.',
-  'District of Columbia': 'DC',
+  'District Of Columbia': 'DC',
   Massachusetts: 'Mass.',
   'New Hampshire': 'New Hamp.',
   Washington: 'Wash.',
@@ -18,16 +18,16 @@ const PLACE_NAME_FULL_REPLACEMENTS = {
 const PLACE_NAME_PARTIAL_REPLACEMENTS = [
   [/^([A-Z])\w+\s([A-Z])\w+\s([A-Z])\w+$/, '$1$2$3'],
   [/\sand(\sthe)?\s/, ' & '],
-  [/^East\s/, 'E. '],
   [/ew\sZealand$/, 'Z'],
-  [/^North\s/, 'N. '],
+  [/^(\w)\w+ Australia$/, '$1A'],
   [/^Saint\s/, 'St. '],
+  [/^East\s/, 'E. '],
+  [/^North\s/, 'N. '],
   [/^South\s/, 'S. '],
   [/^(\w+),\sSouth/, 'S. $1'],
   [/\*$/, ''],
   [/nited\s([A-Z])\w+$/, '$1'],
-  [/^West\s/, 'W. '],
-  [/^(\w)\w+ Australia$/, '$1A']
+  [/^West\s/, 'W. ']
 ];
 
 const dataFetchReducer = (state, action) => {

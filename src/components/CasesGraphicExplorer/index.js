@@ -150,7 +150,7 @@ export default () => {
     }
 
     const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({
-      label: place,
+      label: explorerPlacesData[place].alias || place,
       value: place,
       _type: explorerPlacesData[place].type
     }));
