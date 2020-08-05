@@ -100,7 +100,7 @@ export const DEFAULT_PROPS = {
   highlightedTrends: false
 };
 const KEYING_FN = d => d.key;
-const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, ABC</a></small>`;
+const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, The COVID Tracking Project, ABC</a></small>`;
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
