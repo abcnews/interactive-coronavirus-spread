@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import { OTHER_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
-import COUNTRIES_POPULATIONS from './population';
+import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
+import PLACES_POPULATIONS from './population';
 
-const PLACE_NAME_REPLACEMENTS = [
+const PLACE_NAME_FULL_REPLACEMENTS = {
+  Connecticut: 'Conn.',
+  'District Of Columbia': 'DC',
+  Massachusetts: 'Mass.',
+  'New Hampshire': 'New Hamp.',
+  Washington: 'Wash.',
+  Victoria: 'Vic',
+  Tasmania: 'Tas',
+  Queensland: 'Qld',
+  'Australian Capital Territory': 'ACT',
+  'Northern Territory': 'NT',
+  'New South Wales': 'NSW'
+};
+const PLACE_NAME_PARTIAL_REPLACEMENTS = [
   [/^([A-Z])\w+\s([A-Z])\w+\s([A-Z])\w+$/, '$1$2$3'],
   [/\sand(\sthe)?\s/, ' & '],
-  [/^East\s/, 'E. '],
   [/ew\sZealand$/, 'Z'],
-  [/^North\s/, 'N. '],
+  [/^(\w)\w+ Australia$/, '$1A'],
   [/^Saint\s/, 'St. '],
+  [/^East\s/, 'E. '],
+  [/^North\s/, 'N. '],
   [/^South\s/, 'S. '],
   [/^(\w+),\sSouth/, 'S. $1'],
   [/\*$/, ''],
@@ -49,6 +63,7 @@ const fetchCache = {};
 const useDataLoader = initialURL => {
   const [url, setURL] = useState(initialURL);
   const [state, dispatch] = useReducer(dataFetchReducer, {
+    url,
     isLoading: false,
     error: null,
     data: null
@@ -83,8 +98,24 @@ const useDataLoader = initialURL => {
   return [state, setURL];
 };
 
+function clone(value) {
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+
+  const _value = Array.isArray(value) ? [] : {};
+
+  for (const key in value) {
+    _value[key] = clone(value[key]);
+  }
+
+  return _value;
+}
+
+const placesDataCache = {};
+
 export const usePlacesData = initialURL => {
-  const [{ isLoading, error, data: loadedData }, setURL] = useDataLoader(initialURL || PLACES_DATA_URL);
+  const [{ url, isLoading, error, data: loadedData }, setURL] = useDataLoader(initialURL || PLACES_DATA_URL);
 
   return [
     {
@@ -95,61 +126,81 @@ export const usePlacesData = initialURL => {
           return null;
         }
 
-        const data = JSON.parse(JSON.stringify(loadedData));
+        if (!placesDataCache[url]) {
+          const data = clone(loadedData);
 
-        Object.keys(data).forEach(key => {
-          let currentPlaceName = key;
+          // Update some place names
+          for (const originalPlaceName in data) {
+            let nextPlaceName = originalPlaceName;
 
-          PLACE_NAME_REPLACEMENTS.forEach(pnr => {
-            const [pattern, replacement] = pnr;
+            // Check for full replacements
+            nextPlaceName = PLACE_NAME_FULL_REPLACEMENTS[originalPlaceName] || originalPlaceName;
 
-            if (pattern.test(currentPlaceName)) {
-              const nextPlaceName = currentPlaceName.replace(pattern, replacement);
-              data[nextPlaceName] = data[currentPlaceName];
-              delete data[currentPlaceName];
-              currentPlaceName = nextPlaceName;
-            }
-          });
-        });
+            // ...or incremental partial replacements
+            if (nextPlaceName === originalPlaceName) {
+              PLACE_NAME_PARTIAL_REPLACEMENTS.forEach(pnpr => {
+                const [pattern, replacement] = pnpr;
 
-        if (data['Western Sahara']) {
-          delete data['Western Sahara'];
-        }
-
-        // Modify existing data format until we have the new format
-        Object.keys(data).forEach(place => {
-          Object.keys(data[place]).forEach(date => {
-            // Remove last Australian date if it's missing cumulative deaths
-            if (place === 'Australia' && data[place][date].deaths == null) {
-              delete data[place][date];
-              return;
+                if (pattern.test(nextPlaceName)) {
+                  nextPlaceName = nextPlaceName.replace(pattern, replacement);
+                }
+              });
             }
 
-            data[place][date] = {
-              cases: data[place][date].cases || 0,
-              deaths: data[place][date].deaths || 0,
-              recoveries: data[place][date].recoveries || data[place][date].recovered || 0
-            };
-          });
+            // Finally, mount their data onto new keys
+            if (nextPlaceName !== originalPlaceName) {
+              data[nextPlaceName] = data[originalPlaceName];
+              data[nextPlaceName].alias = originalPlaceName;
+              delete data[originalPlaceName];
+            }
+          }
 
-          data[place] = {
-            type:
+          // Remove places we want to exclude
+          for (const place of EXCLUDED_PLACES) {
+            if (data[EXCLUDED_PLACES]) {
+              delete data[EXCLUDED_PLACES];
+            }
+          }
+
+          for (const place in data) {
+            // Remove `country` prop from regions
+            delete data[place].country;
+
+            // Re-type some places
+            data[place].type =
               place === 'Worldwide'
                 ? 'aggregate'
                 : SHIPS.indexOf(place) > -1
                 ? 'ship'
                 : OTHER_PLACES.indexOf(place) > -1
                 ? 'other'
-                : 'country',
-            dates: data[place]
-          };
+                : data[place].type;
 
-          if (data[place].type === 'country') {
-            data[place].population = COUNTRIES_POPULATIONS[place];
+            // Add `population` to places we have local data for
+            if (PLACES_POPULATIONS[place]) {
+              data[place].population = PLACES_POPULATIONS[place];
+            }
+
+            const { dates } = data[place];
+
+            for (const date in dates) {
+              // Remove last Australian date if it's missing cumulative deaths
+              if (place === 'Australia' && dates[date].deaths == null) {
+                delete dates[date];
+                continue;
+              }
+
+              // Fill in non-zeroed props
+              dates[date].cases = dates[date].cases || 0;
+              dates[date].deaths = dates[date].deaths || 0;
+              dates[date].recoveries = dates[date].recoveries || 0;
+            }
           }
-        });
 
-        return data;
+          placesDataCache[url] = data;
+        }
+
+        return clone(placesDataCache[url]);
       }, [loadedData])
     },
     setURL
@@ -164,8 +215,10 @@ function getSupplementaryURL(url) {
   return supplementaryURLs[url.split('?')[0]];
 }
 
+const placesTestingDataCache = {};
+
 export const usePlacesTestingData = initialURL => {
-  const [{ isLoading, error, data: loadedData }, setPlacesTestingDataURL] = useDataLoader(
+  const [{ url, isLoading, error, data: loadedData }, setPlacesTestingDataURL] = useDataLoader(
     initialURL || PLACES_TESTING_DATA_URL
   );
   const [
@@ -182,31 +235,35 @@ export const usePlacesTestingData = initialURL => {
           return null;
         }
 
-        const data = JSON.parse(JSON.stringify(loadedData));
+        if (!placesTestingDataCache[url]) {
+          const data = clone(loadedData);
 
-        Object.keys(data).forEach(place => {
-          const supplementaryDataPlace = supplementaryData[place];
+          for (const place in data) {
+            const supplementaryDataPlace = supplementaryData[place];
 
-          Object.keys(data[place]).forEach(date => {
-            const tests = data[place][date];
-            const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
-            const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
+            for (const date in data[place]) {
+              const tests = data[place][date];
+              const supplementaryDataPlaceDate = supplementaryDataPlace.dates[date];
+              const cases = supplementaryDataPlaceDate ? supplementaryDataPlaceDate.cases : 0;
 
-            data[place][date] = {
-              tests,
-              cases,
-              testspcc: cases ? tests / cases : 0
+              data[place][date] = {
+                tests,
+                cases,
+                testspcc: cases ? tests / cases : 0
+              };
+            }
+
+            data[place] = {
+              type: supplementaryDataPlace.type,
+              population: supplementaryDataPlace.population,
+              dates: data[place]
             };
-          });
+          }
 
-          data[place] = {
-            type: supplementaryDataPlace.type,
-            population: supplementaryDataPlace.population,
-            dates: data[place]
-          };
-        });
+          placesTestingDataCache[url] = data;
+        }
 
-        return data;
+        return clone(placesTestingDataCache[url]);
       }, [loadedData, supplementaryData])
     },
     url => {

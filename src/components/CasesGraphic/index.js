@@ -100,7 +100,7 @@ export const DEFAULT_PROPS = {
   highlightedTrends: false
 };
 const KEYING_FN = d => d.key;
-const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, ABC</a></small>`;
+const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, The COVID Tracking Project, ABC</a></small>`;
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
@@ -531,26 +531,29 @@ const CasesGraphic = props => {
     let yUpperExtent = yScaleCap || 0;
     let xDaysUpperExtent = xScaleDaysCap || 0;
 
-    const visiblePlacesData = placesData.filter(isPlaceVisible).filter(
-      place =>
-        place.dataAs[xScaleType]
-          .filter(d => (xScaleType !== 'dates' ? daysCapFilter(d) : timeRangeFilter(d)))
-          .filter(d => typeof yScaleCap !== 'number' || d[yScaleProp] <= yScaleCap)
-          .filter(d => yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(d))
-          .map(d => {
-            // Update dataset-limited extents for use in scales/filters later
+    const visiblePlacesData = placesData
+      .filter(isPlaceVisible)
+      .filter(d => !isPerCapitaFigures || d.population != null)
+      .filter(
+        place =>
+          place.dataAs[xScaleType]
+            .filter(d => (xScaleType !== 'dates' ? daysCapFilter(d) : timeRangeFilter(d)))
+            .filter(d => typeof yScaleCap !== 'number' || d[yScaleProp] <= yScaleCap)
+            .filter(d => yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(d))
+            .map(d => {
+              // Update dataset-limited extents for use in scales/filters later
 
-            if (xScaleType !== 'dates') {
-              xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
-            }
+              if (xScaleType !== 'dates') {
+                xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
+              }
 
-            if (typeof yScaleCap !== 'number') {
-              yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
-            }
+              if (typeof yScaleCap !== 'number') {
+                yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+              }
 
-            return d;
-          }).length > 0
-    );
+              return d;
+            }).length > 0
+      );
 
     const xAxisLabel =
       xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';

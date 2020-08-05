@@ -29,7 +29,6 @@ const App = ({ scrollyData }) => {
     if (maxDate) {
       graphicProps.toDate = maxDate;
       graphicProps.xScaleDaysCap = Math.max(30, Math.round((maxDate - DATE_USA_HIT_100_CASES) / ONE_DAY));
-      console.log(graphicProps);
     }
   } else if (graphic === 'doubling') {
     Graphic = DoublingGraphic;
