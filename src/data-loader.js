@@ -3,6 +3,11 @@ import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL
 import PLACES_POPULATIONS from './population';
 
 const PLACE_NAME_FULL_REPLACEMENTS = {
+  Connecticut: 'Conn.',
+  'District of Columbia': 'DC',
+  Massachusetts: 'Mass.',
+  'New Hampshire': 'New Hamp.',
+  Washington: 'Wash.',
   Victoria: 'Vic',
   Tasmania: 'Tas',
   Queensland: 'Qld',
@@ -132,7 +137,7 @@ export const usePlacesData = initialURL => {
             nextPlaceName = PLACE_NAME_FULL_REPLACEMENTS[originalPlaceName] || originalPlaceName;
 
             // ...or incremental partial replacements
-            if (nextPlaceName !== originalPlaceName) {
+            if (nextPlaceName === originalPlaceName) {
               PLACE_NAME_PARTIAL_REPLACEMENTS.forEach(pnr => {
                 const [pattern, replacement] = pnr;
 
