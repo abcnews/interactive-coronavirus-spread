@@ -138,8 +138,8 @@ export const usePlacesData = initialURL => {
 
             // ...or incremental partial replacements
             if (nextPlaceName === originalPlaceName) {
-              PLACE_NAME_PARTIAL_REPLACEMENTS.forEach(pnr => {
-                const [pattern, replacement] = pnr;
+              PLACE_NAME_PARTIAL_REPLACEMENTS.forEach(pnpr => {
+                const [pattern, replacement] = pnpr;
 
                 if (pattern.test(nextPlaceName)) {
                   nextPlaceName = nextPlaceName.replace(pattern, replacement);
