@@ -25,9 +25,17 @@ export const decodeVersionedProps = encoded => {
 };
 
 export const updateLegacyProps = props => {
-  // Support legacy configs (when the "daysSince100Cases" xScaleType was called "days")
-  if (props && props.xScaleType === 'days') {
-    props.xScaleType = 'daysSince100Cases';
+  if (props) {
+    // Support legacy `xScaleType` (when "daysSince100Cases" was called "days")
+    if (props.xScaleType === 'days') {
+      props.xScaleType = 'daysSince100Cases';
+    }
+
+    // Support legacy `hasFootnotes` (renaming it to `hasCredits`)
+    if (typeof props.hasFootnotes === 'boolean') {
+      props.hasCredits = props.hasFootnotes;
+      delete props.hasFootnotes;
+    }
   }
 
   return props;

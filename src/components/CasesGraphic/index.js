@@ -68,7 +68,7 @@ const UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS = {
 export const DEFAULT_CASES_CAP = 5e4; // 50k
 export const DEFAULT_PROPS = {
   title: undefined,
-  hasFootnotes: undefined,
+  hasCredits: undefined,
   xScaleType: X_SCALE_TYPES[0],
   yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
@@ -82,7 +82,7 @@ export const DEFAULT_PROPS = {
   highlightedTrends: false
 };
 const KEYING_FN = d => d.key;
-const FOOTNOTES_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, The COVID Tracking Project, ABC</a></small>`;
+const FOOTNOTES_CREDITS_MARKUP = `<small><a href="https://abc.net.au/news/12107500">Data sources: Johns Hopkins Coronavirus Resource Center, Our World in Data, The COVID Tracking Project, ABC</a></small>`;
 
 const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log(increasePerPeriod + 1);
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
@@ -277,7 +277,7 @@ let nextIDIndex = 0;
 const CasesGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, xScaleType, yScaleType, title, hasFootnotes } = {
+  const { placesDataURL, xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -299,6 +299,19 @@ const CasesGraphic = props => {
     ],
     []
   );
+  const footnotesMarkup = useMemo(() => {
+    const footnotesMarkupParts = [];
+
+    if (rollingAverageDays > 1) {
+      footnotesMarkupParts.push(`<small>Values shown are ${rollingAverageDays} day averages.</small>`);
+    }
+
+    if (hasCredits) {
+      footnotesMarkupParts.push(FOOTNOTES_CREDITS_MARKUP);
+    }
+
+    return footnotesMarkupParts.join(' ');
+  }, [hasCredits, rollingAverageDays]);
   const [
     { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
@@ -392,7 +405,7 @@ const CasesGraphic = props => {
 
     let {
       title,
-      hasFootnotes,
+      hasCredits,
       places,
       yScaleCap,
       xScaleDaysCap,
@@ -426,7 +439,11 @@ const CasesGraphic = props => {
       return;
     }
 
-    if (title !== prevProps.title || hasFootnotes !== prevProps.hasFootnotes) {
+    if (
+      title !== prevProps.title ||
+      hasCredits !== prevProps.hasCredits ||
+      rollingAverageDays !== prevProps.rollingAverageDays
+    ) {
       debug('Title / footnotes change requires resize');
       requestAnimationFrame(() => measureAndSetDimensions());
     }
@@ -523,9 +540,9 @@ const CasesGraphic = props => {
           place.dataAs[xScaleType],
           rollingAverageDays,
           d => d[yScaleProp],
-          (v, d) => ({
+          (yScalePropValue, d) => ({
             ...d,
-            [yScaleProp]: v
+            [yScaleProp]: yScalePropValue
           })
         );
 
@@ -981,11 +998,7 @@ const CasesGraphic = props => {
         <g className={styles.trendLabels} />
         <g className={styles.plotLabels} />
       </svg>
-      <p
-        ref={footnotesRef}
-        className={styles.footnotes}
-        dangerouslySetInnerHTML={{ __html: hasFootnotes ? FOOTNOTES_MARKUP : '' }}
-      ></p>
+      <p ref={footnotesRef} className={styles.footnotes} dangerouslySetInnerHTML={{ __html: footnotesMarkup }}></p>
     </div>
   );
 };

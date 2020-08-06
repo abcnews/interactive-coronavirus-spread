@@ -101,7 +101,7 @@ export default () => {
 
   const [placesDataURL, setPlacesDataURL] = useState(PLACES_DATA_URL);
   const [title, setTitle] = useState(initialProps.title);
-  const [hasFootnotes, setHasFootnotes] = useState(initialProps.hasFootnotes);
+  const [hasCredits, setHasCredits] = useState(initialProps.hasCredits);
   const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
@@ -124,7 +124,7 @@ export default () => {
     ...initialProps,
     placesDataURL,
     title,
-    hasFootnotes,
+    hasCredits,
     xScaleType,
     yScaleType,
     yScaleProp,
@@ -226,14 +226,14 @@ export default () => {
           <label>Chart Title</label>
           <Textfield name="title" value={title || ''} onChange={event => setTitle(event.currentTarget.value)} />
         </div>
-        <div key="hasfootnotes">
+        <div key="footnotes">
           <label>Footnotes</label>
           <Checkbox
-            name="hasfootnotes"
+            name="hascredits"
             label="Show data sources &amp; story link"
             value="Show data sources &amp; story link"
-            isChecked={hasFootnotes}
-            onChange={event => setHasFootnotes(event.target.checked)}
+            isChecked={hasCredits}
+            onChange={event => setHasCredits(event.target.checked)}
           />
         </div>
         <div key="highlightedplaces">
