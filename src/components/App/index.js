@@ -1,7 +1,7 @@
 import Scrollyteller from '@abcnews/scrollyteller';
 import React, { memo, useCallback, useState } from 'react';
 import { PRESETS } from '../../constants';
-import { getInclusiveDateFromYYYYMMDD } from '../../utils';
+import { getInclusiveDateFromYYYYMMDD } from '../../misc-utils';
 import CasesGraphic from '../CasesGraphic';
 import DoublingGraphic from '../DoublingGraphic';
 import Placeholder from '../TestComponent';

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
+import { clone } from './misc-utils';
 import PLACES_POPULATIONS from './population';
 
 const PLACE_NAME_FULL_REPLACEMENTS = {
@@ -97,20 +98,6 @@ const useDataLoader = initialURL => {
 
   return [state, setURL];
 };
-
-function clone(value) {
-  if (typeof value !== 'object' || value === null) {
-    return value;
-  }
-
-  const _value = Array.isArray(value) ? [] : {};
-
-  for (const key in value) {
-    _value[key] = clone(value[key]);
-  }
-
-  return _value;
-}
 
 const placesDataCache = {};
 

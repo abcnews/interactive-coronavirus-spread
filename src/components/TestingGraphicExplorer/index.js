@@ -5,7 +5,7 @@ import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { PLACES_TESTING_DATA_URL } from '../../constants';
 import { usePlacesTestingData } from '../../data-loader';
-import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
+import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../mount-utils';
 import TestingGraphic, { DEFAULT_PROPS, Y_SCALE_TYPES, Y_SCALE_PROPS } from '../TestingGraphic';
 import InlineGraphic from '../InlineGraphic';
 import styles from '../CasesGraphicExplorer/styles.css'; // borrow styles from CasesGaphicExplorer (they're visually the same)

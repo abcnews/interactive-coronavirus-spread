@@ -11,6 +11,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import InlineGraphic from './components/InlineGraphic';
 import { PRESETS } from './constants';
+import { getInclusiveDateFromYYYYMMDD } from './misc-utils';
 
 export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
 
@@ -22,14 +23,6 @@ export const decodeVersionedProps = encoded => {
     console.error(err);
   }
   return decoded;
-};
-
-export const getInclusiveDateFromYYYYMMDD = yyymmdd => {
-  let [, yyyy, mm, dd] = String(yyymmdd).match(/(\d{4})(\d{2})(\d{2})/) || [];
-
-  if (yyyy && mm && dd) {
-    return new Date(`${yyyy}-${mm}-${dd}T23:59`);
-  }
 };
 
 export const updateLegacyProps = props => {

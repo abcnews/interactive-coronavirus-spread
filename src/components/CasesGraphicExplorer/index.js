@@ -6,7 +6,7 @@ import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import { PLACES_DATA_URL, TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
-import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../utils';
+import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../mount-utils';
 import CasesGraphic, {
   DEFAULT_CASES_CAP,
   DEFAULT_PROPS,
