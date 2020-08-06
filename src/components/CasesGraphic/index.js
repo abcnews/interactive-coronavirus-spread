@@ -21,7 +21,7 @@ import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
-import { clone, generateColorAllocator, last } from '../../misc-utils';
+import { clone, generateColorAllocator, last, movingAverage } from '../../misc-utils';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -75,6 +75,7 @@ export const DEFAULT_PROPS = {
   xScaleDaysCap: false,
   yScaleCap: DEFAULT_CASES_CAP,
   hasLineSmoothing: true,
+  rollingAverageDays: 1,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES,
   trends: KEY_TRENDS,
@@ -403,6 +404,7 @@ const CasesGraphic = props => {
       yScaleType,
       yScaleProp,
       hasLineSmoothing,
+      rollingAverageDays,
       fromDate,
       toDate
     } = {
@@ -507,7 +509,28 @@ const CasesGraphic = props => {
 
               return d;
             }).length > 0
-      );
+      )
+      .map(_place => {
+        // Each props/state update, we work with clones of the places we need,
+        // with optional moving averages applied to their data.
+        const place = clone(_place, true);
+
+        if (rollingAverageDays < 2) {
+          return place;
+        }
+
+        place.dataAs[xScaleType] = movingAverage(
+          place.dataAs[xScaleType],
+          rollingAverageDays,
+          d => d[yScaleProp],
+          (v, d) => ({
+            ...d,
+            [yScaleProp]: v
+          })
+        );
+
+        return place;
+      });
 
     const xAxisLabel =
       xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';

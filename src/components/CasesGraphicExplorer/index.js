@@ -85,6 +85,7 @@ const DAYS_CAP_OPTIONS = {
   '40': '40 days',
   '': 'None'
 };
+const ROLLING_AVERAGE_DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
@@ -107,6 +108,7 @@ export default () => {
   const [xScaleDaysCap, setXScaleDaysCap] = useState(initialProps.xScaleDaysCap);
   const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [hasLineSmoothing, setHasLineSmoothing] = useState(initialProps.hasLineSmoothing);
+  const [rollingAverageDays, setRollingAverageDays] = useState(initialProps.rollingAverageDays);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
   const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
@@ -129,6 +131,7 @@ export default () => {
     yScaleCap,
     xScaleDaysCap,
     hasLineSmoothing,
+    rollingAverageDays,
     places: visiblePlaces,
     highlightedPlaces,
     fromDate,
@@ -185,6 +188,10 @@ export default () => {
   const trendsSelectOptions = TRENDS.map(({ name, doublingTimePeriods }) => ({
     label: `Every ${name}`,
     value: doublingTimePeriods
+  }));
+  const rollingAverageDaysOptions = ROLLING_AVERAGE_DAYS_OPTIONS.map(value => ({
+    label: value === 1 ? 'None' : `${value} days`,
+    value
   }));
 
   const casesGraphicPropsJSON = JSON.stringify(casesGraphicProps, 2, 2);
@@ -431,7 +438,27 @@ export default () => {
             label="Apply smoothing to lines"
             value="Apply smoothing to lines"
             isChecked={hasLineSmoothing}
+            isDisabled={rollingAverageDays > 1}
             onChange={event => setHasLineSmoothing(event.target.checked)}
+          />
+        </div>
+        <div key="rollingaveragedays">
+          <label>Rolling Average</label>
+          <Select
+            components={animatedComponents}
+            styles={SELECT_STYLES}
+            defaultValue={rollingAverageDaysOptions.find(option => option.value === initialProps.rollingAverageDays)}
+            value={rollingAverageDaysOptions.find(option => option.value === rollingAverageDays)}
+            options={rollingAverageDaysOptions}
+            onChange={selectedOption => {
+              const [rollingAverageDays] = optionsValues([selectedOption]);
+
+              setRollingAverageDays(rollingAverageDays);
+
+              if (rollingAverageDays > 1) {
+                setHasLineSmoothing(true);
+              }
+            }}
           />
         </div>
         {areTrendsAllowed && (

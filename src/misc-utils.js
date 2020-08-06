@@ -72,3 +72,12 @@ export function generateColorAllocator(placesData) {
 }
 
 export const last = x => x[x.length - 1];
+
+export const movingAverage = (data, smoothing = 1, accessor = d => d, storer = v => v) =>
+  data.reduce(
+    (acc, d, i, arr) =>
+      i < smoothing - 1
+        ? acc
+        : acc.concat(storer(arr.slice(i - smoothing + 1, i + 1).reduce((t, d) => t + accessor(d), 0) / smoothing, d)),
+    []
+  );
