@@ -1,6 +1,7 @@
 import {
   axisBottom,
   axisLeft,
+  curveLinear,
   curveMonotoneX,
   forceCollide,
   forceSimulation,
@@ -73,6 +74,7 @@ export const Y_SCALE_PROPS = Y_SCALE_TOTAL_INCLUDING_PMP_PROPS.concat(
 export const DEFAULT_PROPS = {
   yScaleType: Y_SCALE_TYPES[0],
   yScaleProp: Y_SCALE_PROPS[0],
+  hasLineSmoothing: true,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES
 };
@@ -324,7 +326,7 @@ const TestingGraphic = props => {
       return;
     }
 
-    let { places, highlightedPlaces, preset, yScaleType, yScaleProp, fromDate, toDate } = {
+    let { places, highlightedPlaces, preset, yScaleType, yScaleProp, hasLineSmoothing, fromDate, toDate } = {
       ...DEFAULT_PROPS,
       ...props
     };
@@ -412,7 +414,8 @@ const TestingGraphic = props => {
     const generateLinePath = d =>
       line()
         .x(d => xScale(d.date))
-        .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
+        .y(d => safe_yScale(d[yScaleProp]))
+        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));
     const plotPointTransformGenerator = d =>
       d ? `translate(${xScale(d.date)}, ${safe_yScale(d[yScaleProp])})` : 'none';
     const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));

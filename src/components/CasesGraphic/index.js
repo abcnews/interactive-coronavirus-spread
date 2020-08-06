@@ -1,6 +1,7 @@
 import {
   axisBottom,
   axisLeft,
+  curveLinear,
   curveMonotoneX,
   forceCollide,
   forceSimulation,
@@ -94,6 +95,7 @@ export const DEFAULT_PROPS = {
   yScaleProp: Y_SCALE_PROPS[0],
   xScaleDaysCap: false,
   yScaleCap: DEFAULT_CASES_CAP,
+  hasLineSmoothing: true,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES,
   trends: KEY_TRENDS,
@@ -453,6 +455,7 @@ const CasesGraphic = props => {
       xScaleType,
       yScaleType,
       yScaleProp,
+      hasLineSmoothing,
       fromDate,
       toDate
     } = {
@@ -590,7 +593,8 @@ const CasesGraphic = props => {
     const generateLinePath = d =>
       line()
         .x(d => xScale(d[xScaleProp]))
-        .y(d => safe_yScale(d[yScaleProp]))(getDataCollection(d));
+        .y(d => safe_yScale(d[yScaleProp]))
+        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));
     const isPlaceYCapped = d =>
       typeof yScaleCap === 'number' && last(getUncappedYDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);

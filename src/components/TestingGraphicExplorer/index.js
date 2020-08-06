@@ -1,3 +1,4 @@
+import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import React, { useMemo, useState } from 'react';
 import Select from 'react-select';
@@ -42,6 +43,7 @@ export default () => {
   const [placesDataURL, setPlacesDataURL] = useState(PLACES_TESTING_DATA_URL);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
+  const [hasLineSmoothing, setHasLineSmoothing] = useState(initialProps.hasLineSmoothing);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
   const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
@@ -56,6 +58,7 @@ export default () => {
     placesDataURL,
     yScaleType,
     yScaleProp,
+    hasLineSmoothing,
     places: visiblePlaces,
     highlightedPlaces,
     fromDate,
@@ -231,6 +234,16 @@ export default () => {
               }}
             />
           </div>
+        </div>
+        <div key="haslinesmoothing">
+          <label>Line Smoothing</label>
+          <Checkbox
+            name="haslinesmoothing"
+            label="Apply smoothing to lines"
+            value="Apply smoothing to lines"
+            isChecked={hasLineSmoothing}
+            onChange={event => setHasLineSmoothing(event.target.checked)}
+          />
         </div>
         <hr />
         <details>
