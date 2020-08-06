@@ -19,8 +19,9 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { usePlacesTestingData } from '../../data-loader';
 import { KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
+import { usePlacesTestingData } from '../../data-loader';
+import { generateColorAllocator, last } from '../../misc-utils';
 import styles from '../CasesGraphic/styles.css'; // borrow styles from CasesGaphic (they're visually the same)
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -40,28 +41,6 @@ const FORMAT_S = format('~s');
 const TRANSITION_DURATIONS = {
   opacity: 250,
   transform: 1000
-};
-const COLORS = [
-  'teal',
-  'orange',
-  'cyan',
-  'purple',
-  'red',
-  'blue',
-  'brown',
-  'green',
-  'copy' /* copy = black/white, depending on preferred color scheme */
-];
-const COLOR_DIBS = {
-  China: 'teal',
-  Italy: 'orange',
-  Singapore: 'cyan',
-  'S. Korea': 'purple',
-  UK: 'red',
-  US: 'blue',
-  Taiwan: 'brown',
-  Japan: 'green',
-  Australia: 'copy'
 };
 export const Y_SCALE_TYPES = ['logarithmic', 'linear'];
 const Y_SCALE_TOTAL_PROPS = ['tests', 'testspcc']; // pcc props shouldn't have pmp added
@@ -84,7 +63,6 @@ const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
 const calculatePeriodsToIncrease = (increasePerPeriod, startingValue, endingValue) =>
   Math.log(endingValue / startingValue) / Math.log(increasePerPeriod + 1);
-const last = x => x[x.length - 1];
 const inclusionCheckGenerator = (collection, itemPropName) => d =>
   typeof collection === 'boolean' ? collection : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
 
@@ -98,37 +76,6 @@ function checkScaleProps(yScaleProp) {
   if (Y_SCALE_PROPS.indexOf(yScaleProp) === -1) {
     throw new Error(`Unrecognised yScaleProp: ${yScaleProp}`);
   }
-}
-
-function generateColorAllocator(placesData) {
-  const colorAllocation = {};
-  let colorsUnallocated = [].concat(COLORS);
-
-  // Pre-allocate places with dibs, then allocate remaining.
-  placesData
-    .filter(({ key }) => {
-      const preferredColor = COLOR_DIBS[key];
-
-      if (preferredColor && colorsUnallocated.indexOf(preferredColor) > -1) {
-        colorAllocation[key] = preferredColor;
-        colorsUnallocated = colorsUnallocated.filter(color => color !== preferredColor);
-
-        return false;
-      }
-
-      return true;
-    })
-    .forEach(({ key }) => {
-      if (!colorsUnallocated.length) {
-        return;
-      }
-
-      colorAllocation[key] = colorsUnallocated.shift();
-    });
-
-  return key => {
-    return colorAllocation[key] || 'none';
-  };
 }
 
 let transformedPlacesDataCache = {};

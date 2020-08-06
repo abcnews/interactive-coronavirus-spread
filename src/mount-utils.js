@@ -11,7 +11,6 @@ import React from 'react';
 import { render } from 'react-dom';
 import InlineGraphic from './components/InlineGraphic';
 import { PRESETS } from './constants';
-import { getInclusiveDateFromYYYYMMDD } from './misc-utils';
 
 export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
 
@@ -35,7 +34,20 @@ export const updateLegacyProps = props => {
 };
 
 const ONE_DAY = 864e5;
-const DATE_USA_HIT_100_CASES = new Date(2020, 2, 4);
+const US_100_CASES = new Date(2020, 2, 4);
+const MAX_DAYS_CAP = 30;
+
+export const maxdateMixin = (props, maxdate) => {
+  let [, yyyy, mm, dd] = String(maxdate).match(/(\d{4})(\d{2})(\d{2})/) || [];
+  const formatted = `${yyyy}-${mm}-${dd}`;
+  const inclusiveDate = new Date(`${formatted}T23:59`);
+
+  return {
+    ...props,
+    toDate: formatted,
+    xScaleDaysCap: Math.max(MAX_DAYS_CAP, Math.round((inclusiveDate - US_100_CASES) / ONE_DAY))
+  };
+};
 
 const prepareMountAndResolveProps = (mountEl, props) => {
   const presetProp = props.encoded || props.preset;
@@ -54,17 +66,12 @@ const prepareMountAndResolveProps = (mountEl, props) => {
     }
   }
 
-  const otherProps = updateLegacyProps(
+  let otherProps = updateLegacyProps(
     props.encoded ? decodeVersionedProps(props.encoded) : props.preset ? PRESETS[props.preset] : null
   );
 
   if (props.maxdate) {
-    const maxDate = getInclusiveDateFromYYYYMMDD(props.maxdate);
-
-    if (maxDate) {
-      otherProps.toDate = maxDate;
-      otherProps.xScaleDaysCap = Math.max(30, Math.round((maxDate - DATE_USA_HIT_100_CASES) / ONE_DAY));
-    }
+    otherProps = maxdateMixin(otherProps, props.maxdate);
   }
 
   return [presetProp, otherProps];

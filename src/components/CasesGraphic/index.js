@@ -19,8 +19,9 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { usePlacesData } from '../../data-loader';
 import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
+import { usePlacesData } from '../../data-loader';
+import { clone, generateColorAllocator, last } from '../../misc-utils';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -40,28 +41,6 @@ const FORMAT_S = format('~s');
 const TRANSITION_DURATIONS = {
   opacity: 250,
   transform: 1000
-};
-const COLORS = [
-  'teal',
-  'orange',
-  'cyan',
-  'purple',
-  'red',
-  'blue',
-  'brown',
-  'green',
-  'copy' /* copy = black/white, depending on preferred color scheme */
-];
-const COLOR_DIBS = {
-  China: 'teal',
-  Italy: 'orange',
-  Singapore: 'cyan',
-  'S. Korea': 'purple',
-  UK: 'red',
-  US: 'blue',
-  Taiwan: 'brown',
-  Japan: 'green',
-  Australia: 'copy'
 };
 export const X_SCALE_TYPES = ['daysSince100Cases', 'daysSince1Death', 'daysSince1Recovery', 'dates'];
 export const Y_SCALE_TYPES = ['logarithmic', 'linear'];
@@ -108,7 +87,6 @@ const calculateDoublingTimePeriods = increasePerPeriod => Math.log(2) / Math.log
 const calculateIncreasePerPeriod = doublingTimePeriods => Math.exp(Math.log(2) / doublingTimePeriods) - 1;
 const calculatePeriodsToIncrease = (increasePerPeriod, startingValue, endingValue) =>
   Math.log(endingValue / startingValue) / Math.log(increasePerPeriod + 1);
-const last = x => x[x.length - 1];
 const inclusionCheckGenerator = (collection, itemPropName) => d =>
   typeof collection === 'boolean' ? collection : Array.isArray(collection) && collection.indexOf(d[itemPropName]) > -1;
 
@@ -187,37 +165,6 @@ function generateTrendsData(trends, startDate, numDays, yUpperExtent) {
   }, []);
 }
 
-function generateColorAllocator(placesData) {
-  const colorAllocation = {};
-  let colorsUnallocated = [].concat(COLORS);
-
-  // Pre-allocate places with dibs, then allocate remaining.
-  placesData
-    .filter(({ key }) => {
-      const preferredColor = COLOR_DIBS[key];
-
-      if (preferredColor && colorsUnallocated.indexOf(preferredColor) > -1) {
-        colorAllocation[key] = preferredColor;
-        colorsUnallocated = colorsUnallocated.filter(color => color !== preferredColor);
-
-        return false;
-      }
-
-      return true;
-    })
-    .forEach(({ key }) => {
-      if (!colorsUnallocated.length) {
-        return;
-      }
-
-      colorAllocation[key] = colorsUnallocated.shift();
-    });
-
-  return key => {
-    return colorAllocation[key] || 'none';
-  };
-}
-
 function setTruncatedLineDashArray(node) {
   const pathLength = node.getTotalLength();
 
@@ -274,7 +221,7 @@ function transformPlacesData(placesData, cacheKey) {
               }
             ]);
           }, [])
-          .filter(({ cases, date }) => cases >= 1);
+          .filter(({ cases }) => cases >= 1);
 
         const dataAs_daysSince100Cases = dataAs_dates
           .filter(({ cases }) => cases >= 100)
@@ -537,9 +484,10 @@ const CasesGraphic = props => {
     let yUpperExtent = yScaleCap || 0;
     let xDaysUpperExtent = xScaleDaysCap || 0;
 
+    // Get the subset of placesData we'll be binding to our graphic during this render
     const visiblePlacesData = placesData
       .filter(isPlaceVisible)
-      .filter(d => !isPerCapitaFigures || d.population != null)
+      .filter(place => !isPerCapitaFigures || place.population != null)
       .filter(
         place =>
           place.dataAs[xScaleType]
@@ -599,7 +547,11 @@ const CasesGraphic = props => {
       typeof yScaleCap === 'number' && last(getUncappedYDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
     const plotPointTransformGenerator = d => `translate(${xScale(d[xScaleProp])}, ${safe_yScale(d[yScaleProp])})`;
-    const lineEndTransformGenerator = d => plotPointTransformGenerator(last(getDataCollection(d)));
+    const lineEndTransformGenerator = d => {
+      const dataCollection = getDataCollection(d);
+
+      return dataCollection.length ? plotPointTransformGenerator(last(dataCollection)) : null;
+    };
     const labelForceClamp = (min, max) => {
       let forceNodes;
 
@@ -924,10 +876,14 @@ const CasesGraphic = props => {
       d =>
         isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
     );
-    const plotLabelForceNodes = labelledPlacesData.map(d => ({
-      fx: 0,
-      targetY: safe_yScale(last(getDataCollection(d))[yScaleProp])
-    }));
+    const plotLabelForceNodes = labelledPlacesData.map(d => {
+      const dataCollection = getDataCollection(d);
+
+      return {
+        fx: 0,
+        targetY: safe_yScale(dataCollection.length ? last(dataCollection)[yScaleProp] : 0)
+      };
+    });
     if (chartWidth < 640 || xScaleType === 'dates' || xScaleDaysCap || yScaleType === 'logarithmic') {
       const plotLabelsForceSimulation = forceSimulation()
         .nodes(plotLabelForceNodes)
@@ -939,12 +895,16 @@ const CasesGraphic = props => {
         plotLabelsForceSimulation.tick();
       }
     }
-    const plotLabelsData = labelledPlacesData.map((d, i) => ({
-      key: d.key,
-      text: d.key,
-      x: 6 + xScale(last(getDataCollection(d))[xScaleProp]),
-      y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
-    }));
+    const plotLabelsData = labelledPlacesData.map((d, i) => {
+      const dataCollection = getDataCollection(d);
+
+      return {
+        key: d.key,
+        text: d.key,
+        x: 6 + xScale(dataCollection.length ? last(dataCollection)[xScaleProp] : 0),
+        y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
+      };
+    });
     const plotLabels = svg // Bind
       .select(`.${styles.plotLabels}`)
       .attr('transform', `translate(${MARGIN.left} ${MARGIN.top})`)
