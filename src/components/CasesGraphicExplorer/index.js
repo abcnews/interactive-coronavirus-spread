@@ -431,17 +431,6 @@ export default () => {
             </div>
           </div>
         )}
-        <div key="haslinesmoothing">
-          <label>Line Smoothing</label>
-          <Checkbox
-            name="haslinesmoothing"
-            label="Apply smoothing to lines"
-            value="Apply smoothing to lines"
-            isChecked={hasLineSmoothing}
-            isDisabled={rollingAverageDays > 1}
-            onChange={event => setHasLineSmoothing(event.target.checked)}
-          />
-        </div>
         <div key="rollingaveragedays">
           <label>Rolling Average</label>
           <Select
@@ -459,6 +448,17 @@ export default () => {
                 setHasLineSmoothing(true);
               }
             }}
+          />
+        </div>
+        <div key="haslinesmoothing">
+          <label>Line Smoothing</label>
+          <Checkbox
+            name="haslinesmoothing"
+            label="Apply smoothing to lines"
+            value="Apply smoothing to lines"
+            isChecked={hasLineSmoothing}
+            isDisabled={rollingAverageDays > 1}
+            onChange={event => setHasLineSmoothing(event.target.checked)}
           />
         </div>
         {areTrendsAllowed && (
