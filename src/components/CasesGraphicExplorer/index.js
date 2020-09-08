@@ -85,7 +85,7 @@ const DAYS_CAP_OPTIONS = {
   '40': '40 days',
   '': 'None'
 };
-const ROLLING_AVERAGE_DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
+const ROLLING_AVERAGE_DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14];
 
 const animatedComponents = makeAnimated();
 const optionsValues = options => options.map(option => option.value);
