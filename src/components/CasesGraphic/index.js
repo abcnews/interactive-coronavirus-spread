@@ -303,7 +303,7 @@ const CasesGraphic = props => {
     const footnotesMarkupParts = [];
 
     if (rollingAverageDays > 1) {
-      footnotesMarkupParts.push(`<small>Values shown are ${rollingAverageDays} day averages.</small>`);
+      footnotesMarkupParts.push(`<small>Values shown are ${rollingAverageDays}-day averages.</small>`);
     }
 
     if (hasCredits) {
