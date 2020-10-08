@@ -546,6 +546,14 @@ const CasesGraphic = props => {
           })
         );
 
+        // Update yUpperExtent, taking into account the smoothing provided by the rolling average
+        if (typeof yScaleCap !== 'number') {
+          yUpperExtent = 0;
+          place.dataAs[xScaleType].map(d => {
+            yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+          });
+        }
+
         return place;
       });
 
