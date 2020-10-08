@@ -631,7 +631,8 @@ const CasesGraphic = props => {
     const xAxisGenerator =
       xScaleType === 'dates'
         ? axisBottom(xScale)
-            .ticks(timeRangeDays < 10 ? timeDay.every(1) : timeRangeDays < 60 ? timeWeek.every(1) : timeWeek.every(2))
+            // .ticks(timeRangeDays < 10 ? timeDay.every(1) : timeRangeDays < 60 ? timeWeek.every(1) : timeWeek.every(2))
+            .ticks(width < 640 ? 4 : 8)
             .tickFormat(timeFormat('%-d/%-m'))
         : axisBottom(xScale).ticks(5);
     const yAxisGeneratorBase = () =>
