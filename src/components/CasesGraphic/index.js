@@ -410,6 +410,7 @@ const CasesGraphic = props => {
       yScaleCap,
       xScaleDaysCap,
       highlightedPlaces,
+      labelAllPlaces,
       highlightedTrends,
       preset,
       trends,
@@ -921,7 +922,7 @@ const CasesGraphic = props => {
     // Rendering > 12. Add/remove/update plot labels (near ends of lines)
     const labelledPlacesData = visiblePlacesData.filter(
       d =>
-        isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
+        labelAllPlaces || isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
     );
     const plotLabelForceNodes = labelledPlacesData.map(d => {
       const dataCollection = getDataCollection(d);
