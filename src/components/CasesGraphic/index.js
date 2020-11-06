@@ -530,6 +530,11 @@ const CasesGraphic = props => {
         const place = clone(_place, true);
 
         if (rollingAverageDays < 2) {
+          if (typeof yScaleCap !== 'number') {
+            place.dataAs[xScaleType].map(d => {
+              yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+            });
+          }
           return place;
         }
 
