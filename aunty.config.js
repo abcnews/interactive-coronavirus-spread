@@ -16,7 +16,7 @@ module.exports = {
     config.devtool = 'source-map';
 
     ADDITIONAL_ENTRY_POINTS.forEach(name => {
-      config.entry[name] = [config.entry.index[0].replace('index.js', `${name}.js`)];
+      config.entry[name] = [config.entry.index[0].replace('index', name)];
     });
 
     return config;

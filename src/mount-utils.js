@@ -1,10 +1,4 @@
-import {
-  ensureBlockMount,
-  exactMountSelector,
-  getMountValue,
-  getTrailingMountValue,
-  prefixedMountSelector
-} from '@abcnews/mount-utils';
+import { getMountValue, selectMounts } from '@abcnews/mount-utils';
 import * as acto from '@abcnews/alternating-case-to-object';
 import { decode, encode } from '@abcnews/base-36-props';
 import React from 'react';
@@ -67,7 +61,7 @@ const prepareMountAndResolveProps = (mountEl, props) => {
 
   // Look for longform encoded props elsewhere (assuming only a hint is currently used)
   if (props.encoded) {
-    const longformMountEl = document.querySelector(prefixedMountSelector(props.encoded));
+    const [longformMountEl] = selectMounts(props.encoded);
 
     if (longformMountEl) {
       props.encoded = getMountValue(longformMountEl);
@@ -86,8 +80,8 @@ const prepareMountAndResolveProps = (mountEl, props) => {
 };
 
 export const renderInlineGraphics = (mountPrefix, Graphic) =>
-  [...document.querySelectorAll(prefixedMountSelector(mountPrefix))].map(ensureBlockMount).map(mountEl => {
-    const props = acto(getTrailingMountValue(mountEl, mountPrefix));
+  selectMounts(mountPrefix).map(mountEl => {
+    const props = acto(getMountValue(mountEl, mountPrefix));
     const [presetProp, otherProps] = prepareMountAndResolveProps(mountEl, props);
 
     render(<InlineGraphic>{otherProps && <Graphic preset={presetProp} {...otherProps} />}</InlineGraphic>, mountEl);

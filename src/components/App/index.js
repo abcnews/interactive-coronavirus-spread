@@ -9,8 +9,8 @@ import styles from './styles.css';
 
 const App = ({ scrollyData }) => {
   const [preset, setPreset] = useState('initial');
-  const onMarker = useCallback(config => {
-    const { preset } = config;
+  const onMarker = useCallback(data => {
+    const { preset } = data;
 
     setPreset(preset);
   }, []);
@@ -21,7 +21,7 @@ const App = ({ scrollyData }) => {
   if (graphic === 'cases') {
     Graphic = CasesGraphic;
 
-    const maxdate = scrollyData.panels.length ? scrollyData.panels[0].config.maxdate : '';
+    const maxdate = scrollyData.panels.length ? scrollyData.panels[0].data.maxdate : '';
 
     if (maxdate) {
       graphicProps = maxdateMixin(graphicProps, maxdate);

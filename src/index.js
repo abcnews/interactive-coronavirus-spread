@@ -1,5 +1,5 @@
 import * as acto from '@abcnews/alternating-case-to-object';
-import { getTrailingMountValue, isMount, prefixedMountSelector } from '@abcnews/mount-utils';
+import { getMountValue, isMount, selectMounts } from '@abcnews/mount-utils';
 import { loadScrollyteller } from '@abcnews/scrollyteller';
 import React from 'react';
 import { render } from 'react-dom';
@@ -14,8 +14,8 @@ const whenOdysseyLoaded = new Promise(resolve =>
 );
 const whenScrollytellersLoaded = new Promise((resolve, reject) =>
   whenOdysseyLoaded.then(odyssey => {
-    const scrollyNames = [...document.querySelectorAll(prefixedMountSelector('scrollytellerNAME'))].map(
-      mountEl => acto(getTrailingMountValue(mountEl, 'scrollyteller')).name
+    const scrollyNames = selectMounts('scrollytellerNAME', { markAsUsed: false }).map(
+      mountEl => acto(getMountValue(mountEl, 'scrollyteller')).name
     );
     const scrollyDatas = [];
 

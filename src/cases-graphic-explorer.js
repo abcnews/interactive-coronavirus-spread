@@ -1,16 +1,16 @@
-import { ensureBlockMount, exactMountSelector } from '@abcnews/mount-utils';
+import { selectMounts } from '@abcnews/mount-utils';
 import React from 'react';
 import { render } from 'react-dom';
 import CasesGraphicExplorer from './components/CasesGraphicExplorer';
 
 export const renderExplorer = () => {
-  const mountEl = document.querySelector(exactMountSelector('casesgraphicexplorer'));
+  const [mountEl] = selectMounts('casesgraphicexplorer');
 
   if (!mountEl) {
     return;
   }
 
-  render(<CasesGraphicExplorer />, ensureBlockMount(mountEl));
+  render(<CasesGraphicExplorer />, mountEl);
 };
 
 const domready = fn => {
