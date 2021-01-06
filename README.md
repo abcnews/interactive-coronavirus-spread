@@ -7,7 +7,3 @@ This project deploys some simple redirect documents under `/interactive-coronavi
 ```
 https://www.abc.net.au/res/sites/news-projects/interactive-coronavirus-spread/latest/index.js
 ```
-
-## Authors
-
-- Simon Elvery ([simon@elvery.net](mailto:simon@elvery.net))

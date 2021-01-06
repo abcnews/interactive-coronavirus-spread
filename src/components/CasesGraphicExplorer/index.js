@@ -108,6 +108,7 @@ export default () => {
   const [xScaleDaysCap, setXScaleDaysCap] = useState(initialProps.xScaleDaysCap);
   const [yScaleCap, setYScaleCap] = useState(initialProps.yScaleCap);
   const [hasLineSmoothing, setHasLineSmoothing] = useState(initialProps.hasLineSmoothing);
+  const [labelAllPlaces, setLabelAllPlaces] = useState(initialProps.labelAllPlaces);
   const [rollingAverageDays, setRollingAverageDays] = useState(initialProps.rollingAverageDays);
   const [visiblePlaces, setVisiblePlaces] = useState(initialProps.places);
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
@@ -131,6 +132,7 @@ export default () => {
     yScaleCap,
     xScaleDaysCap,
     hasLineSmoothing,
+    labelAllPlaces,
     rollingAverageDays,
     places: visiblePlaces,
     highlightedPlaces,
@@ -278,6 +280,15 @@ export default () => {
               setVisiblePlaces(nextVisiblePlaces);
               setHighlightedPlaces(highlightedPlaces.filter(place => nextVisiblePlaces.indexOf(place) > -1));
             }}
+          />
+        </div>
+        <div key="labelallplaces">
+          <Checkbox
+            name="labelallplaces"
+            label="Label all visible places"
+            value="Label all visible places"
+            isChecked={labelAllPlaces}
+            onChange={event => setLabelAllPlaces(event.target.checked)}
           />
         </div>
         <div key="xscaletype">

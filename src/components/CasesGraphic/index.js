@@ -410,6 +410,7 @@ const CasesGraphic = props => {
       yScaleCap,
       xScaleDaysCap,
       highlightedPlaces,
+      labelAllPlaces,
       highlightedTrends,
       preset,
       trends,
@@ -520,10 +521,6 @@ const CasesGraphic = props => {
                 xDaysUpperExtent = Math.max(xDaysUpperExtent, d[xScaleProp]);
               }
 
-              if (typeof yScaleCap !== 'number') {
-                yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
-              }
-
               return d;
             }).length > 0
       )
@@ -533,6 +530,11 @@ const CasesGraphic = props => {
         const place = clone(_place, true);
 
         if (rollingAverageDays < 2) {
+          if (typeof yScaleCap !== 'number') {
+            place.dataAs[xScaleType].map(d => {
+              yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
+            });
+          }
           return place;
         }
 
@@ -548,7 +550,6 @@ const CasesGraphic = props => {
 
         // Update yUpperExtent, taking into account the smoothing provided by the rolling average
         if (typeof yScaleCap !== 'number') {
-          yUpperExtent = 0;
           place.dataAs[xScaleType].map(d => {
             yUpperExtent = Math.max(yUpperExtent, d[yScaleProp]);
           });
@@ -582,15 +583,19 @@ const CasesGraphic = props => {
       d.dataAs[xScaleType].filter(item =>
         xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item)
       );
-    const getDataCollection = d =>
-      getUncappedYDataCollection(d).filter(
+    const getDataCollection = d =>{
+      const series = getUncappedYDataCollection(d);
+      const filtered = series.filter(
         item => item[yScaleProp] <= yUpperExtent && (yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(item))
       );
-    const generateLinePath = d =>
-      line()
+      return filtered;
+    }
+    const generateLinePath = d =>{
+      const col = getDataCollection(d);
+      return line()
         .x(d => xScale(d[xScaleProp]))
         .y(d => safe_yScale(d[yScaleProp]))
-        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));
+        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));}
     const isPlaceYCapped = d =>
       typeof yScaleCap === 'number' && last(getUncappedYDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
@@ -764,7 +769,6 @@ const CasesGraphic = props => {
         if (isPlaceYCapped(d)) {
           setTimeout(setTruncatedLineDashArray, 0, this);
         }
-
         return null;
       })
       .style('stroke-opacity', 0)
@@ -923,7 +927,7 @@ const CasesGraphic = props => {
     // Rendering > 12. Add/remove/update plot labels (near ends of lines)
     const labelledPlacesData = visiblePlacesData.filter(
       d =>
-        isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
+        labelAllPlaces || isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
     );
     const plotLabelForceNodes = labelledPlacesData.map(d => {
       const dataCollection = getDataCollection(d);
