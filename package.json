@@ -1,42 +1,42 @@
 {
-	"name": "interactive-coronavirus-spread",
-	"version": "1.18.0",
-	"description": "A project generated from aunty's react project template.",
-	"license": "MIT",
-	"private": true,
-	"contributors": [
-		"Simon Elvery <simon@elvery.net>",
-		"Joshua Byrd <phocks@gmail.com>",
-		"Colin Gourlay <gourlay.colin@abc.net.au>"
-	],
-	"aunty": {
-		"type": "react"
-	},
-	"scripts": {
-		"start": "aunty serve",
-		"test": "aunty test"
-	},
-	"devDependencies": {
-		"@abcnews/aunty": "^11.2.1",
-		"react-test-renderer": "^16.13.0"
-	},
-	"dependencies": {
-		"@abcnews/alternating-case-to-object": "^2.0.0",
-		"@abcnews/base-36-props": "^1.0.1",
-		"@abcnews/mount-utils": "^2.0.0",
-		"@abcnews/scrollyteller": "^4.0.2",
-		"@atlaskit/checkbox": "^12.0.0",
-		"@atlaskit/radio": "^5.0.0",
-		"@atlaskit/textfield": "^5.0.0",
-		"core-js": "^3.6.4",
-		"d3": "^5.15.0",
-		"d3-force-reuse": "^1.0.1",
-		"d3-interpolate-path": "^2.1.2",
-		"d3-selection": "^1.4.1",
-		"react": "^16.13.1",
-		"react-dom": "^16.13.1",
-		"react-reveal": "^1.2.2",
-		"react-select": "^3.1.0",
-		"styled-components": "^5.0.0"
-	}
+  "name": "interactive-coronavirus-spread",
+  "version": "1.18.0",
+  "description": "A project generated from aunty's react project template.",
+  "license": "MIT",
+  "private": true,
+  "contributors": [
+    "Simon Elvery <simon@elvery.net>",
+    "Joshua Byrd <phocks@gmail.com>",
+    "Colin Gourlay <gourlay.colin@abc.net.au>"
+  ],
+  "aunty": {
+    "type": "react"
+  },
+  "scripts": {
+    "start": "aunty serve",
+    "test": "aunty test"
+  },
+  "devDependencies": {
+    "@abcnews/aunty": "^11.2.1",
+    "react-test-renderer": "^16.13.0"
+  },
+  "dependencies": {
+    "@abcnews/alternating-case-to-object": "^2.0.0",
+    "@abcnews/base-36-props": "^1.0.1",
+    "@abcnews/mount-utils": "^2.0.0",
+    "@abcnews/scrollyteller": "^4.0.2",
+    "@atlaskit/checkbox": "^12.0.0",
+    "@atlaskit/radio": "^5.0.3",
+    "@atlaskit/textfield": "^5.0.0",
+    "core-js": "^3.6.4",
+    "d3": "^5.15.0",
+    "d3-force-reuse": "^1.0.1",
+    "d3-interpolate-path": "^2.1.2",
+    "d3-selection": "^1.4.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-reveal": "^1.2.2",
+    "react-select": "^3.1.0",
+    "styled-components": "^5.2.1"
+  }
 }
