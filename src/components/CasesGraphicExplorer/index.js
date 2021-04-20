@@ -4,7 +4,7 @@ import Textfield from '@atlaskit/textfield';
 import React, { useMemo, useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import { PLACES_DATA_URL, TRENDS } from '../../constants';
+import { GLOBAL_DATA_URL, PLACES_DATA_URL, TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../mount-utils';
 import CasesGraphic, {
@@ -71,18 +71,18 @@ const RADIO_LABELS = {
   recoveriespmp: 'Cumulative recoveries / million people'
 };
 const Y_SCALE_CAP_OPTIONS = {
-  '1000': '1k',
-  '5000': '5k',
-  '10000': '10k',
-  '50000': '50k',
-  '100000': '100k',
+  1000: '1k',
+  5000: '5k',
+  10000: '10k',
+  50000: '50k',
+  100000: '100k',
   '': 'None'
 };
 const DAYS_CAP_OPTIONS = {
-  '10': '10 days',
-  '20': '20 days',
-  '30': '30 days',
-  '40': '40 days',
+  10: '10 days',
+  20: '20 days',
+  30: '30 days',
+  40: '40 days',
   '': 'None'
 };
 const ROLLING_AVERAGE_DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 20, 30];
@@ -120,6 +120,10 @@ export default () => {
     { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
     setExplorerPlacesDataURL
   ] = usePlacesData(placesDataURL);
+  const [
+    { isLoading: isExplorerGlobalDataLoading, error: explorerGlobalDataError, data: explorerGlobalData },
+    setExplorerGlobalDataURL
+  ] = usePlacesData(GLOBAL_DATA_URL);
 
   const casesGraphicProps = {
     ...initialProps,
@@ -152,17 +156,19 @@ export default () => {
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const [placesSelectOptions, availableDates] = useMemo(() => {
-    if (!explorerPlacesData) {
+    if (!explorerPlacesData && !explorerGlobalData) {
       return [[], null];
     }
 
-    const placesSelectOptions = Object.keys(explorerPlacesData).map(place => ({
-      label: explorerPlacesData[place].alias || place,
+    const explorerPlacesAndGlobalData = { ...explorerPlacesData, ...explorerGlobalData };
+
+    const placesSelectOptions = Object.keys(explorerPlacesAndGlobalData).map(place => ({
+      label: explorerPlacesAndGlobalData[place].alias || place,
       value: place,
-      _type: explorerPlacesData[place].type
+      _type: explorerPlacesAndGlobalData[place].type
     }));
-    const availableDates = Object.keys(explorerPlacesData).reduce((memo, place) => {
-      const dates = Object.keys(explorerPlacesData[place].dates);
+    const availableDates = Object.keys(explorerPlacesAndGlobalData).reduce((memo, place) => {
+      const dates = Object.keys(explorerPlacesAndGlobalData[place].dates);
 
       return dates.length > memo.length ? dates : memo;
     }, []);
@@ -173,7 +179,7 @@ export default () => {
     });
 
     return [placesSelectOptions, availableDates];
-  }, [explorerPlacesData]);
+  }, [explorerPlacesData, explorerGlobalData]);
   const fromDateSelectOptions = [{ label: 'Earliest known', value: null }].concat(
     availableDates
       ? availableDates

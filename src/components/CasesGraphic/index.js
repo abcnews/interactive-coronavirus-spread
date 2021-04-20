@@ -19,7 +19,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
+import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS, GLOBAL_DATA_URL } from '../../constants';
 import { usePlacesData } from '../../data-loader';
 import { clone, generateColorAllocator, last, movingAverage } from '../../misc-utils';
 import styles from './styles.css';
@@ -316,12 +316,16 @@ const CasesGraphic = props => {
     { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
     setPlacesDataURL
   ] = usePlacesData(placesDataURL);
+  const [
+    { isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData },
+    setGlobalDataURL
+  ] = usePlacesData(GLOBAL_DATA_URL);
   const [placesData, earliestDate, latestDate] = useMemo(() => {
-    if (!untransformedPlacesData) {
+    if (!untransformedPlacesData && !untransformedGlobalData) {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
+    const placesData = transformPlacesData({ ...untransformedPlacesData, ...untransformedGlobalData }, placesDataURL);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -454,8 +458,18 @@ const CasesGraphic = props => {
       return;
     }
 
+    if (isGlobalDataLoading) {
+      debug('Global data is still loading');
+      return;
+    }
+
     if (placesDataError) {
       debug(`Error loading places data: ${placesDataError}`);
+      return;
+    }
+
+    if (globalDataError) {
+      debug(`Error loading global data: ${globalDataError}`);
       return;
     }
 
@@ -583,19 +597,20 @@ const CasesGraphic = props => {
       d.dataAs[xScaleType].filter(item =>
         xScaleType.indexOf('days') === 0 ? daysCapFilter(item) : timeRangeFilter(item)
       );
-    const getDataCollection = d =>{
+    const getDataCollection = d => {
       const series = getUncappedYDataCollection(d);
       const filtered = series.filter(
         item => item[yScaleProp] <= yUpperExtent && (yScaleType !== 'logarithmic' || logarithmicLowerExtentFilter(item))
       );
       return filtered;
-    }
-    const generateLinePath = d =>{
+    };
+    const generateLinePath = d => {
       const col = getDataCollection(d);
       return line()
         .x(d => xScale(d[xScaleProp]))
         .y(d => safe_yScale(d[yScaleProp]))
-        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));}
+        .curve(hasLineSmoothing ? curveMonotoneX : curveLinear)(getDataCollection(d));
+    };
     const isPlaceYCapped = d =>
       typeof yScaleCap === 'number' && last(getUncappedYDataCollection(d))[yScaleProp] > yScaleCap;
     const generateLinePathLength = d => (isPlaceYCapped(d) ? 100 : 95.5);
@@ -648,14 +663,10 @@ const CasesGraphic = props => {
           );
     // const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
     const yAxisGenerator = yAxisGeneratorBase().tickFormat(value => (value >= 1 ? FORMAT_S(value) : value));
-    const yAxisGridlinesGenerator = yAxisGeneratorBase()
-      .tickSize(-chartWidth)
-      .tickFormat('');
+    const yAxisGridlinesGenerator = yAxisGeneratorBase().tickSize(-chartWidth).tickFormat('');
 
     // Rendering > 1: Update SVG dimensions
-    const svg = select(svgRef.current)
-      .attr('width', width)
-      .attr('height', svgHeight);
+    const svg = select(svgRef.current).attr('width', width).attr('height', svgHeight);
 
     // Rendering > 2: Update accessible SVG title & description
     svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
@@ -737,7 +748,7 @@ const CasesGraphic = props => {
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attrTween('d', function(d) {
+      .attrTween('d', function (d) {
         const currentPath = generateLinePath(d);
 
         const previous = select(this);
@@ -765,7 +776,7 @@ const CasesGraphic = props => {
       .classed(styles.plotLine, true)
       .classed(styles.highlighted, isPlaceHighlighted)
       .attr('d', generateLinePath)
-      .attr('stroke-dasharray', function(d) {
+      .attr('stroke-dasharray', function (d) {
         if (isPlaceYCapped(d)) {
           setTimeout(setTruncatedLineDashArray, 0, this);
         }
@@ -782,7 +793,7 @@ const CasesGraphic = props => {
       .attr('stroke-dasharray', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attrTween('d', function(d) {
+      .attrTween('d', function (d) {
         const currentPath = generateLinePath(d);
 
         const previous = select(this);
@@ -927,7 +938,9 @@ const CasesGraphic = props => {
     // Rendering > 12. Add/remove/update plot labels (near ends of lines)
     const labelledPlacesData = visiblePlacesData.filter(
       d =>
-        labelAllPlaces || isPlaceHighlighted(d) || KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
+        labelAllPlaces ||
+        isPlaceHighlighted(d) ||
+        KEY_PLACES.concat(preset === 'europe' ? KEY_EUROPEAN_PLACES : []).indexOf(d.key) > -1
     );
     const plotLabelForceNodes = labelledPlacesData.map(d => {
       const dataCollection = getDataCollection(d);

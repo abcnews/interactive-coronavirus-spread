@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import { OTHER_PLACES, EXCLUDED_PLACES, PLACES_DATA_URL, PLACES_TESTING_DATA_URL, SHIPS } from './constants';
+import {
+  OTHER_PLACES,
+  EXCLUDED_PLACES,
+  GLOBAL_DATA_URL,
+  PLACES_DATA_URL,
+  PLACES_TESTING_DATA_URL,
+  SHIPS
+} from './constants';
 import { clone } from './misc-utils';
 import PLACES_POPULATIONS from './population';
 
@@ -114,7 +121,15 @@ export const usePlacesData = initialURL => {
         }
 
         if (!placesDataCache[url]) {
-          const data = clone(loadedData);
+          let data = clone(loadedData);
+
+          // Global data is in a slightly different format, so lets correct that
+          if ('name' in data && data.name === 'Global') {
+            delete data.name;
+            data = {
+              Global: data
+            };
+          }
 
           // Update some place names
           for (const originalPlaceName in data) {
