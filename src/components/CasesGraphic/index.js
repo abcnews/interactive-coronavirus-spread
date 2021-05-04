@@ -78,7 +78,7 @@ export const DEFAULT_PROPS = {
   rollingAverageDays: 1,
   places: KEY_PLACES,
   highlightedPlaces: KEY_PLACES,
-  trends: KEY_TRENDS,
+  trends: false,
   highlightedTrends: false
 };
 const KEYING_FN = d => d.key;

@@ -114,7 +114,7 @@ export default () => {
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
   const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
   const [toDate, setToDate] = useState(initialProps.toDate || null);
-  const [visibleTrends, setVisibleTrends] = useState(initialProps.trends);
+  const [visibleTrends, setVisibleTrends] = useState(initialProps.trends || []);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
   const [
     { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
@@ -510,7 +510,9 @@ export default () => {
             <Select
               components={animatedComponents}
               styles={SELECT_STYLES}
-              defaultValue={trendsSelectOptions.filter(option => initialProps.trends.indexOf(option.value) > -1)}
+              defaultValue={trendsSelectOptions.filter(
+                option => (initialProps.trends || []).indexOf(option.value) > -1
+              )}
               value={trendsSelectOptions.filter(option => visibleTrends.indexOf(option.value) > -1)}
               isMulti
               options={trendsSelectOptions}

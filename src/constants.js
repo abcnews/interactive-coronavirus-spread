@@ -67,8 +67,7 @@ export const PRESETS = {
     yScaleType: 'linear',
     yScaleCap: false,
     places: place => place.type === 'country',
-    highlightedPlaces: KEY_PLACES.concat(['Spain', 'Germany', 'Iran', 'France']),
-    trends: false
+    highlightedPlaces: KEY_PLACES.concat(['Spain', 'Germany', 'Iran', 'France'])
   },
   single: {
     graphic: 'cases',
@@ -76,29 +75,25 @@ export const PRESETS = {
     yScaleType: 'linear',
     yScaleCap: false,
     places: ['China'],
-    highlightedPlaces: true,
-    trends: false
+    highlightedPlaces: true
   },
   all: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
     yScaleCap: false,
-    places: true,
-    trends: false
+    places: true
   },
   key: {
     graphic: 'cases',
     xScaleType: 'dates',
     yScaleType: 'linear',
-    yScaleCap: false,
-    trends: false
+    yScaleCap: false
   },
   hundred: {
     graphic: 'cases',
     yScaleType: 'linear',
-    yScaleCap: false,
-    trends: false
+    yScaleCap: false
   },
   doublinginit: {
     graphic: 'doubling',
@@ -118,99 +113,112 @@ export const PRESETS = {
   },
   logarithmic: {
     graphic: 'cases',
-    yScaleCap: false,
-    trends: false
+    yScaleCap: false
   },
   trends: {
     graphic: 'cases',
     highlightedPlaces: false,
     highlightedTrends: true,
-    yScaleCap: false
+    yScaleCap: false,
+    trends: KEY_TRENDS
   },
   logtrends: {
     graphic: 'cases',
-    yScaleCap: false
+    yScaleCap: false,
+    trends: KEY_TRENDS
   },
   zoomin: {
-    graphic: 'cases',
-    trends: false
+    graphic: 'cases'
   },
   firstthirty: {
     graphic: 'cases',
     yScaleCap: false,
-    xScaleDaysCap: 30,
-    trends: false
+    xScaleDaysCap: 30
   },
   firstthirtyunderfiftyk: {
     graphic: 'cases',
-    xScaleDaysCap: 30,
-    trends: false
+    xScaleDaysCap: 30
   },
   trenditaly: {
     graphic: 'cases',
     highlightedPlaces: ['Italy'],
+    trends: KEY_TRENDS,
     highlightedTrends: [2]
   },
   trendaustralia: {
     graphic: 'cases',
     highlightedPlaces: ['Australia'],
+    trends: KEY_TRENDS,
     highlightedTrends: [3]
   },
   trendsingapore: {
     graphic: 'cases',
     highlightedPlaces: ['Singapore'],
+    trends: KEY_TRENDS,
     highlightedTrends: [7]
   },
   australia: {
     graphic: 'cases',
-    highlightedPlaces: ['Australia']
+    highlightedPlaces: ['Australia'],
+    trends: KEY_TRENDS
   },
   china: {
     graphic: 'cases',
     yScaleCap: false,
-    highlightedPlaces: ['China']
+    highlightedPlaces: ['China'],
+    trends: KEY_TRENDS
   },
   singapore: {
     graphic: 'cases',
-    highlightedPlaces: ['Singapore']
+    highlightedPlaces: ['Singapore'],
+    trends: KEY_TRENDS
   },
   singtotaiwan: {
     graphic: 'cases',
-    highlightedPlaces: ['Singapore', 'Taiwan']
+    highlightedPlaces: ['Singapore', 'Taiwan'],
+    trends: KEY_TRENDS
   },
   taiwan: {
     graphic: 'cases',
-    highlightedPlaces: ['Taiwan']
+    highlightedPlaces: ['Taiwan'],
+    trends: KEY_TRENDS
   },
   taiwantokorea: {
     graphic: 'cases',
-    highlightedPlaces: ['Taiwan', 'S. Korea']
+    highlightedPlaces: ['Taiwan', 'S. Korea'],
+    trends: KEY_TRENDS
   },
   korea: {
     graphic: 'cases',
-    highlightedPlaces: ['S. Korea']
+    highlightedPlaces: ['S. Korea'],
+    trends: KEY_TRENDS
   },
   europe: {
     graphic: 'cases',
     places: KEY_PLACES.concat(KEY_EUROPEAN_PLACES),
-    highlightedPlaces: KEY_EUROPEAN_PLACES
+    highlightedPlaces: KEY_EUROPEAN_PLACES,
+    trends: KEY_TRENDS
   },
   koreatoitaly: {
     graphic: 'cases',
-    highlightedPlaces: ['S. Korea', 'Italy']
+    highlightedPlaces: ['S. Korea', 'Italy'],
+    trends: KEY_TRENDS
   },
   italy: {
     graphic: 'cases',
-    highlightedPlaces: ['Italy']
+    highlightedPlaces: ['Italy'],
+    trends: KEY_TRENDS
   },
   italytojapan: {
     graphic: 'cases',
-    highlightedPlaces: ['Italy', 'Japan']
+    highlightedPlaces: ['Italy', 'Japan'],
+    trends: KEY_TRENDS
   },
   unitedstates: {
     graphic: 'cases',
     yScaleCap: false,
-    highlightedPlaces: ['US']
+    highlightedPlaces: ['US'],
+    trends: KEY_TRENDS
   },
   australiantesting: {
     graphic: 'tests',
