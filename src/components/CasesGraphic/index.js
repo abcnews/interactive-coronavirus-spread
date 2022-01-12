@@ -174,9 +174,12 @@ function setTruncatedLineDashArray(node) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, cacheKey) {
+function transformPlacesData(placesData) {
+  const places = Object.keys(placesData);
+  const cacheKey = places.join('_');
+
   if (!transformedPlacesDataCache[cacheKey]) {
-    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+    transformedPlacesDataCache[cacheKey] = places
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
@@ -277,7 +280,7 @@ let nextIDIndex = 0;
 const CasesGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
+  const { xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -312,20 +315,16 @@ const CasesGraphic = props => {
 
     return footnotesMarkupParts.join(' ');
   }, [hasCredits, rollingAverageDays]);
-  const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
-    setPlacesDataURL
-  ] = usePlacesData(placesDataURL);
-  const [
-    { isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData },
-    setGlobalDataURL
-  ] = usePlacesData(GLOBAL_DATA_URL);
+  const [{ isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData }] = usePlacesData();
+  const [{ isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData }] = usePlacesData(
+    GLOBAL_DATA_URL
+  );
   const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData && !untransformedGlobalData) {
       return [];
     }
 
-    const placesData = transformPlacesData({ ...untransformedPlacesData, ...untransformedGlobalData }, placesDataURL);
+    const placesData = transformPlacesData({ ...untransformedPlacesData, ...untransformedGlobalData });
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -429,12 +428,6 @@ const CasesGraphic = props => {
       ...DEFAULT_PROPS,
       ...props
     };
-
-    if (placesDataURL !== prevProps.placesDataURL) {
-      debug('Places data URL change requires reload');
-
-      return setPlacesDataURL(placesDataURL);
-    }
 
     const { width, height, svgHeight } = state;
     const wasResize = width !== prevState.width || height !== prevState.height || svgHeight !== prevState.svgHeight;

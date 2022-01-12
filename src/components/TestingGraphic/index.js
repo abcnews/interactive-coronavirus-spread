@@ -80,9 +80,12 @@ function checkScaleProps(yScaleProp) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, cacheKey) {
+function transformPlacesData(placesData) {
+  const places = Object.keys(placesData);
+  const cacheKey = places.join('_');
+
   if (!transformedPlacesDataCache[cacheKey]) {
-    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+    transformedPlacesDataCache[cacheKey] = places
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
@@ -169,7 +172,7 @@ let nextIDIndex = 0;
 const TestingGraphic = props => {
   const renderId = generateRenderId();
 
-  const { placesDataURL, yScaleType } = {
+  const { yScaleType } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -190,15 +193,14 @@ const TestingGraphic = props => {
     []
   );
   const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
-    setPlacesDataURL
-  ] = usePlacesTestingData(placesDataURL);
+    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData }
+  ] = usePlacesTestingData();
   const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData) {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dates[0].date;
 
@@ -278,12 +280,6 @@ const TestingGraphic = props => {
       ...props
     };
 
-    if (placesDataURL !== prevProps.placesDataURL) {
-      debug('Places data URL change requires reload');
-
-      return setPlacesDataURL(placesDataURL);
-    }
-
     const { width, height } = state;
     const wasResize = width !== prevState.width || height !== prevState.height;
 
@@ -346,9 +342,7 @@ const TestingGraphic = props => {
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const xScale = scaleTime()
-      .domain([timeLowerExtent, timeUpperExtent])
-      .range([0, chartWidth]);
+    const xScale = scaleTime().domain([timeLowerExtent, timeUpperExtent]).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
       ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
@@ -398,14 +392,10 @@ const TestingGraphic = props => {
           );
     // const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
     const yAxisGenerator = yAxisGeneratorBase().tickFormat(value => (value >= 1 ? FORMAT_S(value) : value));
-    const yAxisGridlinesGenerator = yAxisGeneratorBase()
-      .tickSize(-chartWidth)
-      .tickFormat('');
+    const yAxisGridlinesGenerator = yAxisGeneratorBase().tickSize(-chartWidth).tickFormat('');
 
     // Rendering > 1: Update SVG dimensions
-    const svg = select(svgRef.current)
-      .attr('width', width)
-      .attr('height', height);
+    const svg = select(svgRef.current).attr('width', width).attr('height', height);
 
     // Rendering > 2: Update accessible title and description
     svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
@@ -483,7 +473,7 @@ const TestingGraphic = props => {
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attrTween('d', function(d) {
+      .attrTween('d', function (d) {
         const currentPath = generateLinePath(d);
 
         const previous = select(this);

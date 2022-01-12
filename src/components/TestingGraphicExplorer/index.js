@@ -40,7 +40,6 @@ const decodeEncodedUrlParam = () => {
 export default () => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
-  const [placesDataURL, setPlacesDataURL] = useState(PLACES_TESTING_DATA_URL);
   const [yScaleType, setYScaleType] = useState(initialProps.yScaleType);
   const [yScaleProp, setYScaleProp] = useState(initialProps.yScaleProp);
   const [hasLineSmoothing, setHasLineSmoothing] = useState(initialProps.hasLineSmoothing);
@@ -49,13 +48,11 @@ export default () => {
   const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
   const [toDate, setToDate] = useState(initialProps.toDate || null);
   const [
-    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
-    setExplorerPlacesDataURL
-  ] = usePlacesTestingData(placesDataURL);
+    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData }
+  ] = usePlacesTestingData();
 
   const testingGraphicProps = {
     ...initialProps,
-    placesDataURL,
     yScaleType,
     yScaleProp,
     hasLineSmoothing,
@@ -112,22 +109,6 @@ export default () => {
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
-        {/* <div key="places-data-url">
-          <label>Places Data URL</label>
-          <button
-            onClick={() => {
-              const query = Math.random();
-              setVisiblePlaces([]);
-              setHighlightedPlaces([]);
-              setFromDate(null);
-              setToDate(null);
-              setPlacesDataURL(`${PLACES_TESTING_DATA_URL}?${query}`);
-              setExplorerPlacesDataURL(`${PLACES_TESTING_DATA_URL}?${query}`);
-            }}
-          >
-            Update to random
-          </button>
-        </div> */}
         <div key="highlightedplaces">
           <label>
             Highlighted Places{' '}

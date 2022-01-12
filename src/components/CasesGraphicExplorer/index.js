@@ -99,7 +99,6 @@ const decodeEncodedUrlParam = () => {
 export default () => {
   const initialProps = updateLegacyProps(decodeEncodedUrlParam() || DEFAULT_PROPS);
 
-  const [placesDataURL, setPlacesDataURL] = useState(PLACES_DATA_URL);
   const [title, setTitle] = useState(initialProps.title);
   const [hasCredits, setHasCredits] = useState(initialProps.hasCredits);
   const [xScaleType, setXScaleType] = useState(initialProps.xScaleType);
@@ -117,9 +116,8 @@ export default () => {
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends || []);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
   const [
-    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData },
-    setExplorerPlacesDataURL
-  ] = usePlacesData(placesDataURL);
+    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData }
+  ] = usePlacesData();
   const [
     { isLoading: isExplorerGlobalDataLoading, error: explorerGlobalDataError, data: explorerGlobalData },
     setExplorerGlobalDataURL
@@ -127,7 +125,6 @@ export default () => {
 
   const casesGraphicProps = {
     ...initialProps,
-    placesDataURL,
     title,
     hasCredits,
     xScaleType,
@@ -214,22 +211,6 @@ export default () => {
         </InlineGraphic>
       </div>
       <div className={styles.controls}>
-        {/* <div key="places-data-url">
-          <label>Places Data URL</label>
-          <button
-            onClick={() => {
-              const query = Math.random();
-              setVisiblePlaces([]);
-              setHighlightedPlaces([]);
-              setFromDate(null);
-              setToDate(null);
-              setPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
-              setExplorerPlacesDataURL(`${PLACES_DATA_URL}?${query}`);
-            }}
-          >
-            Update to random
-          </button>
-        </div> */}
         <div key="title">
           <label>Chart Title</label>
           <Textfield name="title" value={title || ''} onChange={event => setTitle(event.currentTarget.value)} />
