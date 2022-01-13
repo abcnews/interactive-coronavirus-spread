@@ -90,6 +90,11 @@ export const resolvePlacesAliasesInGraphicProps = props => {
   const resolver = place => ALIASES_PLACES[place] || place;
 
   ['places', 'highlightedPlaces'].forEach(propName => {
+    if (!props[propName] || typeof props[propName] === 'function') {
+      // Ignore undefined or filter functions
+      return;
+    }
+
     const places = props[propName].map(resolver);
 
     // We have to splice to avoid React's error on re-assigning a prop
