@@ -47,9 +47,11 @@ export default () => {
   const [highlightedPlaces, setHighlightedPlaces] = useState(initialProps.highlightedPlaces);
   const [fromDate, setFromDate] = useState(initialProps.fromDate || null);
   const [toDate, setToDate] = useState(initialProps.toDate || null);
-  const [
-    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData }
-  ] = usePlacesTestingData();
+  const {
+    isLoading: isExplorerPlacesDataLoading,
+    error: explorerPlacesDataError,
+    data: explorerPlacesData
+  } = usePlacesTestingData();
 
   const testingGraphicProps = {
     ...initialProps,

@@ -1,3 +1,5 @@
+import { ALIASES_PLACES } from './constants';
+
 export function clone(value, areDatesExpected) {
   if (typeof value !== 'object' || value === null) {
     return value;
@@ -32,10 +34,10 @@ const COLOR_DIBS = {
   China: 'teal',
   Italy: 'orange',
   Singapore: 'cyan',
-  'S. Korea': 'purple',
-  UK: 'red',
+  'Korea, South': 'purple',
+  'United Kingdom': 'red',
   US: 'blue',
-  Taiwan: 'brown',
+  'Taiwan*': 'brown',
   Japan: 'green',
   Australia: 'copy'
 };
@@ -81,3 +83,16 @@ export const movingAverage = (data, smoothing = 1, accessor = d => d, storer = v
         : acc.concat(storer(arr.slice(i - smoothing + 1, i + 1).reduce((t, d) => t + accessor(d), 0) / smoothing, d)),
     []
   );
+
+export const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
+
+export const resolvePlacesAliasesInGraphicProps = props => {
+  const resolver = place => ALIASES_PLACES[place] || place;
+
+  ['places', 'highlightedPlaces'].forEach(propName => {
+    const places = props[propName].map(resolver);
+
+    // We have to splice to avoid React's error on re-assigning a prop
+    props[propName].splice(0, places.length, ...places);
+  });
+};

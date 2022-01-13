@@ -19,9 +19,16 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS, GLOBAL_DATA_URL } from '../../constants';
+import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS, GLOBAL_DATA_URL } from '../../constants';
 import { usePlacesData } from '../../data-loader';
-import { clone, generateColorAllocator, last, movingAverage } from '../../misc-utils';
+import {
+  clone,
+  generateColorAllocator,
+  generateRenderId,
+  last,
+  movingAverage,
+  resolvePlacesAliasesInGraphicProps
+} from '../../misc-utils';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -273,11 +280,12 @@ function usePrevious(value) {
   return ref.current;
 }
 
-const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
-
 let nextIDIndex = 0;
 
 const CasesGraphic = props => {
+  // Support aliased places (defined in some older configs/stories)
+  resolvePlacesAliasesInGraphicProps(props);
+
   const renderId = generateRenderId();
 
   const { xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
@@ -315,8 +323,8 @@ const CasesGraphic = props => {
 
     return footnotesMarkupParts.join(' ');
   }, [hasCredits, rollingAverageDays]);
-  const [{ isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData }] = usePlacesData();
-  const [{ isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData }] = usePlacesData(
+  const { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData } = usePlacesData();
+  const { isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData } = usePlacesData(
     GLOBAL_DATA_URL
   );
   const [placesData, earliestDate, latestDate] = useMemo(() => {
@@ -959,7 +967,7 @@ const CasesGraphic = props => {
 
       return {
         key: d.key,
-        text: d.key,
+        text: PLACES_ALIASES[d.key] || d.key,
         x: 6 + xScale(dataCollection.length ? last(dataCollection)[xScaleProp] : 0),
         y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
       };

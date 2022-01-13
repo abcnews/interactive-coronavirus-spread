@@ -115,13 +115,16 @@ export default () => {
   const [toDate, setToDate] = useState(initialProps.toDate || null);
   const [visibleTrends, setVisibleTrends] = useState(initialProps.trends || []);
   const [highlightedTrends, setHighlightedTrends] = useState([]);
-  const [
-    { isLoading: isExplorerPlacesDataLoading, error: explorerPlacesDataError, data: explorerPlacesData }
-  ] = usePlacesData();
-  const [
-    { isLoading: isExplorerGlobalDataLoading, error: explorerGlobalDataError, data: explorerGlobalData },
-    setExplorerGlobalDataURL
-  ] = usePlacesData(GLOBAL_DATA_URL);
+  const {
+    isLoading: isExplorerPlacesDataLoading,
+    error: explorerPlacesDataError,
+    data: explorerPlacesData
+  } = usePlacesData();
+  const {
+    isLoading: isExplorerGlobalDataLoading,
+    error: explorerGlobalDataError,
+    data: explorerGlobalData
+  } = usePlacesData(GLOBAL_DATA_URL);
 
   const casesGraphicProps = {
     ...initialProps,

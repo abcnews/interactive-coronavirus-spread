@@ -1,63 +1,79 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
+export const PLACES_DATA_ENDPOINT = `${DATA_ENDPOINT}places/`;
+export const PLACES_LOOKUP_URL = `${DATA_ENDPOINT}places-lookup.json`;
 export const PLACES_DATA_URL = `${DATA_ENDPOINT}places-totals.json`;
-export const GLOBAL_DATA_URL = `${DATA_ENDPOINT}places/global.json`;
+export const GLOBAL_DATA_URL = `${PLACES_DATA_ENDPOINT}global.json`;
 export const PLACES_TESTING_DATA_URL = `${__webpack_public_path__}data/cumulative-testing-by-place-and-date.json`;
-export const KEY_PLACES = ['Australia', 'China', 'Italy', 'Japan', 'Singapore', 'S. Korea', 'Taiwan', 'UK', 'US'];
-export const KEY_EUROPEAN_PLACES = [
-  // 'Albania',
-  // 'Andorra',
-  // 'Armenia',
-  // 'Austria',
-  // 'Azerbaijan',
-  // 'Belarus',
-  // 'Belgium',
-  // 'Bosnia and Herzegovina',
-  // 'Bulgaria',
-  // 'Croatia',
-  // 'Cyprus',
-  // 'Czech Republic',
-  'Denmark',
-  // 'Estonia',
-  // 'Finland',
-  'France',
-  // 'Georgia',
-  'Germany',
-  // 'Greece',
-  // 'Hungary',
-  // 'Iceland',
-  // 'Ireland',
+
+export const PLACES_ALIASES = {
+  'Antigua and Barbuda': 'Antigua & Barbuda',
+  'Australian Capital Territory': 'ACT',
+  'Bonaire, Sint Eustatius and Saba': 'Bonaire, Sint Eustatius & Saba',
+  'Bosnia and Herzegovina': 'Bosnia & Herzegovina',
+  'British Virgin Islands': 'BVI',
+  'Central African Republic': 'CAR',
+  Connecticut: 'Conn.',
+  'District Of Columbia': 'DC',
+  'Korea, South': 'S. Korea',
+  Massachusetts: 'Mass.',
+  'New Hampshire': 'New Hamp.',
+  'New South Wales': 'NSW',
+  'New Zealand': 'NZ',
+  'Newfoundland and Labrador': 'Newfoundland & Labrador',
+  'North Carolina': 'N. Carolina',
+  'North Dakota': 'N. Dakota',
+  'North Macedonia': 'N. Macedonia',
+  'Northern Mariana Islands': 'NMI',
+  'Northern Territory': 'NT',
+  'Papua New Guinea': 'PNG',
+  'Prince Edward Island': 'PEI',
+  Queensland: 'Qld',
+  'Saint Barthelemy': 'St. Barthelemy',
+  'Saint Helena, Ascension and Tristan da Cunha': 'St. Helena…',
+  'Saint Kitts and Nevis': 'St. Kitts & Nevis',
+  'Saint Lucia': 'St. Lucia',
+  'Saint Pierre and Miquelon': 'St. Pierre & Miquelon',
+  'Saint Vincent and the Grenadines': 'St. Vincent & Grenadines',
+  'Sao Tome and Principe': 'Sao Tome & Principe',
+  'South Africa': 'S. Africa',
+  'South Australia': 'SA',
+  'South Carolina': 'S. Carolina',
+  'South Dakota': 'S. Dakota',
+  'South Sudan': 'S. Sudan',
+  'Taiwan*': 'Taiwan',
+  Tasmania: 'Tas',
+  'Trinidad and Tobago': 'Trinidad & Tobago',
+  'Turks and Caicos Islands': 'Turks & Caicos Islands',
+  'United Arab Emirates': 'UAE',
+  'United Kingdom': 'UK',
+  Victoria: 'Vic',
+  'Wallis and Futuna': 'Wallis & Futuna',
+  Washington: 'Wash.',
+  'West Bank and Gaza': 'W. Bank & Gaza',
+  'West Virginia': 'W. Virginia',
+  'Western Australia': 'WA'
+};
+export const ALIASES_PLACES = Object.keys(PLACES_ALIASES).reduce((memo, place) => ({
+  ...memo,
+  [PLACES_ALIASES[place]]: place
+}));
+
+export const KEY_PLACES = [
+  'Australia',
+  'China',
   'Italy',
-  // 'Kazakhstan',
-  // 'Latvia',
-  // 'Liechtenstein',
-  // 'Lithuania',
-  // 'Luxembourg',
-  // 'Macedonia',
-  // 'Malta',
-  // 'Moldova',
-  // 'Monaco',
-  // 'Montenegro',
-  // 'Netherlands',
-  // 'Norway',
-  // 'Poland',
-  // 'Portugal',
-  // 'Romania',
-  // 'Russia',
-  // 'San Marino',
-  // 'Serbia',
-  // 'Slovakia',
-  // 'Slovenia',
-  'Spain',
-  // 'Sweden',
-  // 'Switzerland',
-  // 'Turkey',
-  // 'Ukraine',
-  'UK'
-  // 'Vatican City'
+  'Japan',
+  'Singapore',
+  'Korea, South',
+  'Taiwan*',
+  'United Kingdom',
+  'US'
 ];
+export const KEY_EUROPEAN_PLACES = ['Denmark', 'France', 'Germany', 'Italy', 'Spain', 'United Kingdom'];
 export const SHIPS = ['Diamond Princess', 'MS Zaandam'];
 export const OTHER_PLACES = ['Holy See'];
 export const EXCLUDED_PLACES = ['Western Sahara'];
+
 export const KEY_TRENDS = [2, 3, 7];
 
 export const PRESETS = {
@@ -175,7 +191,7 @@ export const PRESETS = {
   },
   singtotaiwan: {
     graphic: 'cases',
-    highlightedPlaces: ['Singapore', 'Taiwan'],
+    highlightedPlaces: ['Singapore', 'Taiwan*'],
     trends: KEY_TRENDS
   },
   taiwan: {
@@ -185,12 +201,12 @@ export const PRESETS = {
   },
   taiwantokorea: {
     graphic: 'cases',
-    highlightedPlaces: ['Taiwan', 'S. Korea'],
+    highlightedPlaces: ['Taiwan*', 'Korea, South'],
     trends: KEY_TRENDS
   },
   korea: {
     graphic: 'cases',
-    highlightedPlaces: ['S. Korea'],
+    highlightedPlaces: ['Korea, South'],
     trends: KEY_TRENDS
   },
   europe: {
@@ -201,7 +217,7 @@ export const PRESETS = {
   },
   koreatoitaly: {
     graphic: 'cases',
-    highlightedPlaces: ['S. Korea', 'Italy'],
+    highlightedPlaces: ['Korea, South', 'Italy'],
     trends: KEY_TRENDS
   },
   italy: {

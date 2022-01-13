@@ -19,9 +19,9 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
+import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
 import { usePlacesTestingData } from '../../data-loader';
-import { generateColorAllocator, last } from '../../misc-utils';
+import { generateColorAllocator, generateRenderId, last, resolvePlacesAliasesInGraphicProps } from '../../misc-utils';
 import styles from '../CasesGraphic/styles.css'; // borrow styles from CasesGaphic (they're visually the same)
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -165,11 +165,12 @@ function usePrevious(value) {
   return ref.current;
 }
 
-const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
-
 let nextIDIndex = 0;
 
 const TestingGraphic = props => {
+  // Support aliased places (defined in some older configs/stories)
+  resolvePlacesAliasesInGraphicProps(props);
+
   const renderId = generateRenderId();
 
   const { yScaleType } = {
@@ -192,9 +193,11 @@ const TestingGraphic = props => {
     ],
     []
   );
-  const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData }
-  ] = usePlacesTestingData();
+  const {
+    isLoading: isPlacesDataLoading,
+    error: placesDataError,
+    data: untransformedPlacesData
+  } = usePlacesTestingData();
   const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData) {
       return [];
@@ -544,7 +547,7 @@ const TestingGraphic = props => {
     }
     const plotLabelsData = labelledPlacesData.map((d, i) => ({
       key: d.key,
-      text: d.key,
+      text: PLACES_ALIASES[d.key] || d.key,
       x: 6 + xScale(last(getDataCollection(d)).date),
       y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
     }));
