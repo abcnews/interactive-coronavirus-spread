@@ -82,7 +82,7 @@ let transformedPlacesDataCache = {};
 
 function transformPlacesData(placesData) {
   const places = Object.keys(placesData);
-  const cacheKey = places.join('_');
+  const cacheKey = places.join('');
 
   if (!transformedPlacesDataCache[cacheKey]) {
     transformedPlacesDataCache[cacheKey] = places

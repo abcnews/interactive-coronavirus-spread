@@ -4,15 +4,15 @@ import {
   EXCLUDED_PLACES,
   PLACES_ALIASES,
   ALIASES_PLACES,
-  GLOBAL_DATA_URL,
   PLACES_LOOKUP_URL,
   PLACES_DATA_ENDPOINT,
-  PLACES_DATA_URL,
   PLACES_TESTING_DATA_URL,
   SHIPS
 } from './constants';
 import { clone } from './misc-utils';
 import PLACES_POPULATIONS from './population';
+
+const fetchCache = {};
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -42,12 +42,8 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const fetchCache = {};
-
-const useDataLoader = initialURL => {
-  const [url, setURL] = useState(initialURL);
+const useDataLoader = url => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
-    url,
     isLoading: false,
     error: null,
     data: null
@@ -77,32 +73,134 @@ const useDataLoader = initialURL => {
     return () => {
       wasCancelled = true;
     };
-  }, [url]);
+  }, []);
 
-  return [state, setURL];
+  return state;
 };
 
-export const usePlacesData = (url = PLACES_DATA_URL) => {
-  const [{ isLoading, error, data: loadedData }] = useDataLoader(url);
+const dataMultiFetchReducer = (state, action) => {
+  switch (action.type) {
+    case 'MULTI_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+        data: null
+      };
+    case 'MULTI_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        data: action.payload
+      };
+    case 'MULTI_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        error: action.payload,
+        data: null
+      };
+    default:
+      throw new Error(`Invalid action type: ${action.type}`);
+  }
+};
+
+const useDataMultiLoader = urls => {
+  const [state, dispatch] = useReducer(dataMultiFetchReducer, {
+    isLoading: false,
+    error: null,
+    data: null
+  });
+
+  useEffect(() => {
+    let wasCancelled = false;
+
+    if (urls.length > 0) {
+      dispatch({ type: 'MULTI_FETCH_INIT' });
+
+      Promise.all(
+        urls.map(url => {
+          if (!fetchCache[url]) {
+            fetchCache[url] = fetch(url)
+              .then(response => response.json())
+              .catch(error => {
+                if (!wasCancelled) {
+                  dispatch({ type: 'MULTI_FETCH_FAILURE', payload: error });
+                }
+              });
+          }
+
+          return fetchCache[url];
+        })
+      )
+        .then(data => {
+          if (!wasCancelled) {
+            dispatch({ type: 'MULTI_FETCH_SUCCESS', payload: data });
+          }
+        })
+        .catch(error => {
+          if (!wasCancelled) {
+            dispatch({ type: 'MULTI_FETCH_FAILURE', payload: error });
+          }
+        });
+    }
+
+    return () => {
+      wasCancelled = true;
+    };
+  }, [urls.length]);
+
+  return state;
+};
+
+export const usePlacesLookupData = () => useDataLoader(PLACES_LOOKUP_URL);
+
+const placesDataCache = {};
+
+export const usePlacesData = places => {
+  const placesDataCacheKey = places ? places.join('') : '*';
+
+  const {
+    isLoading: isPlacesLookupDataLoading,
+    error: placesLookupDataError,
+    data: lookupData
+  } = usePlacesLookupData();
+
+  const { isLoading: isPlacesDataLoading, error: placesDataError, data: placesData } = useDataMultiLoader(
+    lookupData
+      ? // ? places.reduce((urls, place) => {
+        (places || Object.keys(lookupData)).reduce((urls, place) => {
+          const lookupDataKey = ALIASES_PLACES[place] || place;
+          const lookupDataValue = lookupData[lookupDataKey];
+
+          if (lookupDataValue) {
+            urls.push(`${PLACES_DATA_ENDPOINT}${lookupDataValue}`);
+          }
+
+          return urls;
+        }, [])
+      : []
+  );
 
   return {
-    isLoading,
-    error,
+    isLoading: isPlacesLookupDataLoading || isPlacesDataLoading,
+    error: placesLookupDataError || placesDataError,
     data: useMemo(() => {
-      if (loadedData === null) {
+      if (placesData === null) {
         return null;
       }
 
-      if (!placesDataCache[url]) {
-        let data = clone(loadedData);
-
-        // Global data is in a slightly different format, so lets correct that
-        if ('name' in data && data.name === 'Global') {
-          delete data.name;
-          data = {
-            Global: data
-          };
-        }
+      if (!placesDataCache[placesDataCacheKey]) {
+        let data = clone(
+          placesData.reduce(
+            (memo, placeData) => ({
+              ...memo,
+              [placeData.name]: placeData
+            }),
+            {}
+          )
+        );
 
         // Remove places we want to exclude
         for (const place of EXCLUDED_PLACES) {
@@ -154,40 +252,36 @@ export const usePlacesData = (url = PLACES_DATA_URL) => {
           }
         }
 
-        placesDataCache[url] = data;
+        placesDataCache[placesDataCacheKey] = data;
       }
 
-      return clone(placesDataCache[url]);
-    }, [loadedData])
+      return clone(placesDataCache[placesDataCacheKey]);
+    }, [placesData])
   };
 };
 
-const supplementaryURLs = {
-  [PLACES_TESTING_DATA_URL]: PLACES_DATA_URL
-};
+let placesTestingDataCache = null;
 
-function getSupplementaryURL(url) {
-  return supplementaryURLs[url.split('?')[0]];
-}
+const TESTING_PLACES = ['Australia', 'Germany', 'Korea, South', 'United Kingdom', 'US'];
 
-const placesTestingDataCache = {};
-
-export const usePlacesTestingData = initialURL => {
-  const [{ url, isLoading, error, data: loadedData }] = useDataLoader(initialURL || PLACES_TESTING_DATA_URL);
+export const usePlacesTestingData = () => {
+  const { isLoading: isPlacesTestingLoading, error: placesTestingError, data: placesTestingData } = useDataLoader(
+    PLACES_TESTING_DATA_URL
+  );
   const { isLoading: isSupplementaryLoading, error: supplementaryError, data: supplementaryData } = usePlacesData(
-    getSupplementaryURL(initialURL || PLACES_TESTING_DATA_URL)
+    TESTING_PLACES
   );
 
   return {
-    isLoading: isSupplementaryLoading || isLoading,
-    error: supplementaryError || error,
+    isLoading: isSupplementaryLoading || isPlacesTestingLoading,
+    error: supplementaryError || placesTestingError,
     data: useMemo(() => {
-      if (loadedData == null || supplementaryData == null) {
+      if (placesTestingData == null || supplementaryData == null) {
         return null;
       }
 
-      if (!placesTestingDataCache[url]) {
-        const data = clone(loadedData);
+      if (!placesTestingDataCache) {
+        const data = clone(placesTestingData);
 
         for (const place in data) {
           const supplementaryDataPlace = supplementaryData[place];
@@ -211,10 +305,10 @@ export const usePlacesTestingData = initialURL => {
           };
         }
 
-        placesTestingDataCache[url] = data;
+        placesTestingDataCache = data;
       }
 
-      return clone(placesTestingDataCache[url]);
-    }, [loadedData, supplementaryData])
+      return clone(placesTestingDataCache);
+    }, [placesTestingData, supplementaryData])
   };
 };

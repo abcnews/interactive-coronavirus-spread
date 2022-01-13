@@ -19,7 +19,7 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS, GLOBAL_DATA_URL } from '../../constants';
+import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
 import {
   clone,
@@ -183,7 +183,7 @@ let transformedPlacesDataCache = {};
 
 function transformPlacesData(placesData) {
   const places = Object.keys(placesData);
-  const cacheKey = places.join('_');
+  const cacheKey = places.join('');
 
   if (!transformedPlacesDataCache[cacheKey]) {
     transformedPlacesDataCache[cacheKey] = places
@@ -323,16 +323,15 @@ const CasesGraphic = props => {
 
     return footnotesMarkupParts.join(' ');
   }, [hasCredits, rollingAverageDays]);
-  const { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData } = usePlacesData();
-  const { isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData } = usePlacesData(
-    GLOBAL_DATA_URL
+  const { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData } = usePlacesData(
+    Array.isArray(props.places) ? props.places : undefined
   );
   const [placesData, earliestDate, latestDate] = useMemo(() => {
-    if (!untransformedPlacesData && !untransformedGlobalData) {
+    if (untransformedPlacesData === null || Object.keys(untransformedPlacesData).length === 0) {
       return [];
     }
 
-    const placesData = transformPlacesData({ ...untransformedPlacesData, ...untransformedGlobalData });
+    const placesData = transformPlacesData(untransformedPlacesData);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -459,18 +458,13 @@ const CasesGraphic = props => {
       return;
     }
 
-    if (isGlobalDataLoading) {
-      debug('Global data is still loading');
-      return;
-    }
-
     if (placesDataError) {
       debug(`Error loading places data: ${placesDataError}`);
       return;
     }
 
-    if (globalDataError) {
-      debug(`Error loading global data: ${globalDataError}`);
+    if (!placesData) {
+      debug(`No places to render`);
       return;
     }
 

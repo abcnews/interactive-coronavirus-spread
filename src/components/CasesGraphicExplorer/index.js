@@ -4,7 +4,7 @@ import Textfield from '@atlaskit/textfield';
 import React, { useMemo, useState } from 'react';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import { GLOBAL_DATA_URL, PLACES_DATA_URL, TRENDS } from '../../constants';
+import { TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
 import { decodeVersionedProps, encodeVersionedProps, updateLegacyProps } from '../../mount-utils';
 import CasesGraphic, {
@@ -120,11 +120,6 @@ export default () => {
     error: explorerPlacesDataError,
     data: explorerPlacesData
   } = usePlacesData();
-  const {
-    isLoading: isExplorerGlobalDataLoading,
-    error: explorerGlobalDataError,
-    data: explorerGlobalData
-  } = usePlacesData(GLOBAL_DATA_URL);
 
   const casesGraphicProps = {
     ...initialProps,
@@ -156,19 +151,19 @@ export default () => {
   const yScaleTypeOptions = Y_SCALE_TYPES.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const yScalePropOptions = Y_SCALE_PROPS.map(type => ({ label: RADIO_LABELS[type], value: type }));
   const [placesSelectOptions, availableDates] = useMemo(() => {
-    if (!explorerPlacesData && !explorerGlobalData) {
+    if (!explorerPlacesData) {
       return [[], null];
     }
 
-    const explorerPlacesAndGlobalData = { ...explorerPlacesData, ...explorerGlobalData };
+    const explorerPlaces = Object.keys(explorerPlacesData);
 
-    const placesSelectOptions = Object.keys(explorerPlacesAndGlobalData).map(place => ({
-      label: explorerPlacesAndGlobalData[place].alias || place,
+    const placesSelectOptions = explorerPlaces.map(place => ({
+      label: explorerPlacesData[place].alias || place,
       value: place,
-      _type: explorerPlacesAndGlobalData[place].type
+      _type: explorerPlacesData[place].type
     }));
-    const availableDates = Object.keys(explorerPlacesAndGlobalData).reduce((memo, place) => {
-      const dates = Object.keys(explorerPlacesAndGlobalData[place].dates);
+    const availableDates = explorerPlaces.reduce((memo, place) => {
+      const dates = Object.keys(explorerPlacesData[place].dates);
 
       return dates.length > memo.length ? dates : memo;
     }, []);
@@ -179,7 +174,7 @@ export default () => {
     });
 
     return [placesSelectOptions, availableDates];
-  }, [explorerPlacesData, explorerGlobalData]);
+  }, [explorerPlacesData]);
   const fromDateSelectOptions = [{ label: 'Earliest known', value: null }].concat(
     availableDates
       ? availableDates

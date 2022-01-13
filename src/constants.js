@@ -1,8 +1,6 @@
 export const DATA_ENDPOINT = 'https://www.abc.net.au/dat/news/interactives/covid19-data/';
 export const PLACES_DATA_ENDPOINT = `${DATA_ENDPOINT}places/`;
 export const PLACES_LOOKUP_URL = `${DATA_ENDPOINT}places-lookup.json`;
-export const PLACES_DATA_URL = `${DATA_ENDPOINT}places-totals.json`;
-export const GLOBAL_DATA_URL = `${PLACES_DATA_ENDPOINT}global.json`;
 export const PLACES_TESTING_DATA_URL = `${__webpack_public_path__}data/cumulative-testing-by-place-and-date.json`;
 
 export const PLACES_ALIASES = {
