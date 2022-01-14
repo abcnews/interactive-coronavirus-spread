@@ -90,8 +90,8 @@ export const resolvePlacesAliasesInGraphicProps = props => {
   const resolver = place => ALIASES_PLACES[place] || place;
 
   ['places', 'highlightedPlaces'].forEach(propName => {
-    if (!props[propName] || typeof props[propName] === 'function') {
-      // Ignore undefined or filter functions
+    if (!Array.isArray(props[propName])) {
+      // Ignore undefined, boolean or function (filter) values
       return;
     }
 
