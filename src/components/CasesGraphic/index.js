@@ -19,9 +19,16 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS, GLOBAL_DATA_URL } from '../../constants';
+import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES, KEY_TRENDS, TRENDS } from '../../constants';
 import { usePlacesData } from '../../data-loader';
-import { clone, generateColorAllocator, last, movingAverage } from '../../misc-utils';
+import {
+  clone,
+  generateColorAllocator,
+  generateRenderId,
+  last,
+  movingAverage,
+  resolvePlacesAliasesInGraphicProps
+} from '../../misc-utils';
 import styles from './styles.css';
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -174,9 +181,12 @@ function setTruncatedLineDashArray(node) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, cacheKey) {
+function transformPlacesData(placesData) {
+  const places = Object.keys(placesData);
+  const cacheKey = places.join('');
+
   if (!transformedPlacesDataCache[cacheKey]) {
-    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+    transformedPlacesDataCache[cacheKey] = places
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
@@ -270,14 +280,15 @@ function usePrevious(value) {
   return ref.current;
 }
 
-const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
-
 let nextIDIndex = 0;
 
 const CasesGraphic = props => {
+  // Support aliased places (defined in some older configs/stories)
+  resolvePlacesAliasesInGraphicProps(props);
+
   const renderId = generateRenderId();
 
-  const { placesDataURL, xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
+  const { xScaleType, yScaleType, rollingAverageDays, title, hasCredits } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -312,20 +323,15 @@ const CasesGraphic = props => {
 
     return footnotesMarkupParts.join(' ');
   }, [hasCredits, rollingAverageDays]);
-  const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
-    setPlacesDataURL
-  ] = usePlacesData(placesDataURL);
-  const [
-    { isLoading: isGlobalDataLoading, error: globalDataError, data: untransformedGlobalData },
-    setGlobalDataURL
-  ] = usePlacesData(GLOBAL_DATA_URL);
+  const { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData } = usePlacesData(
+    Array.isArray(props.places) ? props.places : undefined
+  );
   const [placesData, earliestDate, latestDate] = useMemo(() => {
-    if (!untransformedPlacesData && !untransformedGlobalData) {
+    if (untransformedPlacesData === null || Object.keys(untransformedPlacesData).length === 0) {
       return [];
     }
 
-    const placesData = transformPlacesData({ ...untransformedPlacesData, ...untransformedGlobalData }, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dataAs.dates[0].date;
 
@@ -430,12 +436,6 @@ const CasesGraphic = props => {
       ...props
     };
 
-    if (placesDataURL !== prevProps.placesDataURL) {
-      debug('Places data URL change requires reload');
-
-      return setPlacesDataURL(placesDataURL);
-    }
-
     const { width, height, svgHeight } = state;
     const wasResize = width !== prevState.width || height !== prevState.height || svgHeight !== prevState.svgHeight;
 
@@ -458,18 +458,13 @@ const CasesGraphic = props => {
       return;
     }
 
-    if (isGlobalDataLoading) {
-      debug('Global data is still loading');
-      return;
-    }
-
     if (placesDataError) {
       debug(`Error loading places data: ${placesDataError}`);
       return;
     }
 
-    if (globalDataError) {
-      debug(`Error loading global data: ${globalDataError}`);
+    if (!placesData) {
+      debug(`No places to render`);
       return;
     }
 
@@ -966,7 +961,7 @@ const CasesGraphic = props => {
 
       return {
         key: d.key,
-        text: d.key,
+        text: PLACES_ALIASES[d.key] || d.key,
         x: 6 + xScale(dataCollection.length ? last(dataCollection)[xScaleProp] : 0),
         y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
       };

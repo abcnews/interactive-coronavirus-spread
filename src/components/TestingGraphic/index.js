@@ -19,9 +19,9 @@ import {
 } from 'd3';
 import { interpolatePath } from 'd3-interpolate-path';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
+import { PLACES_ALIASES, KEY_PLACES, KEY_EUROPEAN_PLACES } from '../../constants';
 import { usePlacesTestingData } from '../../data-loader';
-import { generateColorAllocator, last } from '../../misc-utils';
+import { generateColorAllocator, generateRenderId, last, resolvePlacesAliasesInGraphicProps } from '../../misc-utils';
 import styles from '../CasesGraphic/styles.css'; // borrow styles from CasesGaphic (they're visually the same)
 
 const IS_TRIDENT = navigator.userAgent.indexOf('Trident') > -1;
@@ -80,9 +80,12 @@ function checkScaleProps(yScaleProp) {
 
 let transformedPlacesDataCache = {};
 
-function transformPlacesData(placesData, cacheKey) {
+function transformPlacesData(placesData) {
+  const places = Object.keys(placesData);
+  const cacheKey = places.join('');
+
   if (!transformedPlacesDataCache[cacheKey]) {
-    transformedPlacesDataCache[cacheKey] = Object.keys(placesData)
+    transformedPlacesDataCache[cacheKey] = places
       .map(place => {
         const placeDates = Object.keys(placesData[place].dates);
         const population = placesData[place].population || null;
@@ -162,14 +165,15 @@ function usePrevious(value) {
   return ref.current;
 }
 
-const generateRenderId = () => (Math.random() * 0xfffff * 1000000).toString(16).slice(0, 8);
-
 let nextIDIndex = 0;
 
 const TestingGraphic = props => {
+  // Support aliased places (defined in some older configs/stories)
+  resolvePlacesAliasesInGraphicProps(props);
+
   const renderId = generateRenderId();
 
-  const { placesDataURL, yScaleType } = {
+  const { yScaleType } = {
     ...DEFAULT_PROPS,
     ...props
   };
@@ -189,16 +193,17 @@ const TestingGraphic = props => {
     ],
     []
   );
-  const [
-    { isLoading: isPlacesDataLoading, error: placesDataError, data: untransformedPlacesData },
-    setPlacesDataURL
-  ] = usePlacesTestingData(placesDataURL);
+  const {
+    isLoading: isPlacesDataLoading,
+    error: placesDataError,
+    data: untransformedPlacesData
+  } = usePlacesTestingData();
   const [placesData, earliestDate, latestDate] = useMemo(() => {
     if (!untransformedPlacesData) {
       return [];
     }
 
-    const placesData = transformPlacesData(untransformedPlacesData, placesDataURL);
+    const placesData = transformPlacesData(untransformedPlacesData);
     const earliestDate = placesData.reduce((memo, d) => {
       const candidate = d.dates[0].date;
 
@@ -278,12 +283,6 @@ const TestingGraphic = props => {
       ...props
     };
 
-    if (placesDataURL !== prevProps.placesDataURL) {
-      debug('Places data URL change requires reload');
-
-      return setPlacesDataURL(placesDataURL);
-    }
-
     const { width, height } = state;
     const wasResize = width !== prevState.width || height !== prevState.height;
 
@@ -346,9 +345,7 @@ const TestingGraphic = props => {
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
     const chartWidth = width - MARGIN.right - MARGIN.left;
     const chartHeight = height - MARGIN.top - MARGIN.bottom;
-    const xScale = scaleTime()
-      .domain([timeLowerExtent, timeUpperExtent])
-      .range([0, chartWidth]);
+    const xScale = scaleTime().domain([timeLowerExtent, timeUpperExtent]).range([0, chartWidth]);
     const yScale = (yScaleType === 'logarithmic'
       ? scaleLog().domain([logarithmicLowerExtent, yScaleCap], true)
       : scaleLinear().domain([0, yScaleCap], true)
@@ -398,14 +395,10 @@ const TestingGraphic = props => {
           );
     // const yAxisGenerator = yAxisGeneratorBase().tickFormat(format('~s'));
     const yAxisGenerator = yAxisGeneratorBase().tickFormat(value => (value >= 1 ? FORMAT_S(value) : value));
-    const yAxisGridlinesGenerator = yAxisGeneratorBase()
-      .tickSize(-chartWidth)
-      .tickFormat('');
+    const yAxisGridlinesGenerator = yAxisGeneratorBase().tickSize(-chartWidth).tickFormat('');
 
     // Rendering > 1: Update SVG dimensions
-    const svg = select(svgRef.current)
-      .attr('width', width)
-      .attr('height', height);
+    const svg = select(svgRef.current).attr('width', width).attr('height', height);
 
     // Rendering > 2: Update accessible title and description
     svgTitleRef.current.textContent = `${yAxisLabel} on a ${yScaleType} scale.`;
@@ -483,7 +476,7 @@ const TestingGraphic = props => {
       .style('stroke-opacity', null)
       .transition()
       .duration(transformTransitionDuration)
-      .attrTween('d', function(d) {
+      .attrTween('d', function (d) {
         const currentPath = generateLinePath(d);
 
         const previous = select(this);
@@ -554,7 +547,7 @@ const TestingGraphic = props => {
     }
     const plotLabelsData = labelledPlacesData.map((d, i) => ({
       key: d.key,
-      text: d.key,
+      text: PLACES_ALIASES[d.key] || d.key,
       x: 6 + xScale(last(getDataCollection(d)).date),
       y: plotLabelForceNodes[i].y || plotLabelForceNodes[i].targetY
     }));
