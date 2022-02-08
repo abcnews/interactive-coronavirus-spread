@@ -571,8 +571,10 @@ const CasesGraphic = props => {
       xScaleProp === 'day' ? `Days since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[underlyingProp]}` : 'Date';
     const yAxisLabel = `${isDailyFigures ? 'Daily' : 'Cumulative'} known ${yScaleProp
       .replace('new', 'new ')
-      .replace('pmp', ' per million people')} since ${
-      UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]
+      .replace('pmp', ' per million people')}${
+      xScaleProp === 'day'
+        ? ` since ${UNDERLYING_PROPS_LOWER_LOGARITHMIC_EXTENT_LABELS[yScaleProp.match(UNDERLYING_PROPS_PATTERN)[0]]}`
+        : ''
     }`;
     const opacityTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.opacity;
     const transformTransitionDuration = wasResize ? 0 : TRANSITION_DURATIONS.transform;
@@ -697,7 +699,7 @@ const CasesGraphic = props => {
       .select(`.${styles.yAxisLabel}`)
       .attr('transform', `translate(${0} ${MARGIN.top / 2})`)
       .call(selection => {
-        if (IS_TRIDENT) {
+        if (IS_TRIDENT || yAxisLabel.length < 30) {
           selection.text(yAxisLabel);
         } else {
           const words = yAxisLabel.split(' ');
