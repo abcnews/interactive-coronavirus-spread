@@ -6,7 +6,8 @@ import { render } from 'react-dom';
 import InlineGraphic from './components/InlineGraphic';
 import { PRESETS } from './constants';
 
-export const encodeVersionedProps = props => encode({ version: process.env.npm_package_version, ...props });
+// PACKAGE_JSON_VERSION will be replaced by current package.json version (see aunty.config.js)
+export const encodeVersionedProps = props => encode({ version: PACKAGE_JSON_VERSION, ...props });
 
 export const decodeVersionedProps = encoded => {
   let decoded = null;

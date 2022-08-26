@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const webpack = require('webpack');
+const { version } = require('./package.json');
 
 const ADDITIONAL_ENTRY_POINTS = [
   'standalone-cases-graphic',
@@ -18,6 +20,15 @@ module.exports = {
     ADDITIONAL_ENTRY_POINTS.forEach(name => {
       config.entry[name] = [config.entry.index[0].replace('index', name)];
     });
+
+    config.plugins = [
+      ...(config.plugins || []),
+      ...[
+        new webpack.DefinePlugin({
+          PACKAGE_JSON_VERSION: JSON.stringify(version)
+        })
+      ]
+    ];
 
     return config;
   },
