@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 import {
   OTHER_PLACES,
   EXCLUDED_PLACES,
@@ -11,6 +11,11 @@ import {
 } from './constants';
 import { clone } from './misc-utils';
 import PLACES_POPULATIONS from './population';
+
+const MULTI_FETCH_BATCH_SIZE = 10;
+const MULTI_FETCH_BATCH_DELAY_MS = 100;
+
+const getFetchBatchDelayMS = index => Math.floor(index / MULTI_FETCH_BATCH_SIZE) * MULTI_FETCH_BATCH_DELAY_MS;
 
 const fetchCache = {};
 
@@ -120,9 +125,11 @@ const useDataMultiLoader = urls => {
       dispatch({ type: 'MULTI_FETCH_INIT' });
 
       Promise.all(
-        urls.map(url => {
+        urls.map((url, index) => {
           if (!fetchCache[url]) {
-            fetchCache[url] = fetch(url)
+            fetchCache[url] = new Promise((resolve, reject) =>
+              setTimeout(() => fetch(url).then(resolve).catch(reject), getFetchBatchDelayMS(index))
+            )
               .then(response => response.json())
               .catch(error => {
                 if (!wasCancelled) {
