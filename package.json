@@ -29,7 +29,7 @@
 		"@atlaskit/radio": "^5.3.13",
 		"@atlaskit/textfield": "^5.1.13",
 		"core-js": "^3.6.4",
-		"d3": "^5.15.0",
+		"d3": "^7.6.1",
 		"d3-force-reuse": "^1.0.1",
 		"d3-interpolate-path": "^2.1.2",
 		"d3-selection": "^1.4.1",
